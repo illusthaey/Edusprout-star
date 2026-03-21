@@ -1494,27 +1494,28 @@ html[data-theme="retro"] .site-footer .btn.btn-theme.is-active{
 }
 
 /* =========================================================
-   Alien side background layout (2026.3.21 refresh)
+   Alien side background layout (2026.3.21 fast-light)
    - /static/alien.jpg 한 장만 cover + no-repeat
-   - 좌우 배경은 조금 더 또렷하게, 중앙 패널은 조금 더 안정적으로
+   - 배경 노출을 더 늘리고, 스크롤 지연을 줄이도록 효과를 가볍게 정리
    - 공통 트리거: body.alien-side-bg
    - 공통 래퍼: .alien-page-frame
    - 래퍼가 없는 페이지는 direct header/main/footer를 fallback 패널로 처리
    ========================================================= */
 
 body.alien-side-bg{
-  --alien-frame-gutter: clamp(24px, 7vw, 140px);
-  --alien-panel-bg: rgba(255, 252, 248, 0.94);
-  --alien-panel-bg-solid: rgba(255, 252, 248, 0.97);
+  --alien-frame-gutter: clamp(72px, 16vw, 320px);
+  --alien-frame-max: 1500px;
+  --alien-panel-bg: rgba(255, 252, 248, 0.82);
+  --alien-panel-bg-solid: rgba(255, 252, 248, 0.88);
   --alien-line: rgba(64, 48, 35, 0.12);
-  --alien-shadow-1: rgba(43, 30, 18, 0.18);
-  --alien-shadow-2: rgba(43, 30, 18, 0.08);
+  --alien-shadow-1: rgba(43, 30, 18, 0.11);
+  --alien-shadow-2: rgba(43, 30, 18, 0.05);
   position: relative;
   isolation: isolate;
   min-height: 100svh;
   margin: 0;
   padding: 0;
-  background: #ede5db;
+  background: #eae3db;
 }
 
 body.alien-side-bg::before,
@@ -1526,28 +1527,25 @@ body.alien-side-bg::after{
 }
 
 body.alien-side-bg::before{
-  z-index: -3;
+  z-index: -2;
   background: url("/static/alien.jpg") center center / cover no-repeat;
-  background-attachment: fixed;
-  filter: saturate(0.98) contrast(1.02);
+  background-attachment: scroll;
+  filter: none;
 }
 
 body.alien-side-bg::after{
-  z-index: -2;
+  z-index: -1;
   background:
     linear-gradient(
       90deg,
-      rgba(255,255,255,0.05) 0%,
-      rgba(255,255,255,0.02) 18%,
-      rgba(245,240,234,0.56) 36%,
-      rgba(245,240,234,0.68) 50%,
-      rgba(245,240,234,0.56) 64%,
-      rgba(255,255,255,0.02) 82%,
-      rgba(255,255,255,0.05) 100%
-    ),
-    radial-gradient(circle at 12% 16%, rgba(255,255,255,0.18), transparent 26%),
-    radial-gradient(circle at 88% 18%, rgba(255,255,255,0.12), transparent 22%),
-    linear-gradient(180deg, rgba(248,244,239,0.08), rgba(238,232,224,0.34));
+      rgba(255,255,255,0.02) 0%,
+      rgba(255,255,255,0.00) 16%,
+      rgba(247,243,238,0.06) 34%,
+      rgba(247,243,238,0.14) 50%,
+      rgba(247,243,238,0.06) 66%,
+      rgba(255,255,255,0.00) 84%,
+      rgba(255,255,255,0.02) 100%
+    );
 }
 
 body.alien-side-bg > .alien-page-frame,
@@ -1556,8 +1554,8 @@ body.alien-side-bg > main,
 body.alien-side-bg > .home-link-wrap,
 body.alien-side-bg > footer.site-footer,
 body.alien-side-bg > .simple-footer{
-  width: calc(100vw - var(--alien-frame-gutter));
-  max-width: 1680px;
+  width: calc(100% - var(--alien-frame-gutter));
+  max-width: var(--alien-frame-max);
   margin-left: auto;
   margin-right: auto;
 }
@@ -1565,8 +1563,8 @@ body.alien-side-bg > .simple-footer{
 body.alien-side-bg > .alien-page-frame{
   position: relative;
   z-index: 1;
-  margin-top: clamp(10px, 1.6vw, 20px);
-  padding: clamp(16px, 1.8vw, 24px);
+  margin-top: clamp(10px, 1.4vw, 18px);
+  padding: clamp(14px, 1.6vw, 22px);
 }
 
 body.alien-side-bg > .alien-page-frame,
@@ -1575,31 +1573,20 @@ body.alien-side-bg > main,
 body.alien-side-bg > footer.site-footer,
 body.alien-side-bg > .simple-footer{
   border: 1px solid var(--alien-line);
-  border-radius: clamp(22px, 2.4vw, 32px);
+  border-radius: clamp(20px, 2.2vw, 30px);
   background: var(--alien-panel-bg);
   box-shadow:
-    0 26px 64px var(--alien-shadow-1),
-    0 6px 16px var(--alien-shadow-2),
-    inset 0 1px 0 rgba(255,255,255,0.42);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-@supports not ((backdrop-filter: blur(1px))) {
-  body.alien-side-bg > .alien-page-frame,
-  body.alien-side-bg > header.site-header,
-  body.alien-side-bg > main,
-  body.alien-side-bg > footer.site-footer,
-  body.alien-side-bg > .simple-footer{
-    background: var(--alien-panel-bg-solid);
-  }
+    0 14px 34px var(--alien-shadow-1),
+    0 3px 10px var(--alien-shadow-2);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 body.alien-side-bg > header.site-header,
 body.alien-side-bg > main,
 body.alien-side-bg > footer.site-footer,
 body.alien-side-bg > .simple-footer{
-  margin-top: clamp(10px, 1.6vw, 20px);
+  margin-top: clamp(10px, 1.4vw, 18px);
 }
 
 body.alien-side-bg > .alien-page-frame .site-header,
@@ -1637,7 +1624,7 @@ body.alien-side-bg .dropzone,
 body.alien-side-bg .result,
 body.alien-side-bg .table-scroll,
 body.alien-side-bg .file-list-wrap{
-  box-shadow: 0 10px 28px rgba(43, 30, 18, 0.06);
+  box-shadow: 0 6px 16px rgba(43, 30, 18, 0.05);
 }
 
 body.alien-side-bg > .home-link-wrap{
@@ -1646,9 +1633,9 @@ body.alien-side-bg > .home-link-wrap{
 
 body.alien-side-bg > .home-link-wrap .btn,
 body.alien-side-bg > .home-link-wrap .btn-home{
-  background: rgba(255, 252, 248, 0.94);
+  background: rgba(255, 252, 248, 0.86);
   border-color: rgba(64, 48, 35, 0.18);
-  box-shadow: 0 10px 26px rgba(43, 30, 18, 0.10);
+  box-shadow: 0 6px 16px rgba(43, 30, 18, 0.08);
 }
 
 body.alien-side-bg > footer.site-footer,
@@ -1666,21 +1653,27 @@ body.alien-side-bg > .simple-footer{
 body.alien-side-bg #btnToTop,
 body.alien-side-bg #back-to-top-fab .btn,
 body.alien-side-bg .to-top{
-  box-shadow: 0 10px 24px rgba(43, 30, 18, 0.14);
+  box-shadow: 0 8px 18px rgba(43, 30, 18, 0.10);
+}
+
+@media (max-width: 1200px){
+  body.alien-side-bg{
+    --alien-frame-gutter: clamp(28px, 8vw, 120px);
+    --alien-panel-bg: rgba(255, 252, 248, 0.86);
+    --alien-panel-bg-solid: rgba(255, 252, 248, 0.90);
+  }
 }
 
 @media (max-width: 900px){
   body.alien-side-bg{
-    --alien-frame-gutter: 12px;
-  }
-
-  body.alien-side-bg::before{
-    background-attachment: scroll;
+    --alien-frame-gutter: 14px;
+    --alien-panel-bg: rgba(255, 252, 248, 0.92);
+    --alien-panel-bg-solid: rgba(255, 252, 248, 0.95);
   }
 
   body.alien-side-bg::after{
     background:
-      linear-gradient(180deg, rgba(248,244,239,0.16), rgba(238,232,224,0.42));
+      linear-gradient(180deg, rgba(248,244,239,0.08), rgba(238,232,224,0.20));
   }
 
   body.alien-side-bg > .alien-page-frame{
@@ -1693,7 +1686,6 @@ body.alien-side-bg .to-top{
   body.alien-side-bg > footer.site-footer,
   body.alien-side-bg > .simple-footer{
     border-radius: 18px;
-    background: rgba(255, 252, 248, 0.96);
   }
 }
 
