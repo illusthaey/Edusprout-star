@@ -1,0 +1,1388 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>4대 사회보험료 연체금 계산기</title>
+  <meta
+    name="description"
+    content="국민연금·건강보험·고용보험·산재보험을 한 화면에서 입력해 예상 연체금을 계산하는 페이지"
+  />
+  <link rel="stylesheet" href="/static/style.css?v=20260305" />
+  <style>
+    .calc-page .field {
+      min-width: 0;
+    }
+
+    .calc-page .field label {
+      display: block;
+      margin: 0 0 6px;
+      font-weight: 700;
+      color: #222;
+    }
+
+    .calc-page .field input,
+    .calc-page .field select {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .calc-page .helper-text {
+      margin: 6px 0 0;
+      font-size: 0.95rem;
+      color: #666;
+    }
+
+    .calc-page .common-grid,
+    .calc-page .insurance-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .calc-page .insurance-card {
+      min-width: 0;
+    }
+
+    .calc-page .insurance-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .calc-page .insurance-title {
+      margin: 0;
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: #111;
+    }
+
+    .calc-page .insurance-sub {
+      margin: 4px 0 0;
+      font-size: 0.95rem;
+      color: #666;
+    }
+
+    .calc-page .insurance-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 999px;
+      background: #f9fafb;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #374151;
+      white-space: nowrap;
+    }
+
+    .calc-page .input-total-label {
+      display: block;
+      margin: 0 0 6px;
+      font-weight: 700;
+      color: #222;
+    }
+
+    .calc-page .input-total-box {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #f9fafb;
+      padding: 12px 14px;
+      min-height: 48px;
+    }
+
+    .calc-page .input-total-value {
+      margin: 0;
+      font-size: 1.25rem;
+      line-height: 1.3;
+      font-weight: 800;
+      color: #111;
+      word-break: break-word;
+    }
+
+    .calc-page .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .calc-page .button-row .btn {
+      margin-left: 0 !important;
+      flex: 0 0 auto;
+    }
+
+    .calc-page .kpi-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 12px;
+    }
+
+    .calc-page .kpi-card {
+      min-width: 0;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #fafafa;
+      padding: 14px 16px;
+    }
+
+    .calc-page .kpi-label {
+      margin: 0 0 6px;
+      font-size: 0.95rem;
+      color: #666;
+    }
+
+    .calc-page .kpi-value {
+      margin: 0;
+      font-size: 1.55rem;
+      line-height: 1.25;
+      font-weight: 800;
+      color: #111;
+      word-break: break-word;
+    }
+
+    .calc-page .status-box {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #f9fafb;
+      margin-bottom: 14px;
+    }
+
+    .calc-page .status-box.warn {
+      background: #fff7ed;
+      border-color: #fed7aa;
+    }
+
+    .calc-page .status-box.ok {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+
+    .calc-page .status-box.info {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+    }
+
+    .calc-page .status-box p {
+      margin: 0;
+      color: #334155;
+    }
+
+    .calc-page .calc-summary-wrap {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      margin: 12px 0;
+    }
+
+    .calc-page .summary-table {
+      width: 100%;
+      min-width: 0;
+      border-collapse: collapse;
+      table-layout: fixed;
+      background: #fff;
+      font-size: 1rem;
+    }
+
+    .calc-page .summary-table th,
+    .calc-page .summary-table td {
+      border: 1px solid #e5e7eb;
+      padding: 9px 10px;
+      vertical-align: top;
+    }
+
+    .calc-page .summary-table th {
+      width: 38%;
+      text-align: left;
+      background: #f9fafb;
+      font-weight: 600;
+    }
+
+    .calc-page .summary-table td {
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .calc-page .summary-table td.text-left {
+      text-align: left;
+    }
+
+    .calc-page .table-wrap.result-table-wrap table {
+      min-width: 720px;
+    }
+
+    .calc-page .table-wrap.breakdown-wrap table {
+      min-width: 780px;
+    }
+
+    .calc-page .sheetlike td.text-left,
+    .calc-page .sheetlike th.text-left {
+      text-align: left !important;
+    }
+
+    .calc-page .sheetlike td.text-center,
+    .calc-page .sheetlike th.text-center {
+      text-align: center !important;
+    }
+
+    .calc-page .inactive-row td {
+      color: #6b7280;
+      background: #fcfcfc;
+    }
+
+    .calc-page .total-row th,
+    .calc-page .total-row td {
+      font-weight: 700;
+      background: #f8fafc;
+    }
+
+    .calc-page .formula-box {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #fff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 0.98rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.65;
+      color: #111;
+    }
+
+    .calc-page .muted-note {
+      margin-top: 8px;
+      font-size: 0.95rem;
+      color: #666;
+    }
+
+    .calc-page .legal-list {
+      margin: 10px 0 0;
+      padding-left: 20px;
+    }
+
+    .calc-page .legal-list li {
+      margin: 6px 0;
+    }
+
+    .calc-page .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 900px) {
+      .calc-page .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .calc-page .common-grid,
+      .calc-page .insurance-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .calc-page .button-row .btn {
+        width: 100%;
+        text-align: center;
+      }
+
+      .calc-page .summary-table th {
+        width: 44%;
+      }
+
+      .calc-page .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      .calc-page .no-print,
+      #back-to-top-fab {
+        display: none !important;
+      }
+
+      body {
+        background: #fff;
+      }
+    }
+  </style>
+  <script defer src="/static/footer.js?v=20260303"></script>
+</head>
+<body class="page-index calc-page alien-side-bg">
+<div class="alien-page-frame">
+  <a class="skip-link" href="#main">본문 바로가기</a>
+
+  <main id="main" class="container">
+    <section class="section page-head">
+      <h1>4대 사회보험료 연체금 계산기</h1>
+      <p class="subtitle">
+        국민연금·건강보험·고용보험·산재보험을 한 화면에서 동시에 입력해 예상 연체금을 계산합니다.
+      </p>
+
+      <div class="callout">
+        <ul class="list-tight">
+          <li>이번 버전은 <strong>4대 사회보험료를 동시에 입력</strong>해 한 번에 합산 결과까지 보여줍니다.</li>
+          <li>부과월, 기준일, 납부기한 입력 방식, 원 미만 처리는 <strong>공통값</strong>으로 적용됩니다.</li>
+          <li>자동 납부기한은 <strong>부과월 다음 달 10일</strong>로 잡고, 실제 고지서와 다르면 직접 입력 모드로 바꿔 계산할 수 있습니다.</li>
+          <li>미입력 보험은 계산에서 제외되고, 일부 보험만 납부기한이 다르면 해당 건은 별도로 다시 확인하는 편이 안전합니다.</li>
+        </ul>
+      </div>
+    </section>
+
+    <nav class="section quick-nav no-print" aria-label="빠른 이동">
+      <strong class="local-small">빠른 이동</strong>
+      <div class="chip-row">
+        <a class="chip" href="#inputSection">입력값</a>
+        <a class="chip" href="#resultSection">계산 결과</a>
+        <a class="chip" href="#guideSection">적용 기준 안내</a>
+      </div>
+    </nav>
+
+    <section class="section" id="inputSection" aria-labelledby="inputTitle">
+      <h2 id="inputTitle">입력값</h2>
+      <hr />
+
+      <form id="lateFeeForm" novalidate>
+        <div class="card">
+          <h3 class="local-h3">공통 기준</h3>
+          <div class="common-grid">
+            <div class="field">
+              <label for="assessmentMonth">공통 부과월</label>
+              <input id="assessmentMonth" name="assessmentMonth" type="month" required />
+              <p class="helper-text">입력한 부과월을 4대보험 공통 기준으로 씁니다.</p>
+            </div>
+
+            <div class="field">
+              <label for="referenceDate">기준일(현재 날짜 등)</label>
+              <input id="referenceDate" name="referenceDate" type="date" required />
+              <p class="helper-text">이 날짜 기준으로 연체일수를 계산합니다.</p>
+            </div>
+
+            <div class="field">
+              <label for="dueMode">납부기한 입력 방식</label>
+              <select id="dueMode" name="dueMode">
+                <option value="auto">부과월 기준 자동 산출</option>
+                <option value="manual">고지서 납부기한 직접 입력</option>
+              </select>
+              <p class="helper-text" id="autoDueHint">자동 납부기한: 부과월을 먼저 입력하세요.</p>
+            </div>
+
+            <div class="field" id="manualDueWrap">
+              <label for="manualDueDate">공통 고지서상 납부기한</label>
+              <input id="manualDueDate" name="manualDueDate" type="date" disabled />
+              <p class="helper-text">이번 화면에서는 같은 납부기한을 4대보험 공통으로 적용합니다.</p>
+            </div>
+
+            <div class="field">
+              <label for="roundMode">원 미만 처리</label>
+              <select id="roundMode" name="roundMode">
+                <option value="floor">절사</option>
+                <option value="round">반올림</option>
+                <option value="ceil">올림</option>
+                <option value="raw">소수 그대로 표시</option>
+              </select>
+              <p class="helper-text">각 보험별 연체금을 계산한 뒤 합산합니다.</p>
+            </div>
+
+            <div class="field">
+              <div class="input-total-label">현재 입력 합계 미리보기</div>
+              <div class="input-total-box" aria-live="polite">
+                <p class="input-total-value" id="enteredAmountPreview">0원</p>
+                <p class="helper-text">아래 보험별 금액칸에 숫자를 넣으면 바로 합계가 반영됩니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="insurance-grid">
+          <div class="card insurance-card">
+            <div class="insurance-head">
+              <div>
+                <h3 class="insurance-title">국민연금보험료</h3>
+                <p class="insurance-sub">비워두면 계산에서 제외됩니다.</p>
+              </div>
+              <span class="insurance-chip">4대보험</span>
+            </div>
+            <div class="field">
+              <label for="amountPension">고지금액(원)</label>
+              <input
+                id="amountPension"
+                name="amountPension"
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                class="numeric"
+                placeholder="예: 350000"
+              />
+              <p class="helper-text">국민연금 월별 보험료 고지금액을 입력하세요.</p>
+            </div>
+          </div>
+
+          <div class="card insurance-card">
+            <div class="insurance-head">
+              <div>
+                <h3 class="insurance-title">건강보험료</h3>
+                <p class="insurance-sub">비워두면 계산에서 제외됩니다.</p>
+              </div>
+              <span class="insurance-chip">4대보험</span>
+            </div>
+            <div class="field">
+              <label for="amountHealth">고지금액(원)</label>
+              <input
+                id="amountHealth"
+                name="amountHealth"
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                class="numeric"
+                placeholder="예: 280000"
+              />
+              <p class="helper-text">건강보험 월별 보험료 고지금액을 입력하세요.</p>
+            </div>
+          </div>
+
+          <div class="card insurance-card">
+            <div class="insurance-head">
+              <div>
+                <h3 class="insurance-title">고용보험료</h3>
+                <p class="insurance-sub">비워두면 계산에서 제외됩니다.</p>
+              </div>
+              <span class="insurance-chip">4대보험</span>
+            </div>
+            <div class="field">
+              <label for="amountEmployment">고지금액(원)</label>
+              <input
+                id="amountEmployment"
+                name="amountEmployment"
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                class="numeric"
+                placeholder="예: 42000"
+              />
+              <p class="helper-text">고용보험 월별 보험료 고지금액을 입력하세요.</p>
+            </div>
+          </div>
+
+          <div class="card insurance-card">
+            <div class="insurance-head">
+              <div>
+                <h3 class="insurance-title">산재보험료</h3>
+                <p class="insurance-sub">비워두면 계산에서 제외됩니다.</p>
+              </div>
+              <span class="insurance-chip">4대보험</span>
+            </div>
+            <div class="field">
+              <label for="amountIndustrial">고지금액(원)</label>
+              <input
+                id="amountIndustrial"
+                name="amountIndustrial"
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                class="numeric"
+                placeholder="예: 19000"
+              />
+              <p class="helper-text">산재보험 월별 보험료 고지금액을 입력하세요.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="button-row no-print">
+          <button type="submit" class="btn pastel-blue">계산하기</button>
+          <button type="button" class="btn pastel-teal" id="btnToday">기준일 오늘로</button>
+          <button type="button" class="btn pastel-yellow" id="btnExample">예시 채우기</button>
+          <button type="button" class="btn pastel-grey" id="btnReset">초기화</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="section" id="resultSection" aria-labelledby="resultTitle">
+      <h2 id="resultTitle">계산 결과</h2>
+      <hr />
+
+      <div id="statusBox" class="status-box info" aria-live="polite">
+        <p>공통 기준을 입력하고 보험별 금액을 넣은 뒤 <strong>계산하기</strong>를 누르면 4대보험 예상 연체금이 한 번에 표시됩니다.</p>
+      </div>
+
+      <div class="kpi-grid" aria-live="polite">
+        <div class="kpi-card">
+          <p class="kpi-label">총 고지금액</p>
+          <p class="kpi-value" id="totalNoticeDisplay">0원</p>
+        </div>
+        <div class="kpi-card">
+          <p class="kpi-label">총 예상 연체금</p>
+          <p class="kpi-value" id="totalLateFeeDisplay">0원</p>
+        </div>
+        <div class="kpi-card">
+          <p class="kpi-label">총 예상 납부액</p>
+          <p class="kpi-value" id="totalPayDisplay">0원</p>
+        </div>
+        <div class="kpi-card">
+          <p class="kpi-label">공통 연체일수</p>
+          <p class="kpi-value" id="lateDaysDisplay">0일</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="local-h3">공통 적용값 요약</h3>
+        <div class="calc-summary-wrap">
+          <table class="summary-table" aria-describedby="summaryTableNote">
+            <tbody>
+              <tr>
+                <th scope="row">입력된 보험 수</th>
+                <td id="summaryCount">-</td>
+              </tr>
+              <tr>
+                <th scope="row">총 고지금액</th>
+                <td id="summaryAmount">-</td>
+              </tr>
+              <tr>
+                <th scope="row">공통 부과월</th>
+                <td id="summaryAssessmentMonth">-</td>
+              </tr>
+              <tr>
+                <th scope="row">적용 납부기한</th>
+                <td id="summaryDueDate">-</td>
+              </tr>
+              <tr>
+                <th scope="row">기준일</th>
+                <td id="summaryReferenceDate">-</td>
+              </tr>
+              <tr>
+                <th scope="row">원 미만 처리</th>
+                <td id="summaryRoundMode">-</td>
+              </tr>
+              <tr>
+                <th scope="row">1차 적용일수</th>
+                <td id="summaryStage1Days">-</td>
+              </tr>
+              <tr>
+                <th scope="row">2차 적용일수</th>
+                <td id="summaryStage2Days">-</td>
+              </tr>
+              <tr>
+                <th scope="row">적용 총요율</th>
+                <td id="summaryTotalRate">-</td>
+              </tr>
+              <tr>
+                <th scope="row">보험별 원단위 처리 전 연체금 합계</th>
+                <td id="summaryRawLateFee">-</td>
+              </tr>
+              <tr>
+                <th scope="row">보험별 최종 연체금 합계</th>
+                <td id="summaryLateFee">-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p id="summaryTableNote" class="muted-note">
+          이번 화면은 공통 부과월·공통 납부기한을 기준으로 4대보험을 동시에 계산합니다. 실제 고지서에 개별 납부기한이 다르면 별도 확인이 필요합니다.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3 class="local-h3">보험별 계산 결과</h3>
+        <div class="table-wrap result-table-wrap">
+          <table class="sheetlike">
+            <thead>
+              <tr>
+                <th scope="col" class="text-left">보험</th>
+                <th scope="col">고지금액</th>
+                <th scope="col">1차 금액</th>
+                <th scope="col">2차 금액</th>
+                <th scope="col">최종 연체금</th>
+                <th scope="col">총납부액</th>
+                <th scope="col" class="text-left">비고</th>
+              </tr>
+            </thead>
+            <tbody id="individualResultBody"></tbody>
+          </table>
+        </div>
+        <p class="muted-note">미입력 보험은 “입력 제외”로 남기고, 입력된 보험만 합계에 반영합니다.</p>
+      </div>
+
+      <div class="card">
+        <h3 class="local-h3">구간별 적용 상세</h3>
+        <div class="table-wrap breakdown-wrap">
+          <table class="sheetlike">
+            <thead>
+              <tr>
+                <th scope="col" class="text-left">보험</th>
+                <th scope="col">1차 일수</th>
+                <th scope="col">1차 요율</th>
+                <th scope="col">2차 일수</th>
+                <th scope="col">2차 요율</th>
+                <th scope="col">총요율</th>
+                <th scope="col">상한 적용</th>
+              </tr>
+            </thead>
+            <tbody id="stageBreakdownBody"></tbody>
+          </table>
+        </div>
+        <p class="muted-note">같은 부과월과 납부기한을 쓰므로 일수와 요율은 공통이고, 금액만 보험별 고지금액에 따라 달라집니다.</p>
+      </div>
+
+      <div class="card">
+        <h3 class="local-h3">계산식</h3>
+        <div id="formulaText" class="formula-box">총 연체금 = 0원</div>
+        <p class="muted-note" id="lawNote">법적 근거 요약이 여기에 표시됩니다.</p>
+      </div>
+    </section>
+
+    <section class="section" id="guideSection" aria-labelledby="guideTitle">
+      <h2 id="guideTitle">적용 기준 안내</h2>
+      <hr />
+      <div class="grid two">
+        <div class="card">
+          <h3 class="local-h3">이 화면이 잘 맞는 경우</h3>
+          <ul class="legal-list">
+            <li>같은 부과월의 4대보험을 한 번에 검산하고 싶을 때</li>
+            <li>공통 기준일 기준으로 총 연체금과 총 납부액을 함께 보고 싶을 때</li>
+            <li>보험별 금액은 따로 입력하되 계산 로직은 한 화면에서 정리하고 싶을 때</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 class="local-h3">따로 계산하는 편이 나은 경우</h3>
+          <ul class="legal-list">
+            <li>특정 보험만 실제 고지서 납부기한이 다른 경우</li>
+            <li>고용·산재 개산보험료, 확정보험료, 정산고지처럼 월별보험료와 성격이 다른 경우</li>
+            <li>분기납, 소급고지, 송달지연, 납부기한 연장처럼 공통값을 쓰기 어려운 경우</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <noscript>
+    <div class="container">
+      <div class="section">
+        <p>이 계산기는 자바스크립트가 켜져 있어야 작동합니다.</p>
+      </div>
+    </div>
+  </noscript>
+
+  <script>
+    (function () {
+      const FORMULAS = {
+        pension: {
+          label: "국민연금보험료",
+          stage1Denominator: 1500,
+          stage2Denominator: 6000,
+          stage1MaxDays: 30,
+          stage1CapRate: 0.02,
+          totalCapRate: 0.05
+        },
+        health: {
+          label: "건강보험료",
+          stage1Denominator: 1500,
+          stage2Denominator: 6000,
+          stage1MaxDays: 30,
+          stage1CapRate: 0.02,
+          totalCapRate: 0.05
+        },
+        employment: {
+          label: "고용보험료",
+          stage1Denominator: 1500,
+          stage2Denominator: 6000,
+          stage1MaxDays: 30,
+          stage1CapRate: 0.02,
+          totalCapRate: 0.05
+        },
+        industrial: {
+          label: "산재보험료",
+          stage1Denominator: 1500,
+          stage2Denominator: 6000,
+          stage1MaxDays: 30,
+          stage1CapRate: 0.02,
+          totalCapRate: 0.05
+        }
+      };
+
+      const INSURANCE_ORDER = ["pension", "health", "employment", "industrial"];
+
+      const ROUND_MODE_LABELS = {
+        floor: "절사",
+        round: "반올림",
+        ceil: "올림",
+        raw: "소수 그대로 표시"
+      };
+
+      const DAY_MS = 24 * 60 * 60 * 1000;
+      const $ = function (id) {
+        return document.getElementById(id);
+      };
+
+      const form = $("lateFeeForm");
+      const assessmentMonthEl = $("assessmentMonth");
+      const referenceDateEl = $("referenceDate");
+      const dueModeEl = $("dueMode");
+      const manualDueDateEl = $("manualDueDate");
+      const manualDueWrapEl = $("manualDueWrap");
+      const roundModeEl = $("roundMode");
+      const autoDueHintEl = $("autoDueHint");
+      const enteredAmountPreviewEl = $("enteredAmountPreview");
+      const statusBoxEl = $("statusBox");
+      const btnTodayEl = $("btnToday");
+      const btnExampleEl = $("btnExample");
+      const btnResetEl = $("btnReset");
+      const individualResultBodyEl = $("individualResultBody");
+      const stageBreakdownBodyEl = $("stageBreakdownBody");
+
+      const amountEls = {
+        pension: $("amountPension"),
+        health: $("amountHealth"),
+        employment: $("amountEmployment"),
+        industrial: $("amountIndustrial")
+      };
+
+      let hasCalculated = false;
+
+      function getKstTodayYmd() {
+        const parts = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Seoul",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
+        }).formatToParts(new Date());
+
+        const map = {};
+        parts.forEach(function (part) {
+          if (part.type !== "literal") {
+            map[part.type] = part.value;
+          }
+        });
+
+        return map.year + "-" + map.month + "-" + map.day;
+      }
+
+      function getKstCurrentMonthYm() {
+        return getKstTodayYmd().slice(0, 7);
+      }
+
+      function getKstTwoMonthsAgoYm() {
+        const today = getKstTodayYmd();
+        const year = Number(today.slice(0, 4));
+        const month = Number(today.slice(5, 7));
+        const base = new Date(Date.UTC(year, month - 1, 1));
+        base.setUTCMonth(base.getUTCMonth() - 2);
+        return base.getUTCFullYear() + "-" + String(base.getUTCMonth() + 1).padStart(2, "0");
+      }
+
+      function parseYmdToUtc(ymd) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd || "")) {
+          return null;
+        }
+
+        const parts = ymd.split("-").map(Number);
+        return new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+      }
+
+      function monthToAutoDueDate(ym) {
+        if (!/^\d{4}-\d{2}$/.test(ym || "")) {
+          return "";
+        }
+
+        const parts = ym.split("-").map(Number);
+        const due = new Date(Date.UTC(parts[0], parts[1] - 1, 1));
+        due.setUTCMonth(due.getUTCMonth() + 1);
+        due.setUTCDate(10);
+
+        return due.getUTCFullYear()
+          + "-" + String(due.getUTCMonth() + 1).padStart(2, "0")
+          + "-" + String(due.getUTCDate()).padStart(2, "0");
+      }
+
+      function formatDateKor(ymd) {
+        const date = parseYmdToUtc(ymd);
+        if (!date) {
+          return "-";
+        }
+
+        return date.getUTCFullYear() + "년 " + (date.getUTCMonth() + 1) + "월 " + date.getUTCDate() + "일";
+      }
+
+      function formatMonthKor(ym) {
+        if (!/^\d{4}-\d{2}$/.test(ym || "")) {
+          return "-";
+        }
+
+        const parts = ym.split("-").map(Number);
+        return parts[0] + "년 " + parts[1] + "월";
+      }
+
+      function formatNumber(value, digits) {
+        return new Intl.NumberFormat("ko-KR", {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
+        }).format(value);
+      }
+
+      function formatWon(value) {
+        const isInteger = Number.isInteger(value);
+        return new Intl.NumberFormat("ko-KR", {
+          minimumFractionDigits: isInteger ? 0 : 2,
+          maximumFractionDigits: isInteger ? 0 : 2
+        }).format(value) + "원";
+      }
+
+      function formatPercent(rate) {
+        return new Intl.NumberFormat("ko-KR", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 4
+        }).format(rate * 100) + "%";
+      }
+
+      function applyRoundMode(value, mode) {
+        switch (mode) {
+          case "ceil":
+            return Math.ceil(value);
+          case "round":
+            return Math.round(value);
+          case "raw":
+            return Number(value.toFixed(2));
+          case "floor":
+          default:
+            return Math.floor(value);
+        }
+      }
+
+      function calculateLateDays(dueDate, refDate) {
+        const due = parseYmdToUtc(dueDate);
+        const ref = parseYmdToUtc(refDate);
+
+        if (!due || !ref) {
+          return 0;
+        }
+
+        const diff = Math.floor((ref.getTime() - due.getTime()) / DAY_MS);
+        return Math.max(0, diff);
+      }
+
+      function setStatus(type, html) {
+        statusBoxEl.className = "status-box " + type;
+        statusBoxEl.innerHTML = "<p>" + html + "</p>";
+      }
+
+      function renderDefaultStatus() {
+        setStatus(
+          "info",
+          "공통 기준을 입력하고 보험별 금액을 넣은 뒤 <strong>계산하기</strong>를 누르면 4대보험 예상 연체금이 한 번에 표시됩니다."
+        );
+      }
+
+      function syncDueModeUi() {
+        const isManual = dueModeEl.value === "manual";
+        manualDueWrapEl.classList.toggle("hidden", !isManual);
+        manualDueDateEl.disabled = !isManual;
+        manualDueDateEl.required = isManual;
+
+        if (isManual && !manualDueDateEl.value) {
+          const autoDue = monthToAutoDueDate(assessmentMonthEl.value);
+          if (autoDue) {
+            manualDueDateEl.value = autoDue;
+          }
+        }
+      }
+
+      function updateAutoDueHint() {
+        const autoDue = monthToAutoDueDate(assessmentMonthEl.value);
+
+        if (!autoDue) {
+          autoDueHintEl.textContent = "자동 납부기한: 부과월을 먼저 입력하세요.";
+          return;
+        }
+
+        autoDueHintEl.textContent =
+          "자동 납부기한: " + formatDateKor(autoDue) + " (고지서가 다르면 직접 입력 모드로 변경)";
+      }
+
+      function updateEnteredAmountPreview() {
+        let total = 0;
+
+        INSURANCE_ORDER.forEach(function (key) {
+          const raw = String(amountEls[key].value || "").trim();
+          if (raw === "") {
+            return;
+          }
+
+          const amount = Number(raw);
+          if (Number.isFinite(amount) && amount >= 0) {
+            total += amount;
+          }
+        });
+
+        enteredAmountPreviewEl.textContent = formatWon(total);
+      }
+
+      function getDueDateValue() {
+        return dueModeEl.value === "manual"
+          ? manualDueDateEl.value
+          : monthToAutoDueDate(assessmentMonthEl.value);
+      }
+
+      function buildInactiveIndividualRow(label) {
+        return [
+          '<tr class="inactive-row">',
+          '<th scope="row" class="text-left">', label, "</th>",
+          '<td colspan="5">-</td>',
+          '<td class="text-left">입력 제외</td>',
+          "</tr>"
+        ].join("");
+      }
+
+      function buildInactiveStageRow(label) {
+        return [
+          '<tr class="inactive-row">',
+          '<th scope="row" class="text-left">', label, "</th>",
+          "<td>-</td>",
+          "<td>-</td>",
+          "<td>-</td>",
+          "<td>-</td>",
+          "<td>-</td>",
+          "<td>입력 제외</td>",
+          "</tr>"
+        ].join("");
+      }
+
+      function renderEmptyTables() {
+        individualResultBodyEl.innerHTML = INSURANCE_ORDER.map(function (key) {
+          return buildInactiveIndividualRow(FORMULAS[key].label);
+        }).join("");
+
+        stageBreakdownBodyEl.innerHTML = INSURANCE_ORDER.map(function (key) {
+          return buildInactiveStageRow(FORMULAS[key].label);
+        }).join("");
+      }
+
+      function renderEmpty() {
+        $("totalNoticeDisplay").textContent = "0원";
+        $("totalLateFeeDisplay").textContent = "0원";
+        $("totalPayDisplay").textContent = "0원";
+        $("lateDaysDisplay").textContent = "0일";
+
+        $("summaryCount").textContent = "-";
+        $("summaryAmount").textContent = "-";
+        $("summaryAssessmentMonth").textContent = "-";
+        $("summaryDueDate").textContent = "-";
+        $("summaryReferenceDate").textContent = "-";
+        $("summaryRoundMode").textContent = "-";
+        $("summaryStage1Days").textContent = "-";
+        $("summaryStage2Days").textContent = "-";
+        $("summaryTotalRate").textContent = "-";
+        $("summaryRawLateFee").textContent = "-";
+        $("summaryLateFee").textContent = "-";
+
+        renderEmptyTables();
+
+        $("formulaText").textContent = "총 연체금 = 0원";
+        $("lawNote").textContent = "국민연금·건강보험·고용보험·산재보험의 월별 보험료 공통 산식을 기준으로 계산합니다.";
+      }
+
+      function collectEntries() {
+        const entries = [];
+
+        for (let i = 0; i < INSURANCE_ORDER.length; i += 1) {
+          const key = INSURANCE_ORDER[i];
+          const label = FORMULAS[key].label;
+          const rawText = String(amountEls[key].value || "").trim();
+
+          if (rawText === "") {
+            continue;
+          }
+
+          const amount = Number(rawText);
+
+          if (!Number.isFinite(amount) || amount < 0) {
+            return {
+              ok: false,
+              message: label + " 고지금액을 0 이상 숫자로 입력하세요."
+            };
+          }
+
+          entries.push({
+            key: key,
+            label: label,
+            amount: amount
+          });
+        }
+
+        if (!entries.length) {
+          return {
+            ok: false,
+            message: "최소 1개 보험의 고지금액을 입력하세요."
+          };
+        }
+
+        return {
+          ok: true,
+          entries: entries
+        };
+      }
+
+      function validate() {
+        const collected = collectEntries();
+        const assessmentMonth = assessmentMonthEl.value;
+        const referenceDate = referenceDateEl.value;
+        const dueDate = getDueDateValue();
+
+        if (!collected.ok) {
+          return collected;
+        }
+
+        if (!assessmentMonth) {
+          return { ok: false, message: "공통 부과월을 입력하세요." };
+        }
+
+        if (!referenceDate) {
+          return { ok: false, message: "기준일을 입력하세요." };
+        }
+
+        if (!dueDate) {
+          return {
+            ok: false,
+            message: dueModeEl.value === "manual"
+              ? "공통 고지서상 납부기한을 입력하세요."
+              : "자동 납부기한을 계산할 수 없습니다. 공통 부과월을 확인하세요."
+          };
+        }
+
+        if (!parseYmdToUtc(referenceDate) || !parseYmdToUtc(dueDate)) {
+          return { ok: false, message: "날짜 형식을 다시 확인하세요." };
+        }
+
+        return {
+          ok: true,
+          entries: collected.entries,
+          assessmentMonth: assessmentMonth,
+          referenceDate: referenceDate,
+          dueDate: dueDate,
+          roundMode: roundModeEl.value
+        };
+      }
+
+      function calculateEntry(entry, lateDays, roundMode) {
+        const formula = FORMULAS[entry.key];
+        const stage1Days = Math.min(lateDays, formula.stage1MaxDays);
+        const stage2Days = Math.max(0, lateDays - formula.stage1MaxDays);
+
+        const rawStage1Rate = stage1Days / formula.stage1Denominator;
+        const appliedStage1Rate = Math.min(rawStage1Rate, formula.stage1CapRate);
+        const rawStage2Rate = stage2Days / formula.stage2Denominator;
+        const uncappedTotalRate = appliedStage1Rate + rawStage2Rate;
+        const appliedTotalRate = Math.min(uncappedTotalRate, formula.totalCapRate);
+        const appliedStage2Rate = Math.max(0, appliedTotalRate - appliedStage1Rate);
+
+        const rawStage1Fee = entry.amount * appliedStage1Rate;
+        const rawStage2Fee = entry.amount * appliedStage2Rate;
+        const rawLateFee = entry.amount * appliedTotalRate;
+        const lateFee = applyRoundMode(rawLateFee, roundMode);
+        const totalPay = entry.amount + lateFee;
+
+        return {
+          key: entry.key,
+          label: entry.label,
+          amount: entry.amount,
+          lateDays: lateDays,
+          stage1Days: stage1Days,
+          stage2Days: stage2Days,
+          appliedStage1Rate: appliedStage1Rate,
+          appliedStage2Rate: appliedStage2Rate,
+          appliedTotalRate: appliedTotalRate,
+          rawStage1Fee: rawStage1Fee,
+          rawStage2Fee: rawStage2Fee,
+          rawLateFee: rawLateFee,
+          lateFee: lateFee,
+          totalPay: totalPay,
+          capApplied: uncappedTotalRate > formula.totalCapRate
+        };
+      }
+
+      function renderIndividualRows(resultsByKey) {
+        const rows = INSURANCE_ORDER.map(function (key) {
+          const result = resultsByKey[key];
+
+          if (!result) {
+            return buildInactiveIndividualRow(FORMULAS[key].label);
+          }
+
+          const note = result.lateDays === 0
+            ? "연체 없음"
+            : "계산 반영";
+
+          return [
+            "<tr>",
+            '<th scope="row" class="text-left">', result.label, "</th>",
+            "<td>", formatWon(result.amount), "</td>",
+            "<td>", formatWon(Number(result.rawStage1Fee.toFixed(2))), "</td>",
+            "<td>", formatWon(Number(result.rawStage2Fee.toFixed(2))), "</td>",
+            "<td>", formatWon(result.lateFee), "</td>",
+            "<td>", formatWon(result.totalPay), "</td>",
+            '<td class="text-left">', note, "</td>",
+            "</tr>"
+          ].join("");
+        });
+
+        const totalNotice = INSURANCE_ORDER.reduce(function (sum, key) {
+          return sum + (resultsByKey[key] ? resultsByKey[key].amount : 0);
+        }, 0);
+
+        const totalLateFee = INSURANCE_ORDER.reduce(function (sum, key) {
+          return sum + (resultsByKey[key] ? resultsByKey[key].lateFee : 0);
+        }, 0);
+
+        const totalPay = INSURANCE_ORDER.reduce(function (sum, key) {
+          return sum + (resultsByKey[key] ? resultsByKey[key].totalPay : 0);
+        }, 0);
+
+        rows.push([
+          '<tr class="total-row">',
+          '<th scope="row" class="text-left">합계</th>',
+          "<td>", formatWon(totalNotice), "</td>",
+          "<td>-</td>",
+          "<td>-</td>",
+          "<td>", formatWon(totalLateFee), "</td>",
+          "<td>", formatWon(totalPay), "</td>",
+          '<td class="text-left">입력된 보험 합산</td>',
+          "</tr>"
+        ].join(""));
+
+        individualResultBodyEl.innerHTML = rows.join("");
+      }
+
+      function renderStageRows(resultsByKey) {
+        stageBreakdownBodyEl.innerHTML = INSURANCE_ORDER.map(function (key) {
+          const result = resultsByKey[key];
+
+          if (!result) {
+            return buildInactiveStageRow(FORMULAS[key].label);
+          }
+
+          return [
+            "<tr>",
+            '<th scope="row" class="text-left">', result.label, "</th>",
+            "<td>", formatNumber(result.stage1Days, 0), "일</td>",
+            "<td>", formatPercent(result.appliedStage1Rate), "</td>",
+            "<td>", formatNumber(result.stage2Days, 0), "일</td>",
+            "<td>", formatPercent(result.appliedStage2Rate), "</td>",
+            "<td>", formatPercent(result.appliedTotalRate), "</td>",
+            "<td>", result.capApplied ? "적용" : "미적용", "</td>",
+            "</tr>"
+          ].join("");
+        }).join("");
+      }
+
+      function calculateAndRender() {
+        const validation = validate();
+
+        if (!validation.ok) {
+          renderEmpty();
+          setStatus("warn", validation.message);
+          return;
+        }
+
+        const entries = validation.entries;
+        const assessmentMonth = validation.assessmentMonth;
+        const referenceDate = validation.referenceDate;
+        const dueDate = validation.dueDate;
+        const roundMode = validation.roundMode;
+        const dueLabel = dueModeEl.value === "auto"
+          ? "자동 납부기한(부과월 다음 달 10일)"
+          : "고지서 납부기한 직접 입력";
+        const lateDays = calculateLateDays(dueDate, referenceDate);
+
+        const resultsByKey = {};
+        entries.forEach(function (entry) {
+          resultsByKey[entry.key] = calculateEntry(entry, lateDays, roundMode);
+        });
+
+        const firstResult = resultsByKey[entries[0].key];
+        const totalNotice = entries.reduce(function (sum, entry) {
+          return sum + entry.amount;
+        }, 0);
+        const totalRawLateFee = entries.reduce(function (sum, entry) {
+          return sum + resultsByKey[entry.key].rawLateFee;
+        }, 0);
+        const totalLateFee = entries.reduce(function (sum, entry) {
+          return sum + resultsByKey[entry.key].lateFee;
+        }, 0);
+        const totalPay = entries.reduce(function (sum, entry) {
+          return sum + resultsByKey[entry.key].totalPay;
+        }, 0);
+
+        $("totalNoticeDisplay").textContent = formatWon(totalNotice);
+        $("totalLateFeeDisplay").textContent = formatWon(totalLateFee);
+        $("totalPayDisplay").textContent = formatWon(totalPay);
+        $("lateDaysDisplay").textContent = formatNumber(lateDays, 0) + "일";
+
+        $("summaryCount").textContent = formatNumber(entries.length, 0) + "건";
+        $("summaryAmount").textContent = formatWon(totalNotice);
+        $("summaryAssessmentMonth").textContent = formatMonthKor(assessmentMonth);
+        $("summaryDueDate").textContent = formatDateKor(dueDate) + " (" + dueLabel + ")";
+        $("summaryReferenceDate").textContent = formatDateKor(referenceDate);
+        $("summaryRoundMode").textContent = ROUND_MODE_LABELS[roundMode] || "절사";
+        $("summaryStage1Days").textContent = formatNumber(firstResult.stage1Days, 0) + "일";
+        $("summaryStage2Days").textContent = formatNumber(firstResult.stage2Days, 0) + "일";
+        $("summaryTotalRate").textContent = formatPercent(firstResult.appliedTotalRate);
+        $("summaryRawLateFee").textContent = formatWon(Number(totalRawLateFee.toFixed(2)));
+        $("summaryLateFee").textContent = formatWon(totalLateFee);
+
+        renderIndividualRows(resultsByKey);
+        renderStageRows(resultsByKey);
+
+        const formulaLines = [];
+        formulaLines.push("공통 연체일수 = max(기준일 - 납부기한, 0) = " + lateDays + "일");
+        formulaLines.push("1차 요율 = min(" + firstResult.stage1Days + " / 1500, 2%) = " + formatPercent(firstResult.appliedStage1Rate));
+        formulaLines.push("2차 요율 = " + firstResult.stage2Days + " / 6000 (총상한 반영 후 " + formatPercent(firstResult.appliedStage2Rate) + ")");
+        formulaLines.push("총요율 = min(1차 요율 + 2차 요율, 5%) = " + formatPercent(firstResult.appliedTotalRate));
+        formulaLines.push("");
+        entries.forEach(function (entry) {
+          const result = resultsByKey[entry.key];
+          formulaLines.push(
+            result.label
+            + ": "
+            + formatWon(result.amount)
+            + " × "
+            + formatPercent(result.appliedTotalRate)
+            + " = "
+            + formatWon(Number(result.rawLateFee.toFixed(2)))
+            + " → "
+            + (ROUND_MODE_LABELS[roundMode] || "절사")
+            + " 후 "
+            + formatWon(result.lateFee)
+          );
+        });
+        formulaLines.push("");
+        formulaLines.push("총 고지금액 = " + formatWon(totalNotice));
+        formulaLines.push("보험별 원단위 처리 전 연체금 합계 = " + formatWon(Number(totalRawLateFee.toFixed(2))));
+        formulaLines.push("보험별 최종 연체금 합계 = " + formatWon(totalLateFee));
+        formulaLines.push("총 예상 납부액 = " + formatWon(totalPay));
+
+        $("formulaText").textContent = formulaLines.join("\n");
+        $("lawNote").textContent =
+          "건강보험은 국민건강보험법, 국민연금은 국민연금법, 고용·산재는 보험료징수법의 월별 보험료 연체금 구조를 전제로 같은 산식으로 계산했습니다. 실제 고지서 납부기한과 기관 처리 기준이 다르면 결과도 달라질 수 있습니다.";
+
+        if (lateDays === 0) {
+          setStatus(
+            "ok",
+            "기준일이 납부기한 이전 또는 같은 날이라서 입력된 "
+              + formatNumber(entries.length, 0)
+              + "건 모두 연체금 0원으로 계산했습니다."
+          );
+        } else {
+          const excludedCount = INSURANCE_ORDER.length - entries.length;
+          const extraText = excludedCount > 0
+            ? " 미입력 " + formatNumber(excludedCount, 0) + "건은 계산에서 제외했습니다."
+            : "";
+          setStatus(
+            "info",
+            "기준일 "
+              + formatDateKor(referenceDate)
+              + " 기준으로 공통 연체일수 "
+              + formatNumber(lateDays, 0)
+              + "일을 적용해 입력된 "
+              + formatNumber(entries.length, 0)
+              + "건을 계산했습니다."
+              + extraText
+          );
+        }
+
+        hasCalculated = true;
+      }
+
+      function setDefaults() {
+        assessmentMonthEl.value = getKstCurrentMonthYm();
+        referenceDateEl.value = getKstTodayYmd();
+        dueModeEl.value = "auto";
+        manualDueDateEl.value = "";
+        roundModeEl.value = "floor";
+
+        INSURANCE_ORDER.forEach(function (key) {
+          amountEls[key].value = "";
+        });
+
+        hasCalculated = false;
+        syncDueModeUi();
+        updateAutoDueHint();
+        updateEnteredAmountPreview();
+        renderEmpty();
+        renderDefaultStatus();
+      }
+
+      function fillExample() {
+        assessmentMonthEl.value = getKstTwoMonthsAgoYm();
+        referenceDateEl.value = getKstTodayYmd();
+        dueModeEl.value = "auto";
+        manualDueDateEl.value = "";
+        roundModeEl.value = "floor";
+
+        amountEls.pension.value = "350000";
+        amountEls.health.value = "280000";
+        amountEls.employment.value = "42000";
+        amountEls.industrial.value = "19000";
+
+        syncDueModeUi();
+        updateAutoDueHint();
+        updateEnteredAmountPreview();
+        calculateAndRender();
+      }
+
+      function handleFieldChange() {
+        syncDueModeUi();
+        updateAutoDueHint();
+        updateEnteredAmountPreview();
+
+        if (hasCalculated) {
+          calculateAndRender();
+        }
+      }
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        calculateAndRender();
+      });
+
+      [assessmentMonthEl, referenceDateEl, dueModeEl, manualDueDateEl, roundModeEl].forEach(function (el) {
+        el.addEventListener("change", handleFieldChange);
+      });
+
+      INSURANCE_ORDER.forEach(function (key) {
+        amountEls[key].addEventListener("input", function () {
+          updateEnteredAmountPreview();
+          if (hasCalculated) {
+            calculateAndRender();
+          }
+        });
+
+        amountEls[key].addEventListener("change", handleFieldChange);
+      });
+
+      btnTodayEl.addEventListener("click", function () {
+        referenceDateEl.value = getKstTodayYmd();
+        if (hasCalculated) {
+          calculateAndRender();
+        }
+      });
+
+      btnExampleEl.addEventListener("click", fillExample);
+      btnResetEl.addEventListener("click", setDefaults);
+
+      setDefaults();
+    })();
+  </script>
+</div>
+</body>
+</html>
