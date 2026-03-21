@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>늘봄학교 징수 파일 일괄 생성기</title>
+
+  
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BQLFX9NXE4"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BQLFX9NXE4');
+</script>
+
+
+
+  
+  <link rel="icon" href="/static/favicon.ico" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <script defer src="/static/global-loader.js"></script>
+  <script defer src="/static/footer.js"></script>
+
+  <!-- 외부 라이브러리: 필요 시 /static 으로 자체 호스팅 가능 -->
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <style>
+    .drop-zone {
+      border: 2px dashed #c7cedb;
+      border-radius: 16px;
+      padding: 26px 20px;
+      text-align: center;
+      background: #fafafa;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+    .drop-zone.is-dragover {
+      background: #eef2ff;
+      border-color: #6366f1;
+    }
+    .drop-zone strong {
+      display: block;
+      font-size: 1.15rem;
+      margin-bottom: 6px;
+      color: #111;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      font-size: 0.95rem;
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #d1d5db;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #fff;
+      font-size: 0.95rem;
+    }
+    .pill button {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 700;
+      color: #555;
+      padding: 0;
+    }
+    .result-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 16px 18px;
+      background: #fff;
+      margin: 14px 0;
+    }
+    .result-card h3 {
+      margin-top: 0;
+    }
+    .status-ok {
+      color: #0f766e;
+      font-weight: 700;
+    }
+    .status-warn {
+      color: #b45309;
+      font-weight: 700;
+    }
+    .status-error {
+      color: #b91c1c;
+      font-weight: 700;
+    }
+    .log-box {
+      white-space: pre-wrap;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      min-height: 140px;
+      max-height: 360px;
+      overflow: auto;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .small-help {
+      font-size: 0.98rem;
+      color: #4b5563;
+    }
+    .strong-help {
+      font-weight: 700;
+      color: #111827;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .kpi-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #fafafa;
+    }
+    .kpi-label {
+      font-size: 0.95rem;
+      color: #6b7280;
+    }
+    .kpi-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #111827;
+      margin-top: 4px;
+    }
+    .muted-box {
+      padding: 12px 14px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      border-radius: 12px;
+    }
+    .download-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .table-wrap table td:first-child,
+    .table-wrap table th:first-child {
+      white-space: nowrap;
+    }
+    .opt-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .opt-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+      color: #333;
+    }
+  </style>
+</head>
+  
+<body class="alien-side-bg">
+<div class="alien-page-frame">
+  <main class="container">
+      <h1>늘봄학교 징수결의 파일 일괄 생성기</h1>
+      <p class="muted">
+        ·징수요구 엑셀파일 올리면 내가 쓰기 좋게 변환.
+      </p>
+<hr/>
+
+
+
+    <section class="section">
+      <h2>1. 파일 올리기</h2>
+      <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="파일 드래그 앤 드롭 영역">
+        <strong>여기로 파일을 끌어다 놓으세요</strong>
+        <p class="small-help">또는 아래 버튼으로 선택하세요.</p>
+        <div class="row" style="justify-content:center; margin-top:12px;">
+          <button type="button" id="btnPickFiles" class="btn primary pastel-blue">파일 선택</button>
+          <button type="button" id="btnClearFiles" class="btn ghost">목록 비우기</button>
+        </div>
+        <input id="fileInput" class="hidden" type="file" multiple accept=".xlsx,.xls,.pdf,application/pdf" />
+      </div>
+
+      <div class="card">
+        <h3 class="local-h3">현재 인식된 파일</h3>
+        <div id="fileSummary" class="small-help">아직 파일이 없습니다.</div>
+        <div id="filePills" class="pill-row"></div>
+      </div>
+
+      <div class="opt-row">
+        <label><input type="checkbox" id="optCreateOverview" checked /> PDF가 있으면 결과 엑셀 3 생성</label>
+        <label><input type="checkbox" id="optIncludeZeroOverview" /> 결과 엑셀 3에 0원 항목도 포함</label>
+        <label><input type="checkbox" id="optCreateMasterZip" checked /> 전체 묶음 ZIP도 함께 만들기</label>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>2. 처리 실행</h2>
+      <div class="row gap">
+        <button type="button" id="btnProcess" class="btn primary pastel-mint">결과 만들기</button>
+        <button type="button" id="btnResetResults" class="btn ghost">결과 초기화</button>
+      </div>
+      <p class="note">
+        학교대상수납요구 서식이 없으면 <strong>결과 엑셀 2</strong>는 건너뛰고, 나머지만 생성합니다.
+      </p>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">징수요구 엑셀</div>
+          <div class="kpi-value" id="kpiDemandCount">0개</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">학교대상수납요구 서식</div>
+          <div class="kpi-value" id="kpiTemplateCount">0개</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">PDF</div>
+          <div class="kpi-value" id="kpiPdfCount">0개</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="local-h3">처리 로그</h3>
+        <div id="logBox" class="log-box" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>3. 다운로드</h2>
+      <div id="resultsEmpty" class="muted-box">
+        아직 생성된 결과가 없습니다.
+      </div>
+      <div id="resultsArea"></div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const STATIC = {
+        favicon: "/static/favicon.ico",
+        css: "/static/style.css",
+        loader: "/static/global-loader.js",
+        footer: "/static/footer.js",
+      };
+
+      const FEE_ITEMS = [
+        { key: "instructor", label: "강사료" },
+        { key: "facility", label: "수용비" },
+        { key: "material", label: "재료비" },
+        { key: "textbook", label: "교재비" },
+      ];
+
+      const state = {
+        rawFiles: [],
+        fileEntries: [],
+        templateBuffer: null,
+        templateFileName: "",
+        pdfInfos: [],
+        demandJobs: [],
+        outputUrls: [],
+        masterZipUrl: "",
+      };
+
+      const el = {
+        dropZone: document.getElementById("dropZone"),
+        fileInput: document.getElementById("fileInput"),
+        btnPickFiles: document.getElementById("btnPickFiles"),
+        btnClearFiles: document.getElementById("btnClearFiles"),
+        btnProcess: document.getElementById("btnProcess"),
+        btnResetResults: document.getElementById("btnResetResults"),
+        fileSummary: document.getElementById("fileSummary"),
+        filePills: document.getElementById("filePills"),
+        logBox: document.getElementById("logBox"),
+        resultsArea: document.getElementById("resultsArea"),
+        resultsEmpty: document.getElementById("resultsEmpty"),
+        kpiDemandCount: document.getElementById("kpiDemandCount"),
+        kpiTemplateCount: document.getElementById("kpiTemplateCount"),
+        kpiPdfCount: document.getElementById("kpiPdfCount"),
+        optCreateOverview: document.getElementById("optCreateOverview"),
+        optIncludeZeroOverview: document.getElementById("optIncludeZeroOverview"),
+        optCreateMasterZip: document.getElementById("optCreateMasterZip"),
+      };
+
+      // -----------------------------
+      // 기본 유틸
+      // -----------------------------
+      function log(message, type = "info") {
+        const prefix = type === "error" ? "[오류] " : type === "warn" ? "[주의] " : "[진행] ";
+        el.logBox.textContent += `${prefix}${message}\n`;
+        el.logBox.scrollTop = el.logBox.scrollHeight;
+      }
+
+      function clearLog() {
+        el.logBox.textContent = "";
+      }
+
+      function uniqueFiles(existing, incoming) {
+        const seen = new Set(existing.map((f) => `${f.name}__${f.size}__${f.lastModified}`));
+        const merged = [...existing];
+        for (const file of incoming) {
+          const key = `${file.name}__${file.size}__${file.lastModified}`;
+          if (!seen.has(key)) {
+            merged.push(file);
+            seen.add(key);
+          }
+        }
+        return merged;
+      }
+
+      function revokeOutputs() {
+        for (const url of state.outputUrls) {
+          try { URL.revokeObjectURL(url); } catch (_) {}
+        }
+        state.outputUrls = [];
+        if (state.masterZipUrl) {
+          try { URL.revokeObjectURL(state.masterZipUrl); } catch (_) {}
+          state.masterZipUrl = "";
+        }
+      }
+
+      function clearResults() {
+        revokeOutputs();
+        el.resultsArea.innerHTML = "";
+        el.resultsEmpty.classList.remove("hidden");
+      }
+
+      function sanitizeFileName(name) {
+        return String(name || "")
+          .replace(/[\\/:*?"<>|]+/g, "_")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function sanitizeSheetName(name) {
+        const cleaned = String(name || "")
+          .replace(/[\\/?*\[\]:]+/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        return (cleaned || "시트").slice(0, 31);
+      }
+
+      function makeUniqueSheetName(workbook, name) {
+        const base = sanitizeSheetName(name);
+        const existing = new Set(workbook.worksheets.map((ws) => ws.name));
+        if (!existing.has(base)) return base;
+
+        let counter = 2;
+        while (counter < 1000) {
+          const suffix = `_${counter}`;
+          const trimmed = base.slice(0, Math.max(31 - suffix.length, 1)).trim() || "시트";
+          const candidate = `${trimmed}${suffix}`;
+          if (!existing.has(candidate)) return candidate;
+          counter += 1;
+        }
+
+        return `${Date.now()}`.slice(-8);
+      }
+
+      function normalizeCompact(value) {
+        return String(value ?? "")
+          .replace(/\r/g, " ")
+          .replace(/\n/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function normalizeForCompare(value) {
+        return String(value ?? "")
+          .replace(/\r/g, "")
+          .replace(/\n/g, "")
+          .replace(/\s+/g, "")
+          .trim();
+      }
+
+      function toDisplayText(value) {
+        if (value == null) return "";
+        if (typeof value === "number") return String(value);
+        if (typeof value === "string") return value;
+        if (value instanceof Date) return formatDate(value);
+        if (typeof value === "object") {
+          if (Object.prototype.hasOwnProperty.call(value, "result")) {
+            return toDisplayText(value.result);
+          }
+          if (value.richText && Array.isArray(value.richText)) {
+            return value.richText.map((item) => item.text || "").join("");
+          }
+          if (value.text) return String(value.text);
+          if (value.hyperlink && value.text) return String(value.text);
+          if (value.formula && value.result != null) return toDisplayText(value.result);
+        }
+        return String(value);
+      }
+
+      function toNumber(value) {
+        if (value == null || value === "") return 0;
+        if (typeof value === "number" && Number.isFinite(value)) return Math.round(value);
+        if (typeof value === "string") {
+          const cleaned = value.replace(/[^\d.-]/g, "");
+          if (!cleaned) return 0;
+          const num = Number(cleaned);
+          return Number.isFinite(num) ? Math.round(num) : 0;
+        }
+        if (typeof value === "object" && Object.prototype.hasOwnProperty.call(value, "result")) {
+          return toNumber(value.result);
+        }
+        if (value instanceof Date) return 0;
+        return 0;
+      }
+
+      function isPositiveNumberCell(value) {
+        return toNumber(value) > 0;
+      }
+
+      function formatNumber(num) {
+        return Number(num || 0).toLocaleString("ko-KR");
+      }
+
+      function pad2(num) {
+        return String(num).padStart(2, "0");
+      }
+
+      function formatDate(dateObj) {
+        if (!(dateObj instanceof Date) || Number.isNaN(dateObj.getTime())) return "";
+        const y = dateObj.getFullYear();
+        const m = dateObj.getMonth() + 1;
+        const d = dateObj.getDate();
+        return `${y}.${m}.${d}.`;
+      }
+
+      function formatStamp(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = pad2(dateObj.getMonth() + 1);
+        const d = pad2(dateObj.getDate());
+        const hh = pad2(dateObj.getHours());
+        const mm = pad2(dateObj.getMinutes());
+        return `${y}${m}${d}_${hh}${mm}`;
+      }
+
+      function makeStudentKey(record) {
+        return [
+          normalizeCompact(record.grade),
+          normalizeCompact(record.className),
+          normalizeCompact(record.number),
+          normalizeCompact(record.name),
+        ].join("||");
+      }
+
+      function compareStudents(a, b) {
+        const ag = toNumber(a.grade);
+        const bg = toNumber(b.grade);
+        if (ag !== bg) return ag - bg;
+
+        const ac = normalizeCompact(a.className);
+        const bc = normalizeCompact(b.className);
+        if (ac !== bc) return ac.localeCompare(bc, "ko");
+
+        const an = toNumber(a.number);
+        const bn = toNumber(b.number);
+        if (an !== bn) return an - bn;
+
+        return normalizeCompact(a.name).localeCompare(normalizeCompact(b.name), "ko");
+      }
+
+      function setBusy(isBusy) {
+        el.btnProcess.disabled = isBusy;
+        el.btnPickFiles.disabled = isBusy;
+        el.btnClearFiles.disabled = isBusy;
+        el.btnResetResults.disabled = isBusy;
+      }
+
+      function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        state.outputUrls.push(url);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+      }
+
+      async function blobFromWorkbook(workbook) {
+        const buffer = await workbook.xlsx.writeBuffer();
+        return new Blob([buffer], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+      }
+
+      // -----------------------------
+      // 업로드 UI
+      // -----------------------------
+      function renderFileState() {
+        const demandCount = state.fileEntries.filter((entry) => entry.kind === "demand").length;
+        const templateCount = state.fileEntries.filter((entry) => entry.kind === "template").length;
+        const pdfCount = state.fileEntries.filter((entry) => entry.kind === "pdf").length;
+
+        el.kpiDemandCount.textContent = `${demandCount}개`;
+        el.kpiTemplateCount.textContent = `${templateCount}개`;
+        el.kpiPdfCount.textContent = `${pdfCount}개`;
+
+        if (!state.fileEntries.length) {
+          el.fileSummary.textContent = "아직 파일이 없습니다.";
+          el.filePills.innerHTML = "";
+          return;
+        }
+
+        const lines = [];
+        if (demandCount) lines.push(`징수요구 엑셀 ${demandCount}개`);
+        if (templateCount) lines.push(`학교대상수납요구 서식 ${templateCount}개`);
+        if (pdfCount) lines.push(`PDF ${pdfCount}개`);
+        el.fileSummary.textContent = lines.join(" / ");
+
+        el.filePills.innerHTML = "";
+        state.fileEntries.forEach((entry) => {
+          const pill = document.createElement("div");
+          pill.className = "pill";
+          pill.innerHTML = `
+            <span>${escapeHtml(entry.kindLabel)} · ${escapeHtml(entry.file.name)}</span>
+            <button type="button" aria-label="삭제">×</button>
+          `;
+          pill.querySelector("button").addEventListener("click", () => {
+            state.rawFiles = state.rawFiles.filter((file) => file !== entry.file);
+            classifyRawFiles();
+          });
+          el.filePills.appendChild(pill);
+        });
+      }
+
+      function escapeHtml(str) {
+        return String(str ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function guessKindByName(file) {
+        const lower = file.name.toLowerCase();
+        if (lower.endsWith(".pdf")) return { kind: "pdf", kindLabel: "PDF" };
+        if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
+          if (
+            lower.includes("학교대상수납요구") ||
+            lower.includes("수납요구") && lower.includes("서식")
+          ) {
+            return { kind: "template", kindLabel: "학교대상수납요구 서식" };
+          }
+          return { kind: "demand", kindLabel: "징수요구 엑셀" };
+        }
+        return { kind: "unknown", kindLabel: "미지원 파일" };
+      }
+
+      function classifyRawFiles() {
+        state.fileEntries = state.rawFiles
+          .map((file) => {
+            const guessed = guessKindByName(file);
+            return { file, ...guessed };
+          })
+          .filter((entry) => entry.kind !== "unknown");
+
+        renderFileState();
+      }
+
+      function addFiles(fileList) {
+        const incoming = Array.from(fileList || []);
+        if (!incoming.length) return;
+        state.rawFiles = uniqueFiles(state.rawFiles, incoming);
+        classifyRawFiles();
+      }
+
+      function clearFiles() {
+        state.rawFiles = [];
+        state.fileEntries = [];
+        state.templateBuffer = null;
+        state.templateFileName = "";
+        state.pdfInfos = [];
+        state.demandJobs = [];
+        renderFileState();
+        clearResults();
+        clearLog();
+      }
+
+      el.btnPickFiles.addEventListener("click", () => el.fileInput.click());
+      el.fileInput.addEventListener("change", (event) => {
+        addFiles(event.target.files);
+        el.fileInput.value = "";
+      });
+      el.btnClearFiles.addEventListener("click", clearFiles);
+
+      ["dragenter", "dragover"].forEach((type) => {
+        el.dropZone.addEventListener(type, (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          el.dropZone.classList.add("is-dragover");
+        });
+      });
+      ["dragleave", "drop"].forEach((type) => {
+        el.dropZone.addEventListener(type, (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          el.dropZone.classList.remove("is-dragover");
+        });
+      });
+      el.dropZone.addEventListener("drop", (event) => {
+        addFiles(event.dataTransfer.files);
+      });
+      el.dropZone.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          el.fileInput.click();
+        }
+      });
+
+      el.btnResetResults.addEventListener("click", () => {
+        clearResults();
+        clearLog();
+      });
+
+      // -----------------------------
+      // PDF 파서
+      // -----------------------------
+      if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+
+      function normalizePdfDate(raw) {
+        return String(raw || "")
+          .replace(/\s+/g, "")
+          .replace(/\.{2,}/g, ".")
+          .trim();
+      }
+
+      async function parsePdfMeta(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let joined = "";
+
+        for (let pageNum = 1; pageNum <= Math.min(pdf.numPages, 3); pageNum += 1) {
+          const page = await pdf.getPage(pageNum);
+          const content = await page.getTextContent();
+          const text = content.items.map((item) => item.str || "").join(" ");
+          joined += ` ${text}`;
+        }
+
+        const docNoMatch =
+          joined.match(/시행\s*([가-힣A-Za-z0-9._]+\s*-\s*\d+)/) ||
+          joined.match(/([가-힣A-Za-z0-9._]+\s*-\s*\d+)\s*\(\s*\)/);
+        const allDates = [...joined.matchAll(/20\d{2}\.\s*\d{1,2}\.\s*\d{1,2}\./g)].map((m) => m[0]);
+        const rawDate = allDates.length ? allDates[allDates.length - 1] : "";
+
+        return {
+          file,
+          name: file.name,
+          rawText: joined,
+          docNo: docNoMatch ? String(docNoMatch[1]).replace(/\s*-\s*/g, "-").trim() : "",
+          rawDate,
+          compactDate: normalizePdfDate(rawDate),
+        };
+      }
+
+      function pickPdfForJob(job, pdfInfos) {
+        if (!pdfInfos.length) return null;
+        if (pdfInfos.length === 1) return pdfInfos[0];
+
+        const candidates = pdfInfos.map((pdfInfo) => {
+          let score = 0;
+          const text = `${pdfInfo.name} ${pdfInfo.rawText}`;
+
+          if (job.meta.year && text.includes(String(job.meta.year))) score += 2;
+          if (job.meta.month && text.includes(`${job.meta.month}월`)) score += 3;
+          if (job.meta.month && text.includes(`${job.meta.month}월~`)) score += 1;
+          if (job.meta.monthLabel && text.includes(job.meta.monthLabel)) score += 2;
+
+          return { pdfInfo, score };
+        });
+
+        candidates.sort((a, b) => b.score - a.score);
+        return candidates[0].pdfInfo;
+      }
+
+      // -----------------------------
+      // 엑셀 파서
+      // -----------------------------
+      async function loadWorkbookFromFile(file) {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(await file.arrayBuffer());
+        return workbook;
+      }
+
+      function extractWorkbookMeta(fileName, worksheet) {
+        const firstText = normalizeCompact(toDisplayText(worksheet.getCell(1, 1).value));
+        const mergedText = [firstText, fileName].join(" ");
+        const dateMatch = mergedText.match(/(20\d{2})년\s*(\d{1,2})월/) || mergedText.match(/(20\d{2})[.\- ]?(\d{1,2})월/);
+
+        let year = "";
+        let month = "";
+        if (dateMatch) {
+          year = Number(dateMatch[1]);
+          month = Number(dateMatch[2]);
+        }
+
+        return {
+          sourceFileName: fileName,
+          sourceBaseName: fileName.replace(/\.[^.]+$/, ""),
+          year,
+          month,
+          monthLabel: year && month ? `${year}.${month}월` : "",
+          monthLabelLong: year && month ? `${year}년 ${month}월` : "",
+          titleText: firstText,
+        };
+      }
+
+      function extractSubjectName(raw) {
+        const compact = normalizeCompact(raw);
+        if (!compact) return "과목명미상";
+
+        let subject = compact;
+        if (subject.includes(":")) subject = subject.split(":")[0].trim();
+        if (subject.includes("：")) subject = subject.split("：")[0].trim();
+        subject = subject.replace(/\s+/g, " ").trim();
+
+        return subject || "과목명미상";
+      }
+
+      function getCellText(worksheet, row, col) {
+        return toDisplayText(worksheet.getCell(row, col).value);
+      }
+
+      function getCellNumber(worksheet, row, col) {
+        return toNumber(worksheet.getCell(row, col).value);
+      }
+
+      function findStopRow(worksheet) {
+        for (let row = 1; row <= worksheet.rowCount; row += 1) {
+          const text = normalizeCompact(getCellText(worksheet, row, 1));
+          if (text.includes("*농산어촌(무료)")) return row;
+        }
+        return worksheet.rowCount + 1;
+      }
+
+      function isMergedChildCell(cell) {
+        if (!cell || !cell.master) return false;
+        return cell.address !== cell.master.address;
+      }
+
+      function isHeaderAnchorRow(worksheet, row) {
+        const text = normalizeForCompare(getCellText(worksheet, row, 1));
+        if (text !== "연번") return false;
+
+        const cell = worksheet.getCell(row, 1);
+        if (isMergedChildCell(cell)) return false;
+
+        const prevText = row > 1 ? normalizeForCompare(getCellText(worksheet, row - 1, 1)) : "";
+        if (prevText === "연번") return false;
+
+        return true;
+      }
+
+      function findPreviousTitleA(worksheet, fromRow) {
+        for (let row = fromRow; row >= 1; row -= 1) {
+          const text = normalizeCompact(getCellText(worksheet, row, 1));
+          const compare = normalizeForCompare(text);
+          if (!text) continue;
+          if (compare === "연번" || compare === "합계") continue;
+          if (/^\d+$/.test(compare)) continue;
+          return getCellText(worksheet, row, 1);
+        }
+        return "";
+      }
+
+      function findDataStartRow(worksheet, headerRow, stopRow) {
+        for (let row = headerRow + 1; row < Math.min(headerRow + 8, stopRow); row += 1) {
+          const seqVal = worksheet.getCell(row, 1).value;
+          const nameText = normalizeCompact(getCellText(worksheet, row, 5));
+          if (toNumber(seqVal) > 0 && nameText) return row;
+        }
+        return headerRow + 1;
+      }
+
+      function makeRecordFromRow(worksheet, row, subjectName) {
+        const instructor = getCellNumber(worksheet, row, 22); // V
+        const facility = getCellNumber(worksheet, row, 23);   // W
+        const material = getCellNumber(worksheet, row, 24);   // X
+        const textbook = getCellNumber(worksheet, row, 25);   // Y
+        const totalCell = getCellNumber(worksheet, row, 26);  // Z
+        const sumFromItems = instructor + facility + material + textbook;
+        const total = totalCell > 0 ? totalCell : sumFromItems;
+
+        return {
+          subjectName,
+          rowIndex: row,
+          seq: getCellNumber(worksheet, row, 1),
+          grade: normalizeCompact(getCellText(worksheet, row, 2)),
+          className: normalizeCompact(getCellText(worksheet, row, 3)),
+          number: normalizeCompact(getCellText(worksheet, row, 4)),
+          name: normalizeCompact(getCellText(worksheet, row, 5)),
+          instructor,
+          facility,
+          material,
+          textbook,
+          total,
+        };
+      }
+
+      function isCollectTarget(record) {
+        return (record.total || record.instructor || record.facility || record.material || record.textbook) > 0;
+      }
+
+      function parseDemandWorksheet(worksheet, fileName) {
+        const stopRow = findStopRow(worksheet);
+        const meta = extractWorkbookMeta(fileName, worksheet);
+        const sections = [];
+
+        for (let row = 1; row < stopRow; row += 1) {
+          if (!isHeaderAnchorRow(worksheet, row)) continue;
+
+          const titleRaw = findPreviousTitleA(worksheet, row - 1);
+          const subjectName = extractSubjectName(titleRaw);
+          const dataStart = findDataStartRow(worksheet, row, stopRow);
+          const records = [];
+
+          for (let r = dataStart; r < stopRow; r += 1) {
+            const aRaw = getCellText(worksheet, r, 1);
+            const aCheck = normalizeForCompare(aRaw);
+
+            if (aCheck === "합계") break;
+            if (aCheck === "연번") break;
+            if (!aCheck && !normalizeCompact(getCellText(worksheet, r, 5))) continue;
+            if (toNumber(worksheet.getCell(r, 1).value) <= 0) continue;
+
+            const record = makeRecordFromRow(worksheet, r, subjectName);
+            if (!record.name) continue;
+            records.push(record);
+          }
+
+          const collectRows = records.filter(isCollectTarget);
+          const totals = {
+            instructor: collectRows.reduce((sum, item) => sum + item.instructor, 0),
+            facility: collectRows.reduce((sum, item) => sum + item.facility, 0),
+            material: collectRows.reduce((sum, item) => sum + item.material, 0),
+            textbook: collectRows.reduce((sum, item) => sum + item.textbook, 0),
+            total: collectRows.reduce((sum, item) => sum + item.total, 0),
+          };
+
+          sections.push({
+            subjectName,
+            titleRaw,
+            headerRow: row,
+            collectRows,
+            totals,
+          });
+        }
+
+        return { meta, sections };
+      }
+
+      async function inspectXlsxFile(file) {
+        const workbook = await loadWorkbookFromFile(file);
+        const worksheet = workbook.worksheets[0];
+        const sheetName = worksheet ? worksheet.name : "";
+        const a1 = normalizeCompact(worksheet ? getCellText(worksheet, 1, 1) : "");
+        const b1 = normalizeCompact(worksheet ? getCellText(worksheet, 1, 2) : "");
+
+        const isTemplate =
+          sheetName.includes("학교대상수납요구") ||
+          (a1.includes("선택") && b1.includes("*주/야")) ||
+          normalizeCompact(file.name).includes("학교대상수납요구");
+
+        if (isTemplate) {
+          return {
+            kind: "template",
+            file,
+            workbook,
+            worksheet,
+          };
+        }
+
+        return {
+          kind: "demand",
+          file,
+          workbook,
+          worksheet,
+          parsed: parseDemandWorksheet(worksheet, file.name),
+        };
+      }
+
+      // -----------------------------
+      // 결과 엑셀 1
+      // -----------------------------
+      function applyHeaderStyle(row) {
+        row.font = { bold: true, color: { argb: "FF111827" } };
+        row.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFEFF6FF" },
+          };
+          cell.border = {
+            top: { style: "thin", color: { argb: "FFD1D5DB" } },
+            left: { style: "thin", color: { argb: "FFD1D5DB" } },
+            bottom: { style: "thin", color: { argb: "FFD1D5DB" } },
+            right: { style: "thin", color: { argb: "FFD1D5DB" } },
+          };
+        });
+      }
+
+      function applyBodyBorder(worksheet, fromRow, toRow, fromCol, toCol) {
+        for (let r = fromRow; r <= toRow; r += 1) {
+          for (let c = fromCol; c <= toCol; c += 1) {
+            const cell = worksheet.getCell(r, c);
+            cell.border = {
+              top: { style: "thin", color: { argb: "FFE5E7EB" } },
+              left: { style: "thin", color: { argb: "FFE5E7EB" } },
+              bottom: { style: "thin", color: { argb: "FFE5E7EB" } },
+              right: { style: "thin", color: { argb: "FFE5E7EB" } },
+            };
+          }
+        }
+      }
+
+      async function buildResult1Workbook(job) {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = "ChatGPT";
+        workbook.lastModifiedBy = "ChatGPT";
+        workbook.created = new Date();
+        workbook.modified = new Date();
+
+        const summarySheet = workbook.addWorksheet("전체집계", {
+          views: [{ state: "frozen", ySplit: 2 }],
+        });
+
+        summarySheet.mergeCells("A1:G1");
+        summarySheet.getCell("A1").value = `${job.meta.monthLabelLong || ""} 학부모 부담금 전체집계`;
+        summarySheet.getCell("A1").font = { size: 14, bold: true };
+        summarySheet.getCell("A1").alignment = { horizontal: "center", vertical: "middle" };
+
+        summarySheet.addRow(["과목", "인원", "강사료", "수용비", "재료비", "교재비", "합계"]);
+        applyHeaderStyle(summarySheet.getRow(2));
+
+        let grand = {
+          count: 0,
+          instructor: 0,
+          facility: 0,
+          material: 0,
+          textbook: 0,
+          total: 0,
+        };
+
+        for (const section of job.sections) {
+          const count = section.collectRows.length;
+          grand.count += count;
+          grand.instructor += section.totals.instructor;
+          grand.facility += section.totals.facility;
+          grand.material += section.totals.material;
+          grand.textbook += section.totals.textbook;
+          grand.total += section.totals.total;
+
+          summarySheet.addRow([
+            section.subjectName,
+            count,
+            section.totals.instructor,
+            section.totals.facility,
+            section.totals.material,
+            section.totals.textbook,
+            section.totals.total,
+          ]);
+        }
+
+        summarySheet.addRow([
+          "전체 합계",
+          grand.count,
+          grand.instructor,
+          grand.facility,
+          grand.material,
+          grand.textbook,
+          grand.total,
+        ]);
+
+        summarySheet.columns = [
+          { width: 20 },
+          { width: 10 },
+          { width: 14 },
+          { width: 14 },
+          { width: 14 },
+          { width: 14 },
+          { width: 16 },
+        ];
+
+        const summaryLastRow = summarySheet.rowCount;
+        applyBodyBorder(summarySheet, 2, summaryLastRow, 1, 7);
+        for (let row = 3; row <= summaryLastRow; row += 1) {
+          for (let col = 3; col <= 7; col += 1) {
+            summarySheet.getCell(row, col).numFmt = "#,##0";
+            summarySheet.getCell(row, col).alignment = { horizontal: "right" };
+          }
+          summarySheet.getCell(row, 2).alignment = { horizontal: "center" };
+        }
+        summarySheet.getRow(summaryLastRow).font = { bold: true };
+
+        for (const section of job.sections) {
+          const sheet = workbook.addWorksheet(makeUniqueSheetName(workbook, section.subjectName), {
+            views: [{ state: "frozen", ySplit: 2 }],
+          });
+
+          sheet.mergeCells("A1:I1");
+          sheet.getCell("A1").value = `${job.meta.monthLabelLong || ""} ${section.subjectName} 학부모 부담금 내역`;
+          sheet.getCell("A1").font = { size: 13, bold: true };
+          sheet.getCell("A1").alignment = { horizontal: "center", vertical: "middle" };
+
+          sheet.addRow(["학년", "반", "번호", "이름", "강사료", "수용비", "재료비", "교재비", "합계"]);
+          applyHeaderStyle(sheet.getRow(2));
+
+          const sortedRows = [...section.collectRows].sort(compareStudents);
+          for (const record of sortedRows) {
+            sheet.addRow([
+              record.grade,
+              record.className,
+              record.number,
+              record.name,
+              record.instructor,
+              record.facility,
+              record.material,
+              record.textbook,
+              record.total,
+            ]);
+          }
+
+          sheet.addRow([
+            "합계",
+            "",
+            "",
+            "",
+            section.totals.instructor,
+            section.totals.facility,
+            section.totals.material,
+            section.totals.textbook,
+            section.totals.total,
+          ]);
+
+          sheet.columns = [
+            { width: 8 },
+            { width: 8 },
+            { width: 8 },
+            { width: 16 },
+            { width: 14 },
+            { width: 14 },
+            { width: 14 },
+            { width: 14 },
+            { width: 14 },
+          ];
+
+          const lastRow = sheet.rowCount;
+          applyBodyBorder(sheet, 2, lastRow, 1, 9);
+
+          for (let row = 3; row <= lastRow; row += 1) {
+            sheet.getCell(row, 1).alignment = { horizontal: "center" };
+            sheet.getCell(row, 2).alignment = { horizontal: "center" };
+            sheet.getCell(row, 3).alignment = { horizontal: "center" };
+            for (let col = 5; col <= 9; col += 1) {
+              sheet.getCell(row, col).numFmt = "#,##0";
+              sheet.getCell(row, col).alignment = { horizontal: "right" };
+            }
+          }
+
+          sheet.getRow(lastRow).font = { bold: true };
+        }
+
+        return workbook;
+      }
+
+      // -----------------------------
+      // 결과 엑셀 2
+      // -----------------------------
+      function buildStudentSummaryRows(job) {
+        const map = new Map();
+
+        for (const section of job.sections) {
+          for (const record of section.collectRows) {
+            const key = makeStudentKey(record);
+            if (!map.has(key)) {
+              map.set(key, {
+                grade: record.grade,
+                className: record.className,
+                number: record.number,
+                name: record.name,
+                subjectSet: new Set(),
+                instructor: 0,
+                facility: 0,
+                material: 0,
+                textbook: 0,
+                total: 0,
+                details: [],
+              });
+            }
+
+            const agg = map.get(key);
+            agg.subjectSet.add(record.subjectName);
+            agg.instructor += record.instructor;
+            agg.facility += record.facility;
+            agg.material += record.material;
+            agg.textbook += record.textbook;
+            agg.total += record.total;
+
+            agg.details.push(
+              `${record.subjectName}(강사료 ${formatNumber(record.instructor)}, 수용비 ${formatNumber(record.facility)}, 재료비 ${formatNumber(record.material)}, 교재비 ${formatNumber(record.textbook)}, 합계 ${formatNumber(record.total)})`
+            );
+          }
+        }
+
+        return [...map.values()]
+          .map((item) => ({
+            ...item,
+            subjects: [...item.subjectSet].sort((a, b) => a.localeCompare(b, "ko")).join(", "),
+            detailText: item.details.join(" / "),
+          }))
+          .sort(compareStudents);
+      }
+
+      async function buildStudentSummaryWorkbook(job) {
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("개인별종합", {
+          views: [{ state: "frozen", ySplit: 1 }],
+        });
+
+        sheet.addRow([
+          "학년",
+          "반",
+          "번호",
+          "이름",
+          "수강과목",
+          "강사료합계",
+          "수용비합계",
+          "재료비합계",
+          "교재비합계",
+          "총액",
+          "과목별상세",
+        ]);
+        applyHeaderStyle(sheet.getRow(1));
+
+        const studentRows = buildStudentSummaryRows(job);
+        for (const item of studentRows) {
+          sheet.addRow([
+            item.grade,
+            item.className,
+            item.number,
+            item.name,
+            item.subjects,
+            item.instructor,
+            item.facility,
+            item.material,
+            item.textbook,
+            item.total,
+            item.detailText,
+          ]);
+        }
+
+        sheet.columns = [
+          { width: 8 },
+          { width: 8 },
+          { width: 8 },
+          { width: 14 },
+          { width: 28 },
+          { width: 14 },
+          { width: 14 },
+          { width: 14 },
+          { width: 14 },
+          { width: 14 },
+          { width: 80 },
+        ];
+
+        const lastRow = sheet.rowCount;
+        applyBodyBorder(sheet, 1, lastRow, 1, 11);
+
+        for (let row = 2; row <= lastRow; row += 1) {
+          for (let col = 1; col <= 3; col += 1) {
+            sheet.getCell(row, col).alignment = { horizontal: "center" };
+          }
+          for (let col = 6; col <= 10; col += 1) {
+            sheet.getCell(row, col).numFmt = "#,##0";
+            sheet.getCell(row, col).alignment = { horizontal: "right" };
+          }
+          sheet.getCell(row, 11).alignment = { wrapText: true, vertical: "top" };
+        }
+
+        return workbook;
+      }
+
+      async function buildEdufineItemWorkbook(templateBuffer, job, section, itemMeta) {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(templateBuffer.slice(0));
+        const sheet = workbook.worksheets[0];
+
+        const targetRows = [...section.collectRows]
+          .filter((record) => record[itemMeta.key] > 0)
+          .sort(compareStudents);
+
+        const startRow = 2;
+        const lastClearRow = Math.max(sheet.rowCount, startRow + targetRows.length + 5);
+
+        for (let row = startRow; row <= lastClearRow; row += 1) {
+          sheet.getCell(row, 5).value = null; // E 학년
+          sheet.getCell(row, 6).value = null; // F 반
+          sheet.getCell(row, 7).value = null; // G 번호
+          sheet.getCell(row, 8).value = null; // H 성명
+          sheet.getCell(row, 9).value = null; // I 대상금액
+          if (!normalizeCompact(toDisplayText(sheet.getCell(row, 2).value))) {
+            sheet.getCell(row, 2).value = "주간";
+          }
+        }
+
+        targetRows.forEach((record, index) => {
+          const row = startRow + index;
+          sheet.getCell(row, 5).value = record.grade;
+          sheet.getCell(row, 6).value = record.className;
+          sheet.getCell(row, 7).value = record.number;
+          sheet.getCell(row, 8).value = record.name;
+          sheet.getCell(row, 9).value = record[itemMeta.key];
+          sheet.getCell(row, 9).numFmt = "#,##0";
+        });
+
+        return workbook;
+      }
+
+      async function buildResult2Zip(job, templateBuffer) {
+        const zip = new JSZip();
+
+        for (const section of job.sections) {
+          for (const itemMeta of FEE_ITEMS) {
+            const workbook = await buildEdufineItemWorkbook(templateBuffer, job, section, itemMeta);
+            const blob = await blobFromWorkbook(workbook);
+            const fileName = sanitizeFileName(
+              `에듀파인서식_${job.meta.monthLabel}_${section.subjectName}_${itemMeta.label}.xlsx`
+            );
+            zip.file(fileName, blob);
+          }
+        }
+
+        const studentSummaryWorkbook = await buildStudentSummaryWorkbook(job);
+        const studentSummaryBlob = await blobFromWorkbook(studentSummaryWorkbook);
+        zip.file(
+          sanitizeFileName(`개인별종합_${job.meta.monthLabel}.xlsx`),
+          studentSummaryBlob
+        );
+
+        const content = await zip.generateAsync({ type: "blob" });
+        return content;
+      }
+
+      // -----------------------------
+      // 결과 엑셀 3
+      // -----------------------------
+      function buildOverviewBody(meta, section, itemMeta, amount, count, pdfMeta) {
+        const title = `${meta.year}년 ${meta.month}월 늘봄학교 선택형 교육 프로그램 ${itemMeta.label} 징수결의 (${section.subjectName})`;
+        const related = `${pdfMeta.docNo}(${pdfMeta.compactDate})`;
+        const amountLine = `금${formatNumber(amount)}원`;
+        const countLine = `${count}명`;
+        const attach = `${meta.monthLabel} 늘봄학교 선택형 교육 프로그램 징수 내역 1부.  끝.`;
+
+        const block = [
+          `제목: ${title}`,
+          ``,
+          `1. 관련: ${related}`,
+          `2. 금액: ${amountLine}`,
+          `3. 징수대상인원: ${countLine}`,
+          ``,
+          `붙임  ${attach}`,
+        ].join("\n");
+
+        return {
+          title,
+          related,
+          amountLine,
+          countLine,
+          attach,
+          block,
+        };
+      }
+
+      async function buildResult3Workbook(job, pdfMeta, includeZeroOverview) {
+        const workbook = new ExcelJS.Workbook();
+        const listSheet = workbook.addWorksheet("목록", {
+          views: [{ state: "frozen", ySplit: 1 }],
+        });
+
+        listSheet.addRow(["과목", "항목", "제목", "관련", "금액", "징수대상인원", "붙임", "복사용본문"]);
+        applyHeaderStyle(listSheet.getRow(1));
+
+        for (const section of job.sections) {
+          for (const itemMeta of FEE_ITEMS) {
+            const amount = section.totals[itemMeta.key];
+            const count = section.collectRows.filter((record) => record[itemMeta.key] > 0).length;
+
+            if (!includeZeroOverview && amount <= 0) continue;
+
+            const overview = buildOverviewBody(job.meta, section, itemMeta, amount, count, pdfMeta);
+            listSheet.addRow([
+              section.subjectName,
+              itemMeta.label,
+              overview.title,
+              overview.related,
+              overview.amountLine,
+              overview.countLine,
+              overview.attach,
+              overview.block,
+            ]);
+
+            const sheetName = makeUniqueSheetName(workbook, `${section.subjectName}_${itemMeta.label}`);
+            const sheet = workbook.addWorksheet(sheetName);
+
+            sheet.getCell("A1").value = "제목";
+            sheet.getCell("B1").value = overview.title;
+            sheet.getCell("A2").value = "1. 관련";
+            sheet.getCell("B2").value = overview.related;
+            sheet.getCell("A3").value = "2. 금액";
+            sheet.getCell("B3").value = overview.amountLine;
+            sheet.getCell("A4").value = "3. 징수대상인원";
+            sheet.getCell("B4").value = overview.countLine;
+            sheet.getCell("A5").value = "붙임";
+            sheet.getCell("B5").value = overview.attach;
+            sheet.getCell("A7").value = "복사용 본문";
+            sheet.getCell("A8").value = overview.block;
+
+            sheet.columns = [
+              { width: 20 },
+              { width: 90 },
+            ];
+
+            for (let row = 1; row <= 5; row += 1) {
+              sheet.getCell(row, 1).font = { bold: true };
+              sheet.getCell(row, 1).fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFF9FAFB" },
+              };
+              sheet.getCell(row, 1).border = {
+                top: { style: "thin", color: { argb: "FFD1D5DB" } },
+                left: { style: "thin", color: { argb: "FFD1D5DB" } },
+                bottom: { style: "thin", color: { argb: "FFD1D5DB" } },
+                right: { style: "thin", color: { argb: "FFD1D5DB" } },
+              };
+              sheet.getCell(row, 2).border = {
+                top: { style: "thin", color: { argb: "FFD1D5DB" } },
+                left: { style: "thin", color: { argb: "FFD1D5DB" } },
+                bottom: { style: "thin", color: { argb: "FFD1D5DB" } },
+                right: { style: "thin", color: { argb: "FFD1D5DB" } },
+              };
+              sheet.getCell(row, 2).alignment = { wrapText: true, vertical: "middle" };
+            }
+
+            sheet.getCell("A7").font = { bold: true };
+            sheet.getCell("A8").alignment = { wrapText: true, vertical: "top" };
+            sheet.mergeCells("A8:B14");
+          }
+        }
+
+        listSheet.columns = [
+          { width: 16 },
+          { width: 12 },
+          { width: 52 },
+          { width: 26 },
+          { width: 16 },
+          { width: 16 },
+          { width: 40 },
+          { width: 68 },
+        ];
+
+        const listLastRow = listSheet.rowCount;
+        applyBodyBorder(listSheet, 1, listLastRow, 1, 8);
+        for (let row = 2; row <= listLastRow; row += 1) {
+          listSheet.getCell(row, 8).alignment = { wrapText: true, vertical: "top" };
+        }
+
+        return workbook;
+      }
+
+      // -----------------------------
+      // 화면 결과 렌더
+      // -----------------------------
+      function addDownloadButton(container, label, blob, filename, buttonClass = "btn pastel-blue") {
+        const url = URL.createObjectURL(blob);
+        state.outputUrls.push(url);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.className = buttonClass;
+        a.textContent = label;
+        container.appendChild(a);
+
+        return url;
+      }
+
+      function renderJobResultCard(payload) {
+        el.resultsEmpty.classList.add("hidden");
+
+        const card = document.createElement("div");
+        card.className = "result-card";
+
+        const infoLines = [];
+        infoLines.push(`<div><strong>원본 파일:</strong> ${escapeHtml(payload.job.meta.sourceFileName)}</div>`);
+        infoLines.push(`<div><strong>월:</strong> ${escapeHtml(payload.job.meta.monthLabel || "-")}</div>`);
+        infoLines.push(`<div><strong>과목 수:</strong> ${payload.job.sections.length}개</div>`);
+        infoLines.push(
+          `<div><strong>PDF 연결:</strong> ${
+            payload.pdfMeta
+              ? `<span class="status-ok">${escapeHtml(payload.pdfMeta.docNo || payload.pdfMeta.name || "연결됨")}</span>`
+              : `<span class="status-warn">없음</span>`
+          }</div>`
+        );
+
+        card.innerHTML = `
+          <h3>${escapeHtml(payload.job.meta.sourceBaseName)}</h3>
+          <div class="grid two">
+            <div class="muted-box">${infoLines.join("")}</div>
+            <div class="muted-box">
+              <div><strong>전체 징수 합계:</strong> ${formatNumber(payload.totalAmount)}원</div>
+              <div><strong>전체 학생 수(중복 과목 기준):</strong> ${formatNumber(payload.totalCount)}명</div>
+            </div>
+          </div>
+        `;
+
+        const buttons = document.createElement("div");
+        buttons.className = "download-list";
+
+        if (payload.result1Blob) {
+          addDownloadButton(
+            buttons,
+            "결과 엑셀 1 다운로드",
+            payload.result1Blob,
+            payload.result1FileName,
+            "btn primary pastel-mint"
+          );
+        }
+
+        if (payload.result2ZipBlob) {
+          addDownloadButton(
+            buttons,
+            "결과 엑셀 2 묶음 다운로드",
+            payload.result2ZipBlob,
+            payload.result2ZipFileName,
+            "btn pastel-yellow"
+          );
+        }
+
+        if (payload.result3Blob) {
+          addDownloadButton(
+            buttons,
+            "결과 엑셀 3 다운로드",
+            payload.result3Blob,
+            payload.result3FileName,
+            "btn pastel-purple"
+          );
+        }
+
+        card.appendChild(buttons);
+        el.resultsArea.appendChild(card);
+      }
+
+      // -----------------------------
+      // 전체 처리
+      // -----------------------------
+      async function prepareFiles() {
+        state.templateBuffer = null;
+        state.templateFileName = "";
+        state.pdfInfos = [];
+        state.demandJobs = [];
+
+        const xlsxEntries = state.fileEntries.filter((entry) => entry.kind === "demand" || entry.kind === "template");
+        const pdfEntries = state.fileEntries.filter((entry) => entry.kind === "pdf");
+
+        // PDF 먼저 파싱
+        state.pdfInfos = [];
+        for (const entry of pdfEntries) {
+          try {
+            log(`PDF 분석 시작: ${entry.file.name}`);
+            const pdfMeta = await parsePdfMeta(entry.file);
+            state.pdfInfos.push(pdfMeta);
+            log(
+              `PDF 분석 완료: ${entry.file.name} / 시행 ${pdfMeta.docNo || "미추출"} / 날짜 ${pdfMeta.compactDate || "미추출"}`
+            );
+          } catch (error) {
+            console.error(error);
+            log(`PDF 분석 실패: ${entry.file.name}`, "warn");
+          }
+        }
+
+        // XLSX 분석
+        for (const entry of xlsxEntries) {
+          try {
+            log(`엑셀 분석 시작: ${entry.file.name}`);
+            const inspected = await inspectXlsxFile(entry.file);
+
+            if (inspected.kind === "template") {
+              if (!state.templateBuffer) {
+                state.templateBuffer = await entry.file.arrayBuffer();
+                state.templateFileName = entry.file.name;
+                log(`학교대상수납요구 서식으로 지정: ${entry.file.name}`);
+              } else {
+                log(`서식 파일이 이미 있어서 추가 서식은 무시: ${entry.file.name}`, "warn");
+              }
+              continue;
+            }
+
+            const parsed = inspected.parsed;
+            state.demandJobs.push({
+              file: entry.file,
+              meta: parsed.meta,
+              sections: parsed.sections,
+            });
+            log(`징수요구 엑셀 분석 완료: ${entry.file.name} / 과목 ${parsed.sections.length}개`);
+          } catch (error) {
+            console.error(error);
+            log(`엑셀 분석 실패: ${entry.file.name}`, "error");
+          }
+        }
+
+        state.demandJobs.sort((a, b) => {
+          const ay = Number(a.meta.year || 0);
+          const by = Number(b.meta.year || 0);
+          if (ay !== by) return ay - by;
+
+          const am = Number(a.meta.month || 0);
+          const bm = Number(b.meta.month || 0);
+          if (am !== bm) return am - bm;
+
+          return a.meta.sourceFileName.localeCompare(b.meta.sourceFileName, "ko");
+        });
+      }
+
+      async function buildMasterZip(jobOutputs) {
+        const zip = new JSZip();
+
+        for (const output of jobOutputs) {
+          const folderName = sanitizeFileName(output.job.meta.sourceBaseName || output.job.meta.monthLabel || "결과");
+          const folder = zip.folder(folderName);
+
+          if (output.result1Blob) {
+            folder.file(output.result1FileName, output.result1Blob);
+          }
+          if (output.result2ZipBlob) {
+            folder.file(output.result2ZipFileName, output.result2ZipBlob);
+          }
+          if (output.result3Blob) {
+            folder.file(output.result3FileName, output.result3Blob);
+          }
+        }
+
+        return zip.generateAsync({ type: "blob" });
+      }
+
+      el.btnProcess.addEventListener("click", async () => {
+        clearResults();
+        clearLog();
+
+        if (!state.fileEntries.length) {
+          log("먼저 파일을 올려 주세요.", "warn");
+          return;
+        }
+
+        setBusy(true);
+
+        try {
+          await prepareFiles();
+
+          if (!state.demandJobs.length) {
+            log("징수요구 엑셀을 찾지 못했습니다.", "error");
+            return;
+          }
+
+          if (!state.templateBuffer) {
+            log("학교대상수납요구 서식이 없어 결과 엑셀 2는 생성하지 않습니다.", "warn");
+          }
+
+          const outputs = [];
+
+          for (const job of state.demandJobs) {
+            log(`결과 생성 시작: ${job.meta.sourceFileName}`);
+
+            const totalAmount = job.sections.reduce((sum, section) => sum + section.totals.total, 0);
+            const totalCount = job.sections.reduce((sum, section) => sum + section.collectRows.length, 0);
+            const pdfMeta = el.optCreateOverview.checked ? pickPdfForJob(job, state.pdfInfos) : null;
+
+            const result1Workbook = await buildResult1Workbook(job);
+            const result1Blob = await blobFromWorkbook(result1Workbook);
+            const result1FileName = sanitizeFileName(`결과1_${job.meta.monthLabel}_징수결의첨부.xlsx`);
+
+            let result2ZipBlob = null;
+            let result2ZipFileName = "";
+            if (state.templateBuffer) {
+              result2ZipBlob = await buildResult2Zip(job, state.templateBuffer);
+              result2ZipFileName = sanitizeFileName(`결과2_${job.meta.monthLabel}_에듀파인서식묶음.zip`);
+            }
+
+            let result3Blob = null;
+            let result3FileName = "";
+            if (pdfMeta) {
+              const result3Workbook = await buildResult3Workbook(
+                job,
+                pdfMeta,
+                el.optIncludeZeroOverview.checked
+              );
+              result3Blob = await blobFromWorkbook(result3Workbook);
+              result3FileName = sanitizeFileName(`결과3_${job.meta.monthLabel}_징수결의개요.xlsx`);
+            } else if (el.optCreateOverview.checked && state.pdfInfos.length) {
+              log(`PDF 자동 연결 실패: ${job.meta.sourceFileName} / 첫 PDF 없이 건너뜀`, "warn");
+            }
+
+            const payload = {
+              job,
+              pdfMeta,
+              totalAmount,
+              totalCount,
+              result1Blob,
+              result1FileName,
+              result2ZipBlob,
+              result2ZipFileName,
+              result3Blob,
+              result3FileName,
+            };
+
+            outputs.push(payload);
+            renderJobResultCard(payload);
+            log(`결과 생성 완료: ${job.meta.sourceFileName}`);
+          }
+
+          if (el.optCreateMasterZip.checked && outputs.length) {
+            const masterZipBlob = await buildMasterZip(outputs);
+            const wrap = document.createElement("div");
+            wrap.className = "result-card";
+            wrap.innerHTML = `
+              <h3>전체 묶음 ZIP</h3>
+              <p class="small-help">징수요구 엑셀별 폴더로 분리해서 한 번에 받습니다.</p>
+            `;
+
+            const buttons = document.createElement("div");
+            buttons.className = "download-list";
+            addDownloadButton(
+              buttons,
+              "전체 묶음 ZIP 다운로드",
+              masterZipBlob,
+              sanitizeFileName(`늘봄징수결과_${formatStamp(new Date())}.zip`),
+              "btn primary pastel-orange"
+            );
+            wrap.appendChild(buttons);
+            el.resultsArea.prepend(wrap);
+
+            log("전체 묶음 ZIP 생성 완료");
+          }
+
+          if (!outputs.length) {
+            log("생성된 결과가 없습니다.", "warn");
+          }
+        } catch (error) {
+          console.error(error);
+          log(`처리 중 예외가 발생했습니다: ${error.message || error}`, "error");
+        } finally {
+          setBusy(false);
+        }
+      });
+
+      // 초기 상태
+      renderFileState();
+      clearResults();
+      clearLog();
+      log("준비 완료");
+    })();
+  </script>
+</div>
+</body>
+</html>

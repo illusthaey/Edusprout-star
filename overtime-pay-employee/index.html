@@ -1,0 +1,4507 @@
+
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>교육공무직 초과근무수당 계산기</title>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-BQLFX9NXE4"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-BQLFX9NXE4');
+  </script>
+
+
+<link rel="icon" href="/static/favicon.ico" />
+  <link rel="stylesheet" href="/static/style.css" />
+<script src="/static/footer.js"></script>
+<script src="/static/global-loader.js?v=1"></script>
+
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --fg:#111111;
+      --muted:#5a6475;
+      --line:#dde3ea;
+      --soft:#f6f8fb;
+      --soft2:#eef3f9;
+      --accent:#2357a5;
+      --accent-soft:#e8f0ff;
+      --danger:#b42318;
+      --danger-soft:#ffe5e0;
+      --success:#17633a;
+      --success-soft:#e8f7ee;
+      --warning:#8b5c00;
+      --warning-soft:#fff5d6;
+      --radius:16px;
+      --shadow:0 8px 24px rgba(15,23,42,.06);
+    }
+    *{box-sizing:border-box}
+    html{font-size:16px}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR","Malgun Gothic",sans-serif;
+      color:var(--fg);
+      background:linear-gradient(180deg,#f9fbfd 0%,#fff 240px);
+      line-height:1.5;
+      word-break:keep-all;
+    }
+    h1{
+      margin:0 0 8px;
+      font-size:2rem;
+      line-height:1.2;
+      text-align:left;
+    }
+    h2{
+      margin:0;
+      font-size:1.25rem;
+      line-height:1.3;
+    }
+    p{margin:0}
+    .sub{
+      color:var(--muted);
+      margin-top:8px;
+      font-size:1rem;
+    }
+    .page-head{
+      margin-bottom:18px;
+    }
+    .card{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:#fff;
+      padding:18px;
+      box-shadow:var(--shadow);
+      margin:14px 0;
+      overflow:hidden;
+    }
+    .title-row{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .grid{
+      display:grid;
+      gap:12px;
+    }
+    .grid.two{
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    }
+    .grid.stats{
+      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    }
+    .field label{
+      display:block;
+      font-size:.94rem;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    .field small{
+      display:block;
+      color:var(--muted);
+      margin-top:4px;
+      font-size:.84rem;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="time"],
+    select,
+    textarea{
+      width:100%;
+      padding:10px 12px;
+      border:1px solid #cfd8e3;
+      border-radius:12px;
+      font:inherit;
+      background:#fff;
+      color:var(--fg);
+      min-width:0;
+    }
+    input:focus,
+    select:focus,
+    textarea:focus{
+      outline:2px solid rgba(35,87,165,.18);
+      border-color:#98afd0;
+    }
+    input[disabled], select[disabled], textarea[disabled]{
+      background:#f4f6f8;
+      color:#7b8596;
+    }
+    input.numeric{ text-align:right; }
+    .inline-check{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-height:44px;
+      padding:0 2px;
+      font-weight:600;
+    }
+    .inline-check input{
+      width:18px;
+      height:18px;
+      margin:0;
+      accent-color:var(--accent);
+    }
+    .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    button.btn{
+      border:1px solid #243347;
+      background:#fff;
+      color:#111;
+      border-radius:12px;
+      padding:10px 14px;
+      font:inherit;
+      font-weight:700;
+      cursor:pointer;
+    }
+    button.btn:hover{ background:#f5f7fb; }
+    button.btn.primary{
+      background:#1c4fa0;
+      border-color:#1c4fa0;
+      color:#fff;
+    }
+    button.btn.primary:hover{ background:#18468e; }
+    button.btn.ghost{
+      border-color:#d0d6df;
+      color:#344054;
+      background:#fff;
+    }
+    button.btn.danger{
+      border-color:#b42318;
+      color:#b42318;
+      background:#fff;
+    }
+    .chip,
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:var(--soft);
+      color:#334155;
+      font-size:.88rem;
+      white-space:nowrap;
+    }
+    .badge.accent{ background:var(--accent-soft); color:#163f79; border-color:#c7d8fb; }
+    .badge.warning{ background:var(--warning-soft); color:var(--warning); border-color:#ecd99b; }
+    .badge.success{ background:var(--success-soft); color:var(--success); border-color:#bfe2cb; }
+    .badge.danger{ background:var(--danger-soft); color:var(--danger); border-color:#f1b7aa; }
+    .help{
+      color:var(--muted);
+      font-size:.93rem;
+      line-height:1.6;
+    }
+    .help b{ color:#1f2937; }
+    .stat{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:linear-gradient(180deg,#fff,#fbfdff);
+      padding:14px;
+    }
+    .stat .label{
+      color:var(--muted);
+      font-size:.88rem;
+      margin-bottom:6px;
+    }
+    .stat .value{
+      font-size:1.35rem;
+      font-weight:800;
+      color:#0f172a;
+      line-height:1.2;
+    }
+    .stat .subvalue{
+      color:var(--muted);
+      font-size:.86rem;
+      margin-top:6px;
+    }
+    .allowances{
+      margin-top:12px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .allowances .chip{
+      background:#fff;
+    }
+    .table-wrap{
+      width:100%;
+      overflow-x:auto;
+      margin-top:12px;
+      padding-bottom:4px;
+    }
+    table.sheet{
+      border-collapse:collapse;
+      width:100%;
+      min-width:1500px;
+      background:#fff;
+      font-size:.92rem;
+    }
+    table.sheet th,
+    table.sheet td{
+      border:1px solid #dde3ea;
+      padding:8px 8px;
+      vertical-align:top;
+    }
+    table.sheet th{
+      position:sticky;
+      top:0;
+      z-index:2;
+      background:#f7f9fc;
+      color:#374151;
+      font-size:.85rem;
+      white-space:nowrap;
+      text-align:center;
+    }
+    table.sheet td{
+      background:#fff;
+    }
+    table.sheet tr.row-note td{
+      background:#fffdf7;
+    }
+    td.center, th.center{ text-align:center; }
+    td.right, th.right{ text-align:right; }
+    .time-pair{
+      display:grid;
+      grid-template-columns:1fr 12px 1fr;
+      align-items:center;
+      gap:6px;
+      min-width:180px;
+    }
+    .time-pair span{
+      text-align:center;
+      color:var(--muted);
+      align-self:center;
+    }
+    .cell-stack{
+      display:grid;
+      gap:6px;
+      min-width:100px;
+    }
+    .small-select{ min-width:96px; }
+    .readonly{
+      background:var(--soft);
+      border:1px solid #d6dde8;
+      border-radius:10px;
+      padding:10px 8px;
+      text-align:right;
+      font-weight:700;
+      min-width:86px;
+      white-space:nowrap;
+    }
+    .readonly.soft{
+      text-align:center;
+      font-weight:600;
+      color:#334155;
+    }
+    .row-meta{
+      display:grid;
+      gap:6px;
+      min-width:180px;
+    }
+    .row-meta .notes{
+      color:#7c4a03;
+      font-size:.8rem;
+      line-height:1.45;
+      white-space:normal;
+    }
+    .row-meta .notes div + div{ margin-top:4px; }
+    .row-meta .snapshot{
+      color:#667085;
+      font-size:.78rem;
+      line-height:1.4;
+    }
+    .weekday-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:5px 9px;
+      border-radius:999px;
+      font-size:.82rem;
+      font-weight:700;
+      border:1px solid #d8dee8;
+      background:#fff;
+      color:#334155;
+    }
+    .weekday-badge.weekend{
+      background:#fef2f2;
+      border-color:#f2c9c9;
+      color:#b42318;
+    }
+    .weekday-badge.holiday{
+      background:#fff7db;
+      border-color:#ecd99b;
+      color:#8b5c00;
+    }
+    .mini{
+      color:var(--muted);
+      font-size:.84rem;
+    }
+    .summary-table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:14px;
+      min-width:560px;
+    }
+    .summary-table th,
+    .summary-table td{
+      border:1px solid #dde3ea;
+      padding:10px 12px;
+    }
+    .summary-table th{
+      background:#f7f9fc;
+      text-align:center;
+    }
+    .summary-table td:first-child{
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .summary-table tfoot td{
+      font-weight:800;
+      background:#f8fbff;
+    }
+    .footer-note{
+      margin-top:16px;
+      color:var(--muted);
+      font-size:.9rem;
+      line-height:1.6;
+    }
+    .pillbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      margin-bottom:12px;
+    }
+    .hidden{ display:none !important; }
+    .muted{ color:var(--muted); }
+    .danger-text{ color:var(--danger); }
+    .nowrap{ white-space:nowrap; }
+    .w-90{ width:90px; }
+    .w-110{ width:110px; }
+    .w-130{ width:130px; }
+    .w-150{ width:150px; }
+    .text-left{ text-align:left; }
+    .spacer-8{ height:8px; }
+
+    @media (max-width: 900px){
+      h1{ font-size:1.7rem; }
+      .card{ padding:16px; }
+      .title-row{ align-items:stretch; }
+      .actions.right{ width:100%; justify-content:flex-start; }
+      table.sheet th{ position:static; }
+    }
+  </style>
+</head>
+<body class="alien-side-bg">
+<div class="alien-page-frame">
+  <main class="page-main page-main--xwide">
+      <h1>교육공무직 초과근무수당 계산기</h1>
+      <p class="muted">날짜와 시간대를 입력하면 법내·법외·야간·휴일근로 시간을 자동 구분하고, 직종·최초임용일 기준 통상임금을 반영해 지급액을 계산합니다.</p>
+<hr/>
+
+    <section class="card">
+      <div class="title-row">
+        <h2>기본 설정</h2>
+        <div class="actions">
+          <button type="button" class="btn ghost" id="resetSettingsBtn">설정 초기화</button>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="field">
+          <label for="workplace">근무지</label>
+          <select id="workplace"></select>
+        </div>
+        <div class="field">
+          <label for="job">직종</label>
+          <select id="job"></select>
+        </div>
+        <div class="field">
+          <label for="startDate">최초 임용일</label>
+          <input id="startDate" type="date" />
+          <small id="tenureModeText">입력하면 행 날짜 기준으로 근속연수를 자동 계산합니다.</small>
+        </div>
+        <div class="field">
+          <label for="manualYears">근속연수(입사일 미입력 시)</label>
+          <input id="manualYears" type="number" min="0" step="1" value="0" class="numeric" />
+          <small>입사일을 비워두면 이 값을 사용합니다.</small>
+        </div>
+        <div class="field">
+          <label for="monthlyHours">월 통상임금 산정시간</label>
+          <input id="monthlyHours" type="number" min="1" step="1" value="209" class="numeric" />
+          <small id="monthlyHoursHint">기본값: 전일제 209 / 1일 5시간 130 / 1일 6시간 156</small>
+        </div>
+        <div class="field">
+          <label for="previewDate">통상임금 미리보기 기준일</label>
+          <input id="previewDate" type="date" />
+          <small>행별 계산은 각 행 날짜의 스냅샷을 사용합니다.</small>
+        </div>
+      </div>
+
+      <div class="spacer-8"></div>
+
+      <div class="grid two">
+        <div class="field">
+          <label for="defaultRegStart">기본 정규근무 시작</label>
+          <input id="defaultRegStart" type="text" value="08:40" inputmode="numeric" placeholder="08:40" class="time-text" />
+          <small>키보드로 직접 입력할 수 있습니다. 예: 08:40 또는 840</small>
+        </div>
+        <div class="field">
+          <label for="defaultRegEnd">기본 정규근무 종료</label>
+          <input id="defaultRegEnd" type="text" value="16:40" inputmode="numeric" placeholder="16:40" class="time-text" />
+          <small>입력한 시간대가 평일 법내·법외 기준 계산에 사용됩니다.</small>
+        </div>
+        <div class="field">
+          <label for="defaultBreak">기본 휴게시간</label>
+          <select id="defaultBreak">
+            <option value="0">없음</option>
+            <option value="30" selected>30분</option>
+            <option value="60">1시간</option>
+          </select>
+          <small>소정근로 실근무시간 계산과 행별 휴게 공제에 함께 사용합니다.</small>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <div class="actions" style="min-height:44px;align-items:center;">
+            <button type="button" class="btn" id="applyDefaultScheduleBtn">근무시간·휴게 일괄 적용</button>
+          </div>
+          <small>현재 기본설정의 정규근무시간과 휴게시간을 모든 행에 반영합니다.</small>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="field">
+          <label for="manualHourly">수기 시급</label>
+          <input id="manualHourly" type="number" min="0" step="10" placeholder="예: 12400" class="numeric" />
+          <small>수기 시급을 사용할 때만 적용됩니다.</small>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <div class="inline-check">
+            <input id="manualHourlyEnabled" type="checkbox" />
+            <label for="manualHourlyEnabled" style="margin:0;font-weight:700;">수기 시급 사용</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="field">
+          <label>&nbsp;</label>
+          <div class="help">
+            · <b>주말은 자동으로 휴일</b>로 계산합니다. 평일 공휴일·기관 휴무일은 행에서 <b>휴일</b>을 직접 체크하세요.<br/>
+            · 평일의 <b>법내/법외 구분은 기본설정의 정규근무시간에서 휴게를 제외한 1일 실근무시간</b>을 기준으로 <b>주 40시간 한도</b> 안에서 계산합니다.<br/>
+            · <b>10원 단위 미만은 각 항목별로 절삭</b>한 뒤 합산합니다.<br/>
+            · 자정을 넘기는 근무는 <b>선택한 날짜 기준</b>으로 묶어 계산합니다. 날짜별 엄밀 분리가 필요하면 행을 나눠 입력하세요.
+          </div>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <div class="help">
+            · 행에서는 <b>초과근무 시간만 입력</b>하고, 정규근무시간·휴게시간은 기본설정의 적용값을 사용합니다.<br/>
+            · 기본설정을 바꾼 뒤에는 <b>근무시간·휴게 일괄 적용</b> 버튼을 눌러야 기존 행에도 반영됩니다.<br/>
+            · 운동부지도자는 <b>근속수당 미적용 직종</b>이라 최초임용일 또는 수동 근속연수와 무관하게 근속수당을 0원으로 계산합니다.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="title-row">
+        <h2>통상임금 자동 산출 미리보기</h2>
+        <div class="pillbar">
+          <span id="snapshotBadge" class="badge accent">스냅샷 확인 중</span>
+          <span id="previewHourlyBadge" class="badge">적용 시급 확인 중</span>
+        </div>
+      </div>
+
+      <div class="grid stats">
+        <div class="stat">
+          <div class="label">기본급</div>
+          <div class="value" id="previewBase">-</div>
+          <div class="subvalue" id="previewJobName">-</div>
+        </div>
+        <div class="stat">
+          <div class="label">근속수당</div>
+          <div class="value" id="previewTenure">-</div>
+          <div class="subvalue" id="previewYears">-</div>
+        </div>
+        <div class="stat">
+          <div class="label">산입 수당 합계</div>
+          <div class="value" id="previewAllowances">-</div>
+          <div class="subvalue" id="previewAllowanceCount">-</div>
+        </div>
+        <div class="stat">
+          <div class="label">월 통상임금 합계</div>
+          <div class="value" id="previewMonthly">-</div>
+          <div class="subvalue" id="previewDivisor">-</div>
+        </div>
+        <div class="stat">
+          <div class="label">자동 산출 시급</div>
+          <div class="value" id="previewAutoHourly">-</div>
+          <div class="subvalue">행 날짜마다 다시 계산됩니다.</div>
+        </div>
+        <div class="stat">
+          <div class="label">계산에 쓰는 시급</div>
+          <div class="value" id="previewAppliedHourly">-</div>
+          <div class="subvalue" id="previewAppliedHourlyNote">자동 시급 사용</div>
+        </div>
+      </div>
+
+      <div class="allowances" id="allowanceChips"></div>
+      <div class="footer-note" id="previewFootnote"></div>
+    </section>
+
+    <section class="card">
+      <div class="title-row">
+        <h2>초과근무 입력</h2>
+        <div class="actions right">
+          <button type="button" class="btn" id="addRowBtn">행 추가</button>
+          <button type="button" class="btn ghost" id="cloneLastRowBtn">마지막 행 복제</button>
+          <button type="button" class="btn ghost" id="clearRowsBtn">전체 비우기</button>
+        </div>
+      </div>
+
+      <div class="help">
+        · 행에서는 <b>초과근무 시간만 입력</b>하면 되고, 정규근무시간과 휴게시간은 기본설정의 적용값을 사용합니다.<br/>
+        · 초과근무 시간대와 기본설정의 정규근무 시간대가 겹치면 <b>겹친 구간은 자동 제외</b>합니다.<br/>
+        · 휴게시간이 야간/휴일 구간을 함께 포함하는 경우에는 <b>선택한 휴게를 각 구간에 비례 배분</b>합니다. 실제 휴게 위치를 엄밀하게 반영하려면 행을 나눠 입력하세요.<br/>
+        · 같은 주에 여러 행을 입력하면 그 주의 <b>법내 한도(주 40시간 - 소정 실근무시간)</b>를 합산해 계산하고, 같은 날짜의 휴일근로는 <b>8시간 초과 여부</b>를 합산해서 계산합니다.
+      </div>
+
+      <div class="table-wrap">
+        <table class="sheet" aria-label="초과근무 입력표">
+          <thead>
+            <tr>
+              <th class="center">No</th>
+              <th class="center">날짜</th>
+              <th class="center">요일 / 휴일</th>
+              <th class="center">초과근무<br/>시작 / 종료</th>
+              <th class="center">유급휴게<br/>특례</th>
+              <th class="center">적용 시급</th>
+              <th class="center">유급시간</th>
+              <th class="center">법내</th>
+              <th class="center">법외</th>
+              <th class="center">야간</th>
+              <th class="center">휴일≤8h</th>
+              <th class="center">휴일>8h</th>
+              <th class="center">지급액</th>
+              <th class="center">비고</th>
+              <th class="center">삭제</th>
+            </tr>
+          </thead>
+          <tbody id="rowsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="title-row">
+        <h2>합계</h2>
+        <div class="actions right">
+          <button type="button" class="btn primary" id="downloadBtn">결과 엑셀 다운로드</button>
+        </div>
+      </div>
+
+      <div class="grid stats">
+        <div class="stat">
+          <div class="label">입력 행 수</div>
+          <div class="value" id="sumRows">0</div>
+          <div class="subvalue">유효한 날짜가 있는 행 기준</div>
+        </div>
+        <div class="stat">
+          <div class="label">총 유급시간</div>
+          <div class="value" id="sumPaidTime">0:00</div>
+          <div class="subvalue">휴게 공제 후 시간</div>
+        </div>
+        <div class="stat">
+          <div class="label">평일 법내 / 법외</div>
+          <div class="value" id="sumInsideOutside">0:00 / 0:00</div>
+          <div class="subvalue">주 40시간 · 소정 실근무시간 기준</div>
+        </div>
+        <div class="stat">
+          <div class="label">야간 / 휴일</div>
+          <div class="value" id="sumNightHoliday">0:00 / 0:00</div>
+          <div class="subvalue">야간은 중복 가산 시간</div>
+        </div>
+        <div class="stat">
+          <div class="label">총 지급액</div>
+          <div class="value" id="sumAmount">0원</div>
+          <div class="subvalue">10원 단위 절삭 반영</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="summary-table" aria-label="합계 상세">
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>시간</th>
+              <th>지급액</th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody"></tbody>
+          <tfoot>
+            <tr>
+              <td>총합</td>
+              <td id="summaryTotalHours">0:00</td>
+              <td id="summaryTotalAmount">0원</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+window.EDU_OVERTIME_DATA = {
+  "meta": {
+    "월통상임금산정시간_기본": 209,
+    "월통상임금산정시간_참고": {
+      "1일5시간": 130,
+      "1일6시간": 156,
+      "1일4시간": 104,
+      "1일3시간": 78
+    },
+    "시급_반올림규칙": "원 단위 절사(내림)",
+    "스냅샷선택규칙": "계산시점(calcDate) 기준 적용시작일(effectiveDate) <= calcDate 중 가장 최근 스냅샷을 사용 (선택 근무지 우선, 없으면 공통)",
+    "비고": "2025 자료는 검증/소급 대비용으로 유지. 2026 자료는 01.01/02.17/03.01 변동분 반영."
+  },
+  "snapshots": [
+    {
+      "id": "2025-03-01",
+      "workplace": "공통",
+      "effectiveDate": "2025-03-01",
+      "label": "2025.03.01 (기존자료)",
+      "amounts": {
+        "정액급식비": 150000,
+        "정기상여금": 83330,
+        "명절휴가비": 154160,
+        "교무행정사(직무수당)": 30000,
+        "급식운영수당": 50000,
+        "면허가산수당": 113300,
+        "특수업무수당": 20000,
+        "특수교육지원수당": 30000,
+        "기술정보수당": 20000,
+        "위험수당": 50000,
+        "식생활지도수당": 0
+      },
+      "rules": {
+        "tenureRate": 40000,
+        "tenureCapYears": 23,
+        "hazardAmount": 50000,
+        "holidayMonthly": 154160,
+        "regularBonusMonthly": 83330,
+        "hourlyDivisorFullTime": 209
+      },
+      "jobs": [
+        {
+          "직종": "교무행정사",
+          "기본급": 2066000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "○"
+          },
+          "일급": 79080
+        },
+        {
+          "직종": "유치원방과후교육사",
+          "기본급": 2266000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 86730
+        },
+        {
+          "직종": "늘봄학교전담사",
+          "기본급": 2066000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 79080
+        },
+        {
+          "직종": "장애유아지도사(유)",
+          "기본급": 2266000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 86730
+        },
+        {
+          "직종": "장애유아지도사(유)(단시간)",
+          "기본급": 1416250,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 54470
+        },
+        {
+          "직종": "영양사",
+          "기본급": 2266000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "○",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "◎",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 86730
+        },
+        {
+          "직종": "기숙사생활지도원",
+          "기본급": 2266000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 86730
+        },
+        {
+          "직종": "학교운동부지도자",
+          "기본급": 2287390,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 87550
+        },
+        {
+          "직종": "교육복지사(학교)",
+          "기본급": 2266000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "◎",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 86730
+        },
+        {
+          "직종": "전문상담사",
+          "기본급": 2266000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 86730
+        },
+        {
+          "직종": "건강실무사(유)",
+          "기본급": 2066000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 79080
+        },
+        {
+          "직종": "통학차량운전원",
+          "기본급": 2066000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 79080
+        },
+        {
+          "직종": "발명실무원",
+          "기본급": 2066000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 79080
+        },
+        {
+          "직종": "통학지도원(특수학교)",
+          "기본급": 2066000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 79080
+        },
+        {
+          "직종": "특수교육지도사",
+          "기본급": 2066000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "○",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 79080
+        },
+        {
+          "직종": "조리사",
+          "기본급": 2169300,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "○",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 83030
+        },
+        {
+          "직종": "조리실무사",
+          "기본급": 2066000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "○",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 79080
+        },
+        {
+          "직종": "장애유아지도사(특)",
+          "기본급": 2266000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 86730
+        },
+        {
+          "직종": "장애유아지도사(특)(단시간)",
+          "기본급": 1416250,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 54470
+        },
+        {
+          "직종": "직업지도사",
+          "기본급": 2266000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 86730
+        },
+        {
+          "직종": "학교치료사",
+          "기본급": 2266000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 86730
+        },
+        {
+          "직종": "초등돌봄전담사",
+          "기본급": 1549500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 59590
+        },
+        {
+          "직종": "학교도서관사서",
+          "기본급": 2266000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "◎",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 86730
+        },
+        {
+          "직종": "학교도서관실무사",
+          "기본급": 2066000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 79080
+        },
+        {
+          "직종": "건강실무사",
+          "기본급": 2066000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 79080
+        },
+        {
+          "직종": "방과후전담사",
+          "기본급": 1291250,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 49660
+        },
+        {
+          "직종": "영양사(기숙학교)",
+          "기본급": 2266000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "위험수당": "×",
+            "급식운영수당": "○",
+            "기술정보수당": "○",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 86730
+        },
+        {
+          "직종": "구육성회직원 제수당은 구육성회직원 관리지침을 적용함",
+          "기본급": 0,
+          "근속수당등급": "nan",
+          "적용": {
+            "정액급식비": "×",
+            "위험수당": "×",
+            "급식운영수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "가족수당": "×",
+            "정기상여금": "×",
+            "명절휴가비": "×",
+            "맞춤형복지": "×",
+            "교무행정사(직무수당)": "×"
+          },
+          "일급": 0
+        }
+      ],
+      "source": "사용자 제공 2025 data.json"
+    },
+    {
+      "id": "2026-inst-0101",
+      "workplace": "기관",
+      "effectiveDate": "2026-01-01",
+      "label": "2026.01.01 ~ 2026.02.16 (기관)",
+      "amounts": {
+        "정액급식비": 160000,
+        "교무행정사(직무수당)": 30000,
+        "기술정보수당": 20000,
+        "특수업무수당": 20000,
+        "특수교육지원수당": 30000,
+        "정기상여금": 83330,
+        "식생활지도수당": 50000,
+        "급식운영수당": 50000,
+        "위험수당": 70000,
+        "명절휴가비": 154160
+      },
+      "rules": {
+        "tenureRate": 41000,
+        "tenureCapYears": 24,
+        "hazardAmount": 70000,
+        "holidayMonthly": 154160,
+        "regularBonusMonthly": 83330,
+        "hourlyDivisorFullTime": 209
+      },
+      "jobs": [
+        {
+          "직종": "교무행정사",
+          "기본급": 2144500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "○",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 82080
+        },
+        {
+          "직종": "유치원방과후교육사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "평생교육사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "영양사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "◎",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "◎",
+            "식생활지도수당": "○",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "기숙사생활지도원",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "치료사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "장애영아지도사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "학교운동부지도자",
+          "기본급": 2365890,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 90560
+        },
+        {
+          "직종": "사회복지사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "임상심리사",
+          "기본급": 2803850,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 107320
+        },
+        {
+          "직종": "교육복지사(기관)",
+          "기본급": 2745780,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "○",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 105100
+        },
+        {
+          "직종": "전문상담사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "진로교육사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "대안교육전문가",
+          "기본급": 2803850,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 107320
+        },
+        {
+          "직종": "교육지도사",
+          "기본급": 2246110,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 85970
+        },
+        {
+          "직종": "방과후학교지원가",
+          "기본급": 2246110,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 85970
+        },
+        {
+          "직종": "학습클리닉전문가",
+          "기본급": 2647780,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 101350
+        },
+        {
+          "직종": "학부모지원전문가",
+          "기본급": 2647780,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 101350
+        },
+        {
+          "직종": "학교도서관사서",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "○",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "진학전문지원관",
+          "기본급": 3645000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 139520
+        },
+        {
+          "직종": "발명실무원",
+          "기본급": 2144500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 82080
+        },
+        {
+          "직종": "조리사",
+          "기본급": 2251720,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "◎",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 86190
+        },
+        {
+          "직종": "조리실무사",
+          "기본급": 2144500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "◎",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "△",
+            "맞춤형복지": "○"
+          },
+          "일급": 82080
+        },
+        {
+          "직종": "일급제 대체인력의 해당 직종 일급 단가가 92,000원 미만인 경우: 92,000원 지급, 92,000원 이상인 경우:  해당 직종 일급 단가 적용",
+          "기본급": 0,
+          "근속수당등급": "",
+          "적용": {},
+          "일급": 0
+        }
+      ],
+      "source": "2026년 교육공무직 기관근무자 보수표.xlsx / 수당적용표(01.01)"
+    },
+    {
+      "id": "2026-inst-0217",
+      "workplace": "기관",
+      "effectiveDate": "2026-02-17",
+      "label": "2026.02.17 ~ (기관)",
+      "amounts": {
+        "정액급식비": 160000,
+        "교무행정사(직무수당)": 30000,
+        "기술정보수당": 20000,
+        "특수업무수당": 20000,
+        "특수교육지원수당": 30000,
+        "정기상여금": 83330,
+        "식생활지도수당": 50000,
+        "급식운영수당": 50000,
+        "위험수당": 70000,
+        "명절휴가비": 178700
+      },
+      "rules": {
+        "tenureRate": 41000,
+        "tenureCapYears": 24,
+        "hazardAmount": 70000,
+        "holidayMonthly": 178700,
+        "regularBonusMonthly": 83330,
+        "hourlyDivisorFullTime": 209
+      },
+      "jobs": [
+        {
+          "직종": "교무행정사",
+          "기본급": 2144500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "○",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 82080
+        },
+        {
+          "직종": "유치원방과후교육사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "평생교육사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "영양사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "◎",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "◎",
+            "식생활지도수당": "○",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "기숙사생활지도원",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "치료사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "장애영아지도사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "학교운동부지도자",
+          "기본급": 2365890,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 90560
+        },
+        {
+          "직종": "사회복지사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "임상심리사",
+          "기본급": 2803850,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 107320
+        },
+        {
+          "직종": "교육복지사(기관)",
+          "기본급": 2745780,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "○",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 105100
+        },
+        {
+          "직종": "전문상담사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "진로교육사",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "대안교육전문가",
+          "기본급": 2803850,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 107320
+        },
+        {
+          "직종": "교육지도사",
+          "기본급": 2246110,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 85970
+        },
+        {
+          "직종": "방과후학교지원가",
+          "기본급": 2246110,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 85970
+        },
+        {
+          "직종": "학습클리닉전문가",
+          "기본급": 2647780,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 101350
+        },
+        {
+          "직종": "학부모지원전문가",
+          "기본급": 2647780,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 101350
+        },
+        {
+          "직종": "학교도서관사서",
+          "기본급": 2344500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "○",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 89740
+        },
+        {
+          "직종": "진학전문지원관",
+          "기본급": 3645000,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 139520
+        },
+        {
+          "직종": "발명실무원",
+          "기본급": 2144500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "×",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 82080
+        },
+        {
+          "직종": "조리사",
+          "기본급": 2251720,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "◎",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 86190
+        },
+        {
+          "직종": "조리실무사",
+          "기본급": 2144500,
+          "근속수당등급": "◎",
+          "적용": {
+            "정액급식비": "○",
+            "교무행정사(직무수당)": "×",
+            "위험수당": "◎",
+            "기술정보수당": "×",
+            "특수업무수당": "×",
+            "특수교육지원수당": "×",
+            "면허가산수당": "×",
+            "식생활지도수당": "×",
+            "가족수당": "○",
+            "정기상여금": "○",
+            "명절휴가비": "○",
+            "맞춤형복지": "○"
+          },
+          "일급": 82080
+        },
+        {
+          "직종": "일급제 대체인력의 해당 직종 일급 단가가 92,000원 미만인 경우: 92,000원 지급, 92,000원 이상인 경우:  해당 직종 일급 단가 적용",
+          "기본급": 0,
+          "근속수당등급": "",
+          "적용": {},
+          "일급": 0
+        }
+      ],
+      "source": "2026년 교육공무직 기관근무자 보수표.xlsx / 수당적용표(02.17)"
+    }
+  ]
+};
+
+
+window.EDU_OVERTIME_DATA.snapshots.push({
+  "id": "2026-school-0101",
+  "workplace": "학교",
+  "effectiveDate": "2026-01-01",
+  "label": "2026.01.01 ~ 2026.02.16 (학교)",
+  "amounts": {
+    "정액급식비": 160000,
+    "교무행정사(직무수당)": 30000,
+    "기술정보수당": 20000,
+    "특수업무수당": 20000,
+    "특수교육지원수당": 30000,
+    "정기상여금": 83330,
+    "식생활지도수당": 50000,
+    "급식운영수당": 50000,
+    "위험수당": 50000,
+    "명절휴가비": 154160
+  },
+  "rules": {
+    "tenureRate": 40000,
+    "tenureCapYears": 23,
+    "hazardAmount": 50000,
+    "holidayMonthly": 154160,
+    "regularBonusMonthly": 83330,
+    "hourlyDivisorFullTime": 209
+  },
+  "jobs": [
+    {
+      "직종": "교무행정사",
+      "기본급": 2066000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "○",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 79080
+    },
+    {
+      "직종": "유치원방과후교육사",
+      "기본급": 2266000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 86730
+    },
+    {
+      "직종": "늘봄학교전담사",
+      "기본급": 2066000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 79080
+    },
+    {
+      "직종": "장애유아지도사(유)",
+      "기본급": 2266000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 86730
+    },
+    {
+      "직종": "장애유아지도사(유)(단시간)",
+      "기본급": 1416250,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 54470
+    },
+    {
+      "직종": "영양사",
+      "기본급": 2266000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "○",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "○",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 86730
+    },
+    {
+      "직종": "기숙사생활지도원",
+      "기본급": 2266000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 86730
+    },
+    {
+      "직종": "학교운동부지도자",
+      "기본급": 2287390,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 87550
+    },
+    {
+      "직종": "교육복지사(학교)",
+      "기본급": 2266000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "○",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 86730
+    },
+    {
+      "직종": "전문상담사",
+      "기본급": 2266000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 86730
+    },
+    {
+      "직종": "건강실무사(유)",
+      "기본급": 2066000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 79080
+    },
+    {
+      "직종": "통학차량운전원",
+      "기본급": 2066000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 79080
+    },
+    {
+      "직종": "발명실무원",
+      "기본급": 2066000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 79080
+    },
+    {
+      "직종": "통학지도원(특수학교)",
+      "기본급": 2066000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 79080
+    },
+    {
+      "직종": "특수교육지도사",
+      "기본급": 2066000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "○",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 79080
+    },
+    {
+      "직종": "조리사",
+      "기본급": 2169300,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "○",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 83030
+    },
+    {
+      "직종": "조리실무사",
+      "기본급": 2066000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "○",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 79080
+    },
+    {
+      "직종": "장애유아지도사(특)",
+      "기본급": 2266000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 86730
+    },
+    {
+      "직종": "장애유아지도사(특)(단시간)",
+      "기본급": 1416250,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 54470
+    },
+    {
+      "직종": "직업지도사",
+      "기본급": 2266000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 86730
+    },
+    {
+      "직종": "학교치료사",
+      "기본급": 2266000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 86730
+    },
+    {
+      "직종": "초등돌봄전담사",
+      "기본급": 1549500,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 59590
+    },
+    {
+      "직종": "학교도서관사서",
+      "기본급": 2266000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "○",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 86730
+    },
+    {
+      "직종": "학교도서관실무사",
+      "기본급": 2066000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 79080
+    },
+    {
+      "직종": "건강실무사",
+      "기본급": 2066000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 79080
+    },
+    {
+      "직종": "방과후전담사",
+      "기본급": 1291250,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "×",
+        "기술정보수당": "×",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 49660
+    },
+    {
+      "직종": "영양사(기숙학교)",
+      "기본급": 2266000,
+      "근속수당등급": "○",
+      "적용": {
+        "정액급식비": "○",
+        "교무행정사(직무수당)": "×",
+        "위험수당": "×",
+        "급식운영수당": "○",
+        "기술정보수당": "○",
+        "특수업무수당": "×",
+        "특수교육지원수당": "×",
+        "면허가산수당": "×",
+        "식생활지도수당": "×",
+        "가족수당": "○",
+        "정기상여금": "○",
+        "명절휴가비": "△",
+        "맞춤형복지": "○"
+      },
+      "일급": 86730
+    },
+    {
+      "직종": "구육성회직원 제수당은 구육성회직원 관리지침을 적용함",
+      "기본급": 0,
+      "근속수당등급": "",
+      "적용": {},
+      "일급": 0
+    },
+    {
+      "직종": "일급제 대체인력의 해당 직종 일급 단가가 89,600원 미만인 경우: 89,600원 지급, 89,600원 이상인 경우:  해당 직종 일급 단가 적용",
+      "기본급": 0,
+      "근속수당등급": "",
+      "적용": {},
+      "일급": 0
+    }
+  ],
+  "source": "2026년 교육공무직 학교근무자 보수표.xlsx / 수당적용표(01.01)"
+});
+
+(function(){
+  const clone = obj => JSON.parse(JSON.stringify(obj));
+  const base = window.EDU_OVERTIME_DATA.snapshots.find(s => s.id === '2026-school-0101');
+  if(base){
+    const school0217 = clone(base);
+    school0217.id = '2026-school-0217';
+    school0217.effectiveDate = '2026-02-17';
+    school0217.label = '2026.02.17 ~ 2026.02.28 (학교)';
+    school0217.amounts['명절휴가비'] = 178700;
+    school0217.rules.holidayMonthly = 178700;
+    school0217.jobs.forEach(job => {
+      if(job && job.적용 && job.적용['명절휴가비'] === '△'){
+        job.적용['명절휴가비'] = '○';
+      }
+    });
+    school0217.source = '2026년 교육공무직 학교근무자 보수표.xlsx / 수당적용표(02.17)';
+    window.EDU_OVERTIME_DATA.snapshots.push(school0217);
+  }
+})();
+
+(function(){
+  const clone = obj => JSON.parse(JSON.stringify(obj));
+  const base = window.EDU_OVERTIME_DATA.snapshots.find(s => s.id === '2026-school-0217');
+  if(base){
+    const school0301 = clone(base);
+    school0301.id = '2026-school-0301';
+    school0301.effectiveDate = '2026-03-01';
+    school0301.label = '2026.03.01 ~ (학교)';
+    school0301.amounts['위험수당'] = 70000;
+    school0301.rules.tenureRate = 41000;
+    school0301.rules.tenureCapYears = 24;
+    school0301.rules.hazardAmount = 70000;
+    school0301.source = '2026년 교육공무직 학교근무자 보수표.xlsx / 수당적용표(03.01)';
+
+    const baseMap = {
+      '교무행정사': 2144500,
+      '유치원방과후교육사': 2344500,
+      '늘봄학교전담사': 2144500,
+      '장애유아지도사(유)': 2344500,
+      '장애유아지도사(유)(단시간)': 1465310,
+      '영양사': 2344500,
+      '기숙사생활지도원': 2344500,
+      '학교운동부지도자': 2365890,
+      '교육복지사(학교)': 2344500,
+      '전문상담사': 2344500,
+      '건강실무사(유)': 2144500,
+      '통학차량운전원': 2144500,
+      '발명실무원': 2144500,
+      '통학지도원(특수학교)': 2144500,
+      '특수교육지도사': 2144500,
+      '조리사': 2251720,
+      '조리실무사': 2144500,
+      '장애유아지도사(특)': 2344500,
+      '장애유아지도사(특)(단시간)': 1465310,
+      '직업지도사': 2344500,
+      '학교치료사': 2344500,
+      '초등돌봄전담사': 1608370,
+      '학교도서관사서': 2344500,
+      '학교도서관실무사': 2144500,
+      '건강실무사': 2144500,
+      '방과후전담사': 1340310,
+      '영양사(기숙학교)': 2344500
+    };
+
+    school0301.jobs.forEach(job => {
+      if(baseMap[job.직종] != null){
+        job.기본급 = baseMap[job.직종];
+      }
+      if(job.직종 === '영양사'){
+        job.적용['위험수당'] = '◎';
+        job.적용['급식운영수당'] = '×';
+        job.적용['면허가산수당'] = '◎';
+        job.적용['식생활지도수당'] = '○';
+      }
+      if(job.직종 === '영양사(기숙학교)'){
+        job.적용['위험수당'] = '◎';
+        job.적용['급식운영수당'] = '×';
+        job.적용['기술정보수당'] = '○';
+        job.적용['식생활지도수당'] = '○';
+      }
+    });
+
+    window.EDU_OVERTIME_DATA.snapshots.push(school0301);
+  }
+})();
+
+</script>
+  <script>
+    (function(){
+      'use strict';
+
+      const PAY_DATA = window.EDU_OVERTIME_DATA || { snapshots: [], meta: {} };
+      const ALLOWANCE_NAMES = [
+        "정액급식비",
+        "교무행정사(직무수당)",
+        "위험수당",
+        "급식운영수당",
+        "식생활지도수당",
+        "면허가산수당",
+        "기술정보수당",
+        "특수업무수당",
+        "특수교육지원수당",
+        "정기상여금",
+        "명절휴가비"
+      ];
+      const weekdayNames = ['일','월','화','수','목','금','토'];
+
+      const els = {};
+      let state = {
+        workplace: '',
+        job: '',
+        startDate: '',
+        manualYears: 0,
+        monthlyHours: 209,
+        previewDate: '',
+        defaultRegStart: '08:40',
+        defaultRegEnd: '16:40',
+        defaultBreak: 30,
+        manualHourlyEnabled: false,
+        manualHourly: '',
+        rows: [],
+        nextRowId: 1
+      };
+
+      function $(id){ return document.getElementById(id); }
+
+      function collectEls(){
+        [
+          'workplace','job','startDate','manualYears','monthlyHours','previewDate',
+          'defaultRegStart','defaultRegEnd','defaultBreak','applyDefaultScheduleBtn','manualHourlyEnabled','manualHourly',
+          'resetSettingsBtn','snapshotBadge','previewHourlyBadge','previewBase','previewJobName',
+          'previewTenure','previewYears','previewAllowances','previewAllowanceCount',
+          'previewMonthly','previewDivisor','previewAutoHourly','previewAppliedHourly',
+          'previewAppliedHourlyNote','allowanceChips','previewFootnote','rowsBody',
+          'addRowBtn','cloneLastRowBtn','clearRowsBtn','downloadBtn','sumRows',
+          'sumPaidTime','sumInsideOutside','sumNightHoliday','sumAmount','summaryBody',
+          'summaryTotalHours','summaryTotalAmount','tenureModeText','monthlyHoursHint'
+        ].forEach(id => els[id] = $(id));
+      }
+
+      function pad2(n){ return String(n).padStart(2,'0'); }
+      function todayYmd(){
+        const d = new Date();
+        return [d.getFullYear(), pad2(d.getMonth()+1), pad2(d.getDate())].join('-');
+      }
+      function money(n){
+        const v = Number.isFinite(Number(n)) ? Number(n) : 0;
+        return v.toLocaleString('ko-KR');
+      }
+      function trunc10(n){
+        const v = Number(n) || 0;
+        return Math.floor(v / 10) * 10;
+      }
+      function parseYmd(s){
+        if(!s) return null;
+        const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if(!m) return null;
+        return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+      }
+      function ymdKey(s){
+        return Number(String(s || '').replaceAll('-','')) || 0;
+      }
+      function formatHm(totalMinutes){
+        const m = Math.max(0, Math.round(Number(totalMinutes) || 0));
+        const h = Math.floor(m / 60);
+        const mm = m % 60;
+        return h + ':' + pad2(mm);
+      }
+      function formatWon(n){
+        return money(n) + '원';
+      }
+      function formatMinutesOrDash(n){
+        if(!Number.isFinite(n)) return '-';
+        return formatHm(n);
+      }
+      function calcYears(startDateStr, targetDateStr){
+        const s = parseYmd(startDateStr);
+        const t = parseYmd(targetDateStr);
+        if(!s || !t) return null;
+        let y = t.getFullYear() - s.getFullYear();
+        const anniv = new Date(t.getFullYear(), s.getMonth(), s.getDate());
+        if(t < anniv) y -= 1;
+        return Math.max(0, y);
+      }
+      function weekdayInfo(dateStr){
+        const d = parseYmd(dateStr);
+        if(!d) return { label:'-', isWeekend:false, index:null };
+        const idx = d.getDay();
+        return { label: weekdayNames[idx], isWeekend: idx === 0 || idx === 6, index: idx };
+      }
+      function isApplied(flag){
+        if(flag == null) return false;
+        const f = String(flag).trim();
+        return f !== '' && f !== '×' && f.toLowerCase() !== 'nan';
+      }
+      function defaultMonthlyHoursForJob(job){
+        const name = (job && (job.직종 || job.name)) || '';
+        if(name.includes('초등돌봄전담사')) return 156;
+        if(name.includes('단시간')) return 130;
+        if(name.includes('방과후전담사')) return 130;
+        if(name.includes('반일제')) return 104;
+        return 209;
+      }
+      function isSportsCoachJob(jobOrName){
+        const name = typeof jobOrName === 'string'
+          ? jobOrName
+          : (jobOrName && (jobOrName.직종 || jobOrName.name)) || '';
+        return String(name || '').includes('운동부지도자');
+      }
+      function normalizeTimeText(value){
+        const raw = String(value == null ? '' : value).trim();
+        if(!raw) return '';
+        let m = raw.match(/^(\d{1,2})[:.](\d{2})$/);
+        if(m){
+          const hh = Number(m[1]);
+          const mm = Number(m[2]);
+          if(hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59){
+            return pad2(hh) + ':' + pad2(mm);
+          }
+          return '';
+        }
+        const digits = raw.replace(/\D/g,'');
+        if(/^\d{3,4}$/.test(digits)){
+          const hh = Number(digits.slice(0, digits.length - 2));
+          const mm = Number(digits.slice(-2));
+          if(hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59){
+            return pad2(hh) + ':' + pad2(mm);
+          }
+        }
+        return '';
+      }
+      function getRegularActualMinutes(regularInterval, breakMinutes){
+        if(!regularInterval) return 0;
+        const duration = Math.max(0, Number(regularInterval.duration || 0));
+        const deducted = Math.min(Math.max(0, Number(breakMinutes || 0)), duration);
+        return Math.max(0, duration - deducted);
+      }
+      function getDefaultRegularInterval(){
+        return buildInterval(state.defaultRegStart, state.defaultRegEnd);
+      }
+      function getDefaultRegularActualMinutes(){
+        return getRegularActualMinutes(getDefaultRegularInterval(), state.defaultBreak);
+      }
+      function formatDateYmd(dateObj){
+        return [dateObj.getFullYear(), pad2(dateObj.getMonth() + 1), pad2(dateObj.getDate())].join('-');
+      }
+      function getWeekStartMondayYmd(dateStr){
+        const d = parseYmd(dateStr);
+        if(!d) return '';
+        const day = d.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        d.setDate(d.getDate() + diff);
+        return formatDateYmd(d);
+      }
+      function normalizeData(raw){
+        if(raw && Array.isArray(raw.snapshots)) return raw;
+        return { meta: {}, snapshots: [] };
+      }
+      function workplaceMatches(snapshot, workplace){
+        const wk = snapshot && snapshot.workplace ? snapshot.workplace : '공통';
+        return wk === workplace || wk === '공통';
+      }
+      function selectSnapshot(data, workplace, calcDateStr){
+        const key = ymdKey(calcDateStr);
+        const snaps = Array.isArray(data.snapshots) ? data.snapshots : [];
+        let best = null;
+        for(const s of snaps){
+          if(!workplaceMatches(s, workplace)) continue;
+          const sKey = ymdKey(s.effectiveDate);
+          if(sKey <= key){
+            if(!best) best = s;
+            else {
+              const bKey = ymdKey(best.effectiveDate);
+              if(sKey > bKey) best = s;
+              else if(sKey === bKey && best.workplace === '공통' && s.workplace === workplace) best = s;
+            }
+          }
+        }
+        if(!best){
+          const candidates = snaps.filter(s => workplaceMatches(s, workplace)).sort((a,b)=>ymdKey(a.effectiveDate)-ymdKey(b.effectiveDate));
+          best = candidates[0] || null;
+        }
+        return best;
+      }
+      function validJobRecord(job){
+        if(!job || !job.직종) return false;
+        const base = Number(job.기본급 || 0);
+        return base > 0;
+      }
+      function getAllWorkplaces(){
+        const names = new Set();
+        for(const s of PAY_DATA.snapshots || []){
+          if(s.workplace && s.workplace !== '공통') names.add(s.workplace);
+        }
+        const arr = Array.from(names);
+        arr.sort((a,b)=> a === '학교' ? -1 : b === '학교' ? 1 : a.localeCompare(b,'ko'));
+        return arr.length ? arr : ['학교'];
+      }
+      function getJobsForWorkplace(workplace){
+        const seen = new Set();
+        const jobs = [];
+        const snaps = (PAY_DATA.snapshots || []).slice().sort((a,b)=>ymdKey(b.effectiveDate)-ymdKey(a.effectiveDate));
+        for(const s of snaps){
+          if(!workplaceMatches(s, workplace)) continue;
+          for(const j of s.jobs || []){
+            if(!validJobRecord(j)) continue;
+            if(seen.has(j.직종)) continue;
+            seen.add(j.직종);
+            jobs.push(j.직종);
+          }
+        }
+        return jobs;
+      }
+      function findSnapshotAndJob(workplace, dateStr, jobName){
+        const snaps = (PAY_DATA.snapshots || []).slice();
+        const preferred = selectSnapshot(PAY_DATA, workplace, dateStr);
+        if(preferred){
+          const direct = (preferred.jobs || []).find(j => validJobRecord(j) && j.직종 === jobName);
+          if(direct) return { snapshot: preferred, job: direct, fallback: false };
+        }
+        const before = snaps
+          .filter(s => workplaceMatches(s, workplace) && ymdKey(s.effectiveDate) <= ymdKey(dateStr))
+          .sort((a,b)=>ymdKey(b.effectiveDate)-ymdKey(a.effectiveDate));
+        for(const s of before){
+          const j = (s.jobs || []).find(item => validJobRecord(item) && item.직종 === jobName);
+          if(j) return { snapshot: s, job: j, fallback: true };
+        }
+        const any = snaps
+          .filter(s => workplaceMatches(s, workplace))
+          .sort((a,b)=>ymdKey(b.effectiveDate)-ymdKey(a.effectiveDate));
+        for(const s of any){
+          const j = (s.jobs || []).find(item => validJobRecord(item) && item.직종 === jobName);
+          if(j) return { snapshot: s, job: j, fallback: true };
+        }
+        return { snapshot: preferred, job: null, fallback: false };
+      }
+      function computeTenureAmount(years, snapshot, job){
+        if(isSportsCoachJob(job)) return 0;
+        const y = Math.max(0, Math.floor(Number(years || 0)));
+        if(y < 1) return 0;
+        const rate = Number(snapshot && snapshot.rules && snapshot.rules.tenureRate || 40000);
+        const capYears = Number(snapshot && snapshot.rules && snapshot.rules.tenureCapYears || 23);
+        return Math.min(y, capYears) * rate;
+      }
+      function getDefaultAllowanceAmount(name, snapshot, job, years){
+        const amounts = snapshot && snapshot.amounts ? snapshot.amounts : {};
+        const base = Number(job && job.기본급 || 0);
+        if(name === '면허가산수당'){
+          return trunc10(base * 0.05);
+        }
+        if(name === '특수업무수당'){
+          return Number(amounts[name] || 20000);
+        }
+        if(name === '정기상여금' && Number(years || 0) < 1){
+          return 0;
+        }
+        return Number(amounts[name] || 0);
+      }
+      function getWageBreakdown(dateStr){
+        const result = {
+          dateStr,
+          snapshot: null,
+          job: null,
+          years: 0,
+          base: 0,
+          tenure: 0,
+          allowances: [],
+          monthly: 0,
+          divisor: Math.max(1, Math.floor(Number(state.monthlyHours || 209))),
+          autoHourly: 0,
+          appliedHourly: 0,
+          appliedMode: 'auto',
+          notes: []
+        };
+        const lookup = findSnapshotAndJob(state.workplace, dateStr, state.job);
+        result.snapshot = lookup.snapshot;
+        result.job = lookup.job;
+        if(lookup.fallback && lookup.snapshot){
+          result.notes.push('해당 날짜 스냅샷에 직종이 없어 가장 가까운 스냅샷을 적용했습니다.');
+        }
+        if(!lookup.snapshot || !lookup.job){
+          result.notes.push('직종 또는 스냅샷 정보를 찾지 못했습니다.');
+          if(state.manualHourlyEnabled && Number(state.manualHourly || 0) > 0){
+            result.appliedHourly = trunc10(state.manualHourly);
+            result.appliedMode = 'manual';
+          }
+          return result;
+        }
+
+        const years = state.startDate ? calcYears(state.startDate, dateStr) : Math.max(0, Math.floor(Number(state.manualYears || 0)));
+        result.years = years == null ? 0 : years;
+        result.base = Number(lookup.job.기본급 || 0);
+        result.tenure = computeTenureAmount(result.years, lookup.snapshot, lookup.job);
+
+        const appliedMap = lookup.job.적용 || {};
+        for(const name of ALLOWANCE_NAMES){
+          if(!isApplied(appliedMap[name])) continue;
+          const amount = getDefaultAllowanceAmount(name, lookup.snapshot, lookup.job, result.years);
+          if(amount <= 0) continue;
+          result.allowances.push({ name, amount });
+        }
+        const allowanceSum = result.allowances.reduce((acc, item)=>acc + Number(item.amount || 0), 0);
+        result.monthly = result.base + result.tenure + allowanceSum;
+        result.divisor = Math.max(1, Math.floor(Number(state.monthlyHours || defaultMonthlyHoursForJob(lookup.job))));
+        result.autoHourly = trunc10(result.monthly / result.divisor);
+
+        if(state.manualHourlyEnabled && Number(state.manualHourly || 0) > 0){
+          result.appliedHourly = trunc10(state.manualHourly);
+          result.appliedMode = 'manual';
+        } else {
+          result.appliedHourly = result.autoHourly;
+          result.appliedMode = 'auto';
+        }
+
+        if(isSportsCoachJob(lookup.job)){
+          result.notes.push('운동부지도자는 근속수당 미적용 직종으로 근속수당을 0원으로 계산합니다.');
+        }
+        return result;
+      }
+
+      function parseTimeToMinutes(value){
+        const normalized = normalizeTimeText(value);
+        if(!normalized) return null;
+        const [hh, mm] = normalized.split(':').map(Number);
+        if(hh < 0 || hh > 23 || mm < 0 || mm > 59) return null;
+        return hh * 60 + mm;
+      }
+      function buildInterval(startValue, endValue){
+        const start = parseTimeToMinutes(startValue);
+        const endRaw = parseTimeToMinutes(endValue);
+        if(start == null || endRaw == null) return null;
+        if(endRaw === start) return null;
+        const end = endRaw < start ? endRaw + 1440 : endRaw;
+        return { start, end, duration: end - start };
+      }
+      function overlapLen(aStart, aEnd, bStart, bEnd){
+        return Math.max(0, Math.min(aEnd, bEnd) - Math.max(aStart, bStart));
+      }
+      function subtractInterval(interval, cut){
+        if(!interval) return [];
+        if(!cut) return [interval];
+        const overlap = overlapLen(interval.start, interval.end, cut.start, cut.end);
+        if(overlap <= 0) return [interval];
+        const segments = [];
+        if(interval.start < cut.start){
+          segments.push({ start: interval.start, end: Math.min(interval.end, cut.start), duration: Math.min(interval.end, cut.start) - interval.start });
+        }
+        if(interval.end > cut.end){
+          segments.push({ start: Math.max(interval.start, cut.end), end: interval.end, duration: interval.end - Math.max(interval.start, cut.end) });
+        }
+        return segments.filter(seg => seg.duration > 0);
+      }
+      function getNightMinutesForInterval(interval){
+        if(!interval) return 0;
+        return overlapLen(interval.start, interval.end, 1320, 1440) + overlapLen(interval.start, interval.end, 1440, 1800);
+      }
+      function allocateProportional(total, weights){
+        const t = Math.max(0, Math.floor(Number(total) || 0));
+        const ws = (weights || []).map(w => Math.max(0, Math.floor(Number(w) || 0)));
+        const sum = ws.reduce((a,b)=>a+b,0);
+        if(t <= 0 || sum <= 0) return ws.map(() => 0);
+        if(t >= sum) return ws.slice();
+
+        const exact = ws.map(w => w * t / sum);
+        const base = exact.map(Math.floor);
+        let remainder = t - base.reduce((a,b)=>a+b,0);
+
+        const fractions = exact.map((v,i)=>({ i, frac: v - Math.floor(v), weight: ws[i] }))
+          .sort((a,b)=>{
+            if(b.frac !== a.frac) return b.frac - a.frac;
+            if(b.weight !== a.weight) return b.weight - a.weight;
+            return a.i - b.i;
+          });
+
+        for(let k = 0; k < fractions.length && remainder > 0; k++){
+          base[fractions[k].i] += 1;
+          remainder -= 1;
+        }
+        return base;
+      }
+
+      function makeEmptyRow(overrides){
+        return Object.assign({
+          id: state.nextRowId++,
+          date: state.previewDate || todayYmd(),
+          regularStart: normalizeTimeText(state.defaultRegStart) || state.defaultRegStart || '',
+          regularEnd: normalizeTimeText(state.defaultRegEnd) || state.defaultRegEnd || '',
+          overtimeStart: '',
+          overtimeEnd: '',
+          breakMinutes: Number(state.defaultBreak || 0),
+          paidBreakSpecial: false,
+          manualHoliday: false
+        }, overrides || {});
+      }
+
+      function readSettingsFromDom(){
+        state.workplace = els.workplace.value;
+        state.job = els.job.value;
+        state.startDate = els.startDate.value;
+        state.manualYears = Number(els.manualYears.value || 0);
+        state.monthlyHours = Math.max(1, Number(els.monthlyHours.value || 209));
+        state.previewDate = els.previewDate.value || todayYmd();
+        state.defaultRegStart = String(els.defaultRegStart.value || '').trim();
+        state.defaultRegEnd = String(els.defaultRegEnd.value || '').trim();
+        state.defaultBreak = Number(els.defaultBreak.value || 0);
+        state.manualHourlyEnabled = !!els.manualHourlyEnabled.checked;
+        state.manualHourly = els.manualHourly.value;
+      }
+
+      function syncSettingsToDom(){
+        els.workplace.value = state.workplace;
+        els.job.value = state.job;
+        els.startDate.value = state.startDate || '';
+        els.manualYears.value = state.manualYears;
+        els.monthlyHours.value = state.monthlyHours;
+        els.previewDate.value = state.previewDate;
+        els.defaultRegStart.value = state.defaultRegStart;
+        els.defaultRegEnd.value = state.defaultRegEnd;
+        els.defaultBreak.value = String(state.defaultBreak);
+        els.manualHourlyEnabled.checked = !!state.manualHourlyEnabled;
+        els.manualHourly.value = state.manualHourly || '';
+        els.manualHourly.disabled = !state.manualHourlyEnabled;
+
+        const autoTenure = !!state.startDate;
+        els.manualYears.disabled = autoTenure;
+        els.tenureModeText.textContent = autoTenure
+          ? '입사일이 입력되어 행 날짜 기준으로 근속연수를 자동 계산합니다.'
+          : '입사일이 비어 있으므로 입력한 근속연수를 사용합니다.';
+      }
+
+      function populateWorkplaces(){
+        const workplaces = getAllWorkplaces();
+        els.workplace.innerHTML = workplaces.map(w => `<option value="${escapeHtmlAttr(w)}">${escapeHtml(w)}</option>`).join('');
+        if(!workplaces.includes(state.workplace)){
+          state.workplace = workplaces[0];
+        }
+        els.workplace.value = state.workplace;
+      }
+
+      function populateJobs(){
+        const jobs = getJobsForWorkplace(state.workplace);
+        els.job.innerHTML = jobs.map(name => `<option value="${escapeHtmlAttr(name)}">${escapeHtml(name)}</option>`).join('');
+        if(!jobs.includes(state.job)){
+          state.job = jobs[0] || '';
+        }
+        els.job.value = state.job;
+      }
+
+      function escapeHtml(text){
+        return String(text == null ? '' : text)
+          .replaceAll('&','&amp;')
+          .replaceAll('<','&lt;')
+          .replaceAll('>','&gt;')
+          .replaceAll('"','&quot;')
+          .replaceAll("'",'&#39;');
+      }
+      function escapeHtmlAttr(text){
+        return escapeHtml(text);
+      }
+
+      function renderPreview(){
+        const refDate = state.previewDate || todayYmd();
+        const info = getWageBreakdown(refDate);
+        const allowanceSum = info.allowances.reduce((acc, item)=>acc + item.amount, 0);
+        const sportsCoach = isSportsCoachJob(info.job);
+        els.previewBase.textContent = formatWon(info.base);
+        els.previewJobName.textContent = info.job ? info.job.직종 : '직종 정보 없음';
+        els.previewTenure.textContent = formatWon(info.tenure);
+        els.previewYears.textContent = sportsCoach
+          ? '운동부지도자 · 근속수당 미적용'
+          : `근속연수 ${info.years}년`;
+        els.previewAllowances.textContent = formatWon(allowanceSum);
+        els.previewAllowanceCount.textContent = `산입 수당 ${info.allowances.length}개`;
+        els.previewMonthly.textContent = formatWon(info.monthly);
+        els.previewDivisor.textContent = `월 산정시간 ${money(info.divisor)}시간`;
+        els.previewAutoHourly.textContent = formatWon(info.autoHourly);
+        els.previewAppliedHourly.textContent = formatWon(info.appliedHourly);
+        els.previewAppliedHourlyNote.textContent = info.appliedMode === 'manual'
+          ? '수기 시급 사용'
+          : '자동 시급 사용';
+
+        if(info.snapshot){
+          els.snapshotBadge.className = 'badge accent';
+          els.snapshotBadge.textContent = info.snapshot.label || info.snapshot.effectiveDate || '스냅샷 적용';
+        } else {
+          els.snapshotBadge.className = 'badge danger';
+          els.snapshotBadge.textContent = '스냅샷을 찾지 못했습니다';
+        }
+        els.previewHourlyBadge.className = info.appliedMode === 'manual' ? 'badge warning' : 'badge success';
+        els.previewHourlyBadge.textContent = info.appliedMode === 'manual'
+          ? `계산 적용 시급 ${formatWon(info.appliedHourly)}`
+          : `자동 시급 ${formatWon(info.appliedHourly)}`;
+
+        els.allowanceChips.innerHTML = info.allowances.length
+          ? info.allowances.map(item => `<span class="chip">${escapeHtml(item.name)} ${formatWon(item.amount)}</span>`).join('')
+          : `<span class="chip">산입 수당 없음</span>`;
+
+        const foot = [];
+        foot.push(`행별 계산은 각 행 날짜에 맞는 스냅샷과 근속연수를 사용합니다.`);
+        const defaultRegularActual = getDefaultRegularActualMinutes();
+        if(defaultRegularActual > 0){
+          foot.push(`기본설정 기준 1일 실근무시간은 ${formatHm(defaultRegularActual)}이며, 평일 법내 한도는 이를 바탕으로 주 40시간 내에서 계산합니다.`);
+        }
+        if(info.snapshot && info.snapshot.source){
+          foot.push(`참고 스냅샷 출처: ${info.snapshot.source}`);
+        }
+        if(info.notes.length){
+          foot.push(info.notes.join(' '));
+        }
+        els.previewFootnote.textContent = foot.join(' ');
+      }
+
+      function renderRowsAndSummary(focusSpec){
+        const computed = computeAllRows();
+        renderRows(computed.rows);
+        renderSummary(computed);
+        if(focusSpec){
+          restoreRowFocus(focusSpec);
+        }
+      }
+
+      function captureRowFocusSpec(target){
+        if(!target || !target.closest('#rowsBody')) return null;
+        const rowId = target.getAttribute('data-row-id');
+        const field = target.getAttribute('data-field');
+        if(!rowId || !field) return null;
+        const spec = { rowId, field, type: target.type || target.tagName.toLowerCase() };
+        if(typeof target.selectionStart === 'number') spec.selectionStart = target.selectionStart;
+        if(typeof target.selectionEnd === 'number') spec.selectionEnd = target.selectionEnd;
+        return spec;
+      }
+
+      function restoreRowFocus(spec){
+        if(!spec) return;
+        const selector = `[data-row-id="${spec.rowId}"][data-field="${spec.field}"]`;
+        const target = els.rowsBody.querySelector(selector);
+        if(!target || target.disabled) return;
+        target.focus();
+        if(typeof target.setSelectionRange === 'function' && typeof spec.selectionStart === 'number' && typeof spec.selectionEnd === 'number'){
+          try { target.setSelectionRange(spec.selectionStart, spec.selectionEnd); } catch(_){}
+        }
+      }
+
+      function computeAllRows(){
+        const rows = state.rows.map(row => JSON.parse(JSON.stringify(row)));
+        const computedRows = rows.map((row, index)=> computeRowBase(row, index));
+
+        const dateTypeMap = new Map();
+        for(const row of computedRows){
+          if(!row.dateValid) continue;
+          const key = row.date;
+          if(!dateTypeMap.has(key)) dateTypeMap.set(key, new Set());
+          dateTypeMap.get(key).add(row.isHoliday ? 'holiday' : 'weekday');
+        }
+        for(const row of computedRows){
+          if(row.dateValid && dateTypeMap.get(row.date) && dateTypeMap.get(row.date).size > 1){
+            row.notes.push('같은 날짜에 평일/휴일 입력이 혼재해 각 행 설정대로 계산했습니다.');
+          }
+        }
+
+        const nonHolidayByWeek = new Map();
+        const holidayByDate = new Map();
+
+        for(const row of computedRows){
+          row.insideMinutes = 0;
+          row.outsideMinutes = 0;
+          row.holiday150Minutes = 0;
+          row.holiday200Minutes = 0;
+          row.nightMinutes = row.segments.reduce((acc, seg)=>acc + seg.paidNight, 0);
+          row.paidMinutes = row.segments.reduce((acc, seg)=>acc + seg.paidMinutes, 0);
+          row.overlapRemovedMinutes = row.overlapRemovedMinutes || 0;
+          if(!row.dateValid || !row.hasPayableTime) continue;
+
+          if(row.isHoliday){
+            if(!holidayByDate.has(row.date)) holidayByDate.set(row.date, []);
+            holidayByDate.get(row.date).push(row);
+          } else {
+            const weekKey = getWeekStartMondayYmd(row.date);
+            if(!nonHolidayByWeek.has(weekKey)) nonHolidayByWeek.set(weekKey, []);
+            nonHolidayByWeek.get(weekKey).push(row);
+          }
+        }
+
+        for(const [weekKey, list] of nonHolidayByWeek.entries()){
+          const regularActuals = [];
+          let chosenActual = null;
+
+          for(const row of list){
+            const actual = getRegularActualMinutes(row.regularInterval, row.breakMinutes);
+            if(actual > 0){
+              regularActuals.push(actual);
+              if(chosenActual == null) chosenActual = actual;
+            }
+          }
+          if(chosenActual == null){
+            chosenActual = getDefaultRegularActualMinutes();
+          }
+
+          const uniqueActuals = Array.from(new Set(regularActuals));
+          if(uniqueActuals.length > 1){
+            list.forEach(row => row.notes.push('같은 주의 기준 정규근무 실근무시간이 서로 달라 첫 번째 행 기준으로 법내 한도를 계산했습니다.'));
+          }
+
+          let contractWeekdayCount = 5;
+          for(const [dateKey, types] of dateTypeMap.entries()){
+            if(getWeekStartMondayYmd(dateKey) !== weekKey) continue;
+            const wd = weekdayInfo(dateKey);
+            if(wd.isWeekend) continue;
+            if(types.size === 1 && types.has('holiday')){
+              contractWeekdayCount = Math.max(0, contractWeekdayCount - 1);
+            }
+          }
+
+          let remainingInside = Math.max(0, 2400 - (chosenActual * contractWeekdayCount));
+          const segments = [];
+          list.forEach(row => {
+            row.segments.forEach((seg, segIndex) => {
+              segments.push({
+                row,
+                seg,
+                dateKey: ymdKey(row.date),
+                orderKey: seg.start,
+                segIndex,
+                rowIndex: row.rowIndex
+              });
+            });
+          });
+          segments.sort((a,b)=>{
+            if(a.dateKey !== b.dateKey) return a.dateKey - b.dateKey;
+            if(a.orderKey !== b.orderKey) return a.orderKey - b.orderKey;
+            if(a.rowIndex !== b.rowIndex) return a.rowIndex - b.rowIndex;
+            return a.segIndex - b.segIndex;
+          });
+
+          for(const item of segments){
+            const pay = item.seg.paidMinutes;
+            const inside = Math.min(remainingInside, pay);
+            const outside = pay - inside;
+            item.row.insideMinutes += inside;
+            item.row.outsideMinutes += outside;
+            remainingInside -= inside;
+          }
+        }
+
+        for(const [dateKey, list] of holidayByDate.entries()){
+          let remainingHoliday150 = 480;
+          const segments = [];
+          list.forEach(row => {
+            row.segments.forEach((seg, segIndex) => {
+              segments.push({ row, seg, orderKey: seg.start, segIndex, rowIndex: row.rowIndex });
+            });
+          });
+          segments.sort((a,b)=>{
+            if(a.orderKey !== b.orderKey) return a.orderKey - b.orderKey;
+            if(a.rowIndex !== b.rowIndex) return a.rowIndex - b.rowIndex;
+            return a.segIndex - b.segIndex;
+          });
+
+          for(const item of segments){
+            const pay = item.seg.paidMinutes;
+            const h150 = Math.min(remainingHoliday150, pay);
+            const h200 = pay - h150;
+            item.row.holiday150Minutes += h150;
+            item.row.holiday200Minutes += h200;
+            remainingHoliday150 -= h150;
+          }
+        }
+
+        for(const row of computedRows){
+          row.insidePay = trunc10(row.hourly * (row.insideMinutes / 60) * 1.0);
+          row.outsidePay = trunc10(row.hourly * (row.outsideMinutes / 60) * 1.5);
+          row.nightPay = trunc10(row.hourly * (row.nightMinutes / 60) * 0.5);
+          row.holiday150Pay = trunc10(row.hourly * (row.holiday150Minutes / 60) * 1.5);
+          row.holiday200Pay = trunc10(row.hourly * (row.holiday200Minutes / 60) * 2.0);
+          row.amount = row.insidePay + row.outsidePay + row.nightPay + row.holiday150Pay + row.holiday200Pay;
+        }
+
+        const totals = {
+          rows: computedRows.filter(r => r.dateValid).length,
+          paidMinutes: computedRows.reduce((acc,r)=>acc + (r.paidMinutes || 0), 0),
+          insideMinutes: computedRows.reduce((acc,r)=>acc + (r.insideMinutes || 0), 0),
+          outsideMinutes: computedRows.reduce((acc,r)=>acc + (r.outsideMinutes || 0), 0),
+          nightMinutes: computedRows.reduce((acc,r)=>acc + (r.nightMinutes || 0), 0),
+          holiday150Minutes: computedRows.reduce((acc,r)=>acc + (r.holiday150Minutes || 0), 0),
+          holiday200Minutes: computedRows.reduce((acc,r)=>acc + (r.holiday200Minutes || 0), 0),
+          insidePay: computedRows.reduce((acc,r)=>acc + (r.insidePay || 0), 0),
+          outsidePay: computedRows.reduce((acc,r)=>acc + (r.outsidePay || 0), 0),
+          nightPay: computedRows.reduce((acc,r)=>acc + (r.nightPay || 0), 0),
+          holiday150Pay: computedRows.reduce((acc,r)=>acc + (r.holiday150Pay || 0), 0),
+          holiday200Pay: computedRows.reduce((acc,r)=>acc + (r.holiday200Pay || 0), 0),
+          amount: computedRows.reduce((acc,r)=>acc + (r.amount || 0), 0)
+        };
+
+        return { rows: computedRows, totals };
+      }
+
+      function computeRowBase(row, rowIndex){
+        const info = {
+          id: row.id,
+          rowIndex,
+          date: row.date || '',
+          dateValid: !!parseYmd(row.date),
+          weekdayLabel: '-',
+          isWeekend: false,
+          isHoliday: false,
+          manualHoliday: !!row.manualHoliday,
+          regularStart: row.regularStart || '',
+          regularEnd: row.regularEnd || '',
+          overtimeStart: row.overtimeStart || '',
+          overtimeEnd: row.overtimeEnd || '',
+          breakMinutes: Number(row.breakMinutes || 0),
+          paidBreakSpecial: !!row.paidBreakSpecial,
+          regularInterval: null,
+          overtimeInterval: null,
+          overlapRemovedMinutes: 0,
+          rawMinutes: 0,
+          segments: [],
+          notes: [],
+          snapshotLabel: '',
+          hourly: 0,
+          wageInfo: null,
+          hasPayableTime: false,
+          insideMinutes: 0,
+          outsideMinutes: 0,
+          nightMinutes: 0,
+          holiday150Minutes: 0,
+          holiday200Minutes: 0,
+          insidePay: 0,
+          outsidePay: 0,
+          nightPay: 0,
+          holiday150Pay: 0,
+          holiday200Pay: 0,
+          amount: 0
+        };
+
+        if(!info.dateValid){
+          info.notes.push('날짜를 입력하세요.');
+          return info;
+        }
+
+        const wd = weekdayInfo(info.date);
+        info.weekdayLabel = wd.label;
+        info.isWeekend = wd.isWeekend;
+        info.isHoliday = info.isWeekend || !!info.manualHoliday;
+
+        info.regularInterval = buildInterval(info.regularStart, info.regularEnd);
+        info.overtimeInterval = buildInterval(info.overtimeStart, info.overtimeEnd);
+
+        if(!info.overtimeInterval){
+          info.notes.push('초과근무 시작/종료를 입력하세요.');
+        }
+
+        const wageInfo = getWageBreakdown(info.date);
+        info.wageInfo = wageInfo;
+        info.hourly = Number(wageInfo.appliedHourly || 0);
+        info.snapshotLabel = wageInfo.snapshot ? (wageInfo.snapshot.label || wageInfo.snapshot.effectiveDate || '') : '';
+        if(wageInfo.notes && wageInfo.notes.length){
+          info.notes.push(...wageInfo.notes);
+        }
+
+        if(!info.isHoliday && !info.regularInterval){
+          info.notes.push('기본설정의 정규근무 시간이 비어 있어 평일 법내 한도를 정확히 계산하지 못할 수 있습니다.');
+        }
+
+        if(!info.overtimeInterval){
+          return info;
+        }
+
+        let rawSegments = [];
+        if(info.isHoliday){
+          rawSegments = [info.overtimeInterval];
+          if(info.paidBreakSpecial){
+            info.notes.push('유급휴게 특례를 적용하여 선택한 휴게시간을 공제하지 않았습니다.');
+          }
+        } else {
+          if(info.regularInterval){
+            const segments = subtractInterval(info.overtimeInterval, info.regularInterval);
+            info.overlapRemovedMinutes = info.overtimeInterval.duration - segments.reduce((acc, seg)=>acc + seg.duration, 0);
+            rawSegments = segments;
+            if(info.overlapRemovedMinutes > 0){
+              info.notes.push(`정규근무와 겹친 ${formatHm(info.overlapRemovedMinutes)}을 자동 제외했습니다.`);
+            }
+          } else {
+            rawSegments = [info.overtimeInterval];
+          }
+          if(info.paidBreakSpecial){
+            info.notes.push('유급휴게 특례는 휴일근로일 때만 반영했습니다.');
+          }
+        }
+
+        info.rawMinutes = rawSegments.reduce((acc, seg)=>acc + seg.duration, 0);
+        if(info.rawMinutes <= 0){
+          info.notes.push('정규근무 외 초과근무 시간이 없습니다.');
+          return info;
+        }
+
+        const actualBreak = (info.isHoliday && info.paidBreakSpecial) ? 0 : Math.min(info.breakMinutes, info.rawMinutes);
+        if(actualBreak > 0 && info.breakMinutes > info.rawMinutes){
+          info.notes.push('선택한 휴게시간이 초과근무 시간보다 길어 가능한 범위까지만 공제했습니다.');
+        }
+        const segmentBreaks = allocateProportional(actualBreak, rawSegments.map(seg => seg.duration));
+
+        info.segments = rawSegments.map((seg, idx) => {
+          const segBreak = segmentBreaks[idx];
+          const rawNight = getNightMinutesForInterval(seg);
+          const rawNonNight = seg.duration - rawNight;
+          const [breakNight] = allocateProportional(segBreak, [rawNight, rawNonNight]);
+          const paidNight = rawNight - breakNight;
+          const paidMinutes = seg.duration - segBreak;
+          return {
+            start: seg.start,
+            end: seg.end,
+            rawMinutes: seg.duration,
+            paidMinutes,
+            paidNight
+          };
+        }).filter(seg => seg.paidMinutes > 0);
+
+        info.hasPayableTime = info.segments.length > 0;
+        if(!info.hasPayableTime){
+          info.notes.push('휴게 공제 후 유급 시간이 없습니다.');
+        }
+
+        return info;
+      }
+
+      function weekdayBadgeHtml(row){
+        let cls = 'weekday-badge';
+        if(row.isWeekend) cls += ' weekend';
+        else if(row.isHoliday) cls += ' holiday';
+        const typeLabel = row.isWeekend ? '주말' : row.isHoliday ? '휴일' : '평일';
+        return `<span class="${cls}">${escapeHtml(row.weekdayLabel)}요일 · ${typeLabel}</span>`;
+      }
+
+      function renderRows(rows){
+        els.rowsBody.innerHTML = rows.map((row, idx) => {
+          const notesHtml = row.notes.length
+            ? `<div class="notes">${row.notes.map(n => `<div>${escapeHtml(n)}</div>`).join('')}</div>`
+            : `<div class="notes muted">-</div>`;
+          const snapshotHtml = row.snapshotLabel
+            ? `<div class="snapshot">${escapeHtml(row.snapshotLabel)}</div>`
+            : `<div class="snapshot">스냅샷 없음</div>`;
+          const appliedScheduleHtml = `<div class="snapshot muted">기준 정규 ${escapeHtml(row.regularStart || '')} ~ ${escapeHtml(row.regularEnd || '')} · 휴게 ${escapeHtml(String(row.breakMinutes || 0))}분</div>`;
+
+          const weekend = weekdayInfo(state.rows[idx] && state.rows[idx].date).isWeekend;
+          const holidayChecked = weekend || !!(state.rows[idx] && state.rows[idx].manualHoliday);
+          const holidayDisabled = weekend ? 'disabled' : '';
+          const paidBreakDisabled = (!holidayChecked) ? 'disabled' : '';
+          const rowClass = row.notes.length ? 'row-note' : '';
+          return `
+            <tr class="${rowClass}" data-row-id="${row.id}">
+              <td class="center">${idx + 1}</td>
+              <td class="center">
+                <div class="cell-stack">
+                  <input type="date" value="${escapeHtmlAttr(state.rows[idx].date || '')}" data-field="date" data-row-id="${row.id}" data-grid-col="1" />
+                </div>
+              </td>
+              <td class="center">
+                <div class="cell-stack">
+                  <div class="readonly soft">${weekdayBadgeHtml(row)}</div>
+                  <label class="inline-check" style="justify-content:center;">
+                    <input type="checkbox" data-field="manualHoliday" data-row-id="${row.id}" data-grid-col="2"
+                      ${holidayChecked ? 'checked' : ''} ${holidayDisabled} />
+                    <span class="mini">평일 공휴일·휴무일</span>
+                  </label>
+                </div>
+              </td>
+              <td>
+                <div class="time-pair">
+                  <input type="text" value="${escapeHtmlAttr(state.rows[idx].overtimeStart || '')}" inputmode="numeric" placeholder="예: 17:00" data-field="overtimeStart" data-row-id="${row.id}" data-grid-col="3" />
+                  <span>~</span>
+                  <input type="text" value="${escapeHtmlAttr(state.rows[idx].overtimeEnd || '')}" inputmode="numeric" placeholder="예: 19:30" data-field="overtimeEnd" data-row-id="${row.id}" data-grid-col="4" />
+                </div>
+              </td>
+              <td class="center">
+                <label class="inline-check" style="justify-content:center;">
+                  <input type="checkbox" data-field="paidBreakSpecial" data-row-id="${row.id}" data-grid-col="5"
+                    ${holidayChecked && state.rows[idx].paidBreakSpecial ? 'checked' : ''} ${paidBreakDisabled} />
+                  <span class="mini">적용</span>
+                </label>
+              </td>
+              <td class="right"><div class="readonly">${formatWon(row.hourly)}</div></td>
+              <td class="right"><div class="readonly">${formatMinutesOrDash(row.paidMinutes)}</div></td>
+              <td class="right"><div class="readonly">${formatMinutesOrDash(row.insideMinutes)}</div></td>
+              <td class="right"><div class="readonly">${formatMinutesOrDash(row.outsideMinutes)}</div></td>
+              <td class="right"><div class="readonly">${formatMinutesOrDash(row.nightMinutes)}</div></td>
+              <td class="right"><div class="readonly">${formatMinutesOrDash(row.holiday150Minutes)}</div></td>
+              <td class="right"><div class="readonly">${formatMinutesOrDash(row.holiday200Minutes)}</div></td>
+              <td class="right"><div class="readonly">${formatWon(row.amount)}</div></td>
+              <td class="text-left">
+                <div class="row-meta">
+                  ${snapshotHtml}
+                  ${appliedScheduleHtml}
+                  ${notesHtml}
+                </div>
+              </td>
+              <td class="center">
+                <button type="button" class="btn danger" data-action="delete-row" data-row-id="${row.id}">삭제</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      function renderSummary(computed){
+        const t = computed.totals;
+        els.sumRows.textContent = money(t.rows);
+        els.sumPaidTime.textContent = formatHm(t.paidMinutes);
+        els.sumInsideOutside.textContent = `${formatHm(t.insideMinutes)} / ${formatHm(t.outsideMinutes)}`;
+        els.sumNightHoliday.textContent = `${formatHm(t.nightMinutes)} / ${formatHm(t.holiday150Minutes + t.holiday200Minutes)}`;
+        els.sumAmount.textContent = formatWon(t.amount);
+
+        const rows = [
+          ['법내 연장', formatHm(t.insideMinutes), formatWon(t.insidePay)],
+          ['법외 연장', formatHm(t.outsideMinutes), formatWon(t.outsidePay)],
+          ['야간 가산', formatHm(t.nightMinutes), formatWon(t.nightPay)],
+          ['휴일근로 (8시간 이내)', formatHm(t.holiday150Minutes), formatWon(t.holiday150Pay)],
+          ['휴일근로 (8시간 초과)', formatHm(t.holiday200Minutes), formatWon(t.holiday200Pay)]
+        ];
+        els.summaryBody.innerHTML = rows.map(row => `
+          <tr>
+            <td>${escapeHtml(row[0])}</td>
+            <td class="right">${escapeHtml(row[1])}</td>
+            <td class="right">${escapeHtml(row[2])}</td>
+          </tr>
+        `).join('');
+        els.summaryTotalHours.textContent = formatHm(t.paidMinutes);
+        els.summaryTotalAmount.textContent = formatWon(t.amount);
+      }
+
+      function findRowIndexById(rowId){
+        return state.rows.findIndex(r => String(r.id) === String(rowId));
+      }
+
+      function addRow(copyLast){
+        const last = state.rows[state.rows.length - 1];
+        const row = copyLast && last
+          ? makeEmptyRow({
+              date: last.date,
+              regularStart: last.regularStart,
+              regularEnd: last.regularEnd,
+              overtimeStart: last.overtimeStart,
+              overtimeEnd: last.overtimeEnd,
+              breakMinutes: last.breakMinutes,
+              paidBreakSpecial: last.paidBreakSpecial,
+              manualHoliday: last.manualHoliday
+            })
+          : makeEmptyRow();
+        const holiday = weekdayInfo(row.date).isWeekend || !!row.manualHoliday;
+        if(!holiday) row.paidBreakSpecial = false;
+        state.rows.push(row);
+        renderPreview();
+        renderRowsAndSummary({ rowId: String(row.id), field: 'date' });
+      }
+
+      function clearRows(){
+        state.rows = [makeEmptyRow()];
+        renderPreview();
+        renderRowsAndSummary({ rowId: String(state.rows[0].id), field: 'date' });
+      }
+
+      function resetSettings(){
+        const workplaces = getAllWorkplaces();
+        state.workplace = workplaces.includes('학교') ? '학교' : workplaces[0];
+        state.job = '';
+        state.startDate = '';
+        state.manualYears = 0;
+        state.previewDate = todayYmd();
+        state.defaultRegStart = '08:40';
+        state.defaultRegEnd = '16:40';
+        state.defaultBreak = 30;
+        state.manualHourlyEnabled = false;
+        state.manualHourly = '';
+        populateJobs();
+        const lookup = findSnapshotAndJob(state.workplace, state.previewDate, els.job.value || state.job);
+        if(lookup.job){
+          state.monthlyHours = defaultMonthlyHoursForJob(lookup.job);
+        } else {
+          state.monthlyHours = 209;
+        }
+        syncSettingsToDom();
+        clearRows();
+      }
+
+      function applyDefaultScheduleToAllRows(){
+        readSettingsFromDom();
+        const normalizedStart = normalizeTimeText(state.defaultRegStart);
+        const normalizedEnd = normalizeTimeText(state.defaultRegEnd);
+        if(normalizedStart) state.defaultRegStart = normalizedStart;
+        if(normalizedEnd) state.defaultRegEnd = normalizedEnd;
+        state.rows = state.rows.map(row => Object.assign({}, row, {
+          regularStart: state.defaultRegStart || '',
+          regularEnd: state.defaultRegEnd || '',
+          breakMinutes: Number(state.defaultBreak || 0)
+        }));
+        syncSettingsToDom();
+        renderPreview();
+        renderRowsAndSummary();
+      }
+
+      function handleSettingsChange(evt){
+        const id = evt.target.id;
+        readSettingsFromDom();
+        if(id === 'workplace'){
+          const prevJob = state.job;
+          populateJobs();
+          if(!getJobsForWorkplace(state.workplace).includes(prevJob)){
+            state.job = els.job.value;
+          }
+        }
+        if(id === 'job'){
+          const lookup = findSnapshotAndJob(state.workplace, state.previewDate, state.job);
+          if(lookup.job){
+            state.monthlyHours = defaultMonthlyHoursForJob(lookup.job);
+          }
+        }
+        syncSettingsToDom();
+        renderPreview();
+        renderRowsAndSummary();
+      }
+
+      function handleRowInput(evt){
+        const target = evt.target;
+        const rowId = target.getAttribute('data-row-id');
+        const field = target.getAttribute('data-field');
+        if(!rowId || !field) return;
+        const idx = findRowIndexById(rowId);
+        if(idx < 0) return;
+
+        const focusSpec = captureRowFocusSpec(target);
+
+        if(target.type === 'checkbox'){
+          state.rows[idx][field] = target.checked;
+        } else if(field === 'breakMinutes'){
+          state.rows[idx][field] = Number(target.value || 0);
+        } else {
+          state.rows[idx][field] = target.value;
+        }
+
+        const holiday = weekdayInfo(state.rows[idx].date).isWeekend || !!state.rows[idx].manualHoliday;
+        if(!holiday){
+          state.rows[idx].paidBreakSpecial = false;
+        }
+
+        renderPreview();
+        renderRowsAndSummary(focusSpec);
+      }
+
+      function handleRowsClick(evt){
+        const btn = evt.target.closest('[data-action="delete-row"]');
+        if(!btn) return;
+        const rowId = btn.getAttribute('data-row-id');
+        const idx = findRowIndexById(rowId);
+        if(idx < 0) return;
+        state.rows.splice(idx, 1);
+        if(state.rows.length === 0) state.rows.push(makeEmptyRow());
+        const focusRow = state.rows[Math.min(idx, state.rows.length - 1)];
+        renderPreview();
+        renderRowsAndSummary(focusRow ? { rowId: String(focusRow.id), field: 'date' } : null);
+      }
+
+      function wireEvents(){
+        [
+          'workplace','job','startDate','manualYears','monthlyHours','previewDate',
+          'defaultRegStart','defaultRegEnd','defaultBreak','manualHourlyEnabled','manualHourly'
+        ].forEach(id => {
+          els[id].addEventListener('input', handleSettingsChange);
+          els[id].addEventListener('change', handleSettingsChange);
+        });
+
+        els.applyDefaultScheduleBtn.addEventListener('click', applyDefaultScheduleToAllRows);
+        els.addRowBtn.addEventListener('click', () => addRow(false));
+        els.cloneLastRowBtn.addEventListener('click', () => addRow(true));
+        els.clearRowsBtn.addEventListener('click', clearRows);
+        els.resetSettingsBtn.addEventListener('click', resetSettings);
+        els.rowsBody.addEventListener('input', handleRowInput);
+        els.rowsBody.addEventListener('change', handleRowInput);
+        els.rowsBody.addEventListener('click', handleRowsClick);
+        document.addEventListener('keydown', handleGridArrowNavigation, true);
+        els.downloadBtn.addEventListener('click', downloadExcel);
+      }
+
+      function getFocusableGridElements(){
+        return Array.from(els.rowsBody.querySelectorAll('[data-grid-col]'));
+      }
+
+      function handleGridArrowNavigation(evt){
+        const target = evt.target;
+        if(!target || !target.closest('#rowsBody')) return;
+        const key = evt.key;
+        if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(key)) return;
+
+        const rowId = target.getAttribute('data-row-id');
+        const col = Number(target.getAttribute('data-grid-col'));
+        if(!rowId || !col) return;
+
+        const currentRowIndex = findRowIndexById(rowId);
+        if(currentRowIndex < 0) return;
+
+        const maxCol = Math.max(0, ...Array.from(els.rowsBody.querySelectorAll('[data-grid-col]')).map(el => Number(el.getAttribute('data-grid-col')) || 0));
+        let nextTarget = null;
+        if(key === 'ArrowUp' || key === 'ArrowDown'){
+          const step = key === 'ArrowUp' ? -1 : 1;
+          for(let nextRowIndex = currentRowIndex + step; nextRowIndex >= 0 && nextRowIndex < state.rows.length; nextRowIndex += step){
+            const candidate = els.rowsBody.querySelector(`[data-row-id="${state.rows[nextRowIndex].id}"][data-grid-col="${col}"]`);
+            if(candidate && !candidate.disabled){
+              nextTarget = candidate;
+              break;
+            }
+          }
+        } else {
+          if(shouldKeepCursorMovement(target, key)) return;
+          const step = key === 'ArrowLeft' ? -1 : 1;
+          for(let nextCol = col + step; nextCol >= 1 && nextCol <= maxCol; nextCol += step){
+            const candidate = els.rowsBody.querySelector(`[data-row-id="${rowId}"][data-grid-col="${nextCol}"]`);
+            if(candidate && !candidate.disabled){
+              nextTarget = candidate;
+              break;
+            }
+          }
+        }
+        if(nextTarget){
+          evt.preventDefault();
+          nextTarget.focus();
+          if(typeof nextTarget.select === 'function' && nextTarget.tagName === 'INPUT' && nextTarget.type !== 'checkbox'){
+            try { nextTarget.select(); } catch(_){}
+          }
+        }
+      }
+
+      function shouldKeepCursorMovement(target, key){
+        if(target.tagName !== 'INPUT') return false;
+        const type = (target.type || '').toLowerCase();
+        if(['date','time','checkbox'].includes(type)) return false;
+        if(type === 'number') return false;
+        const posStart = target.selectionStart;
+        const posEnd = target.selectionEnd;
+        const len = (target.value || '').length;
+        if(key === 'ArrowLeft' && posStart > 0) return true;
+        if(key === 'ArrowRight' && posEnd < len) return true;
+        return false;
+      }
+
+      function getExportData(){
+        const computed = computeAllRows();
+        const detailRows = computed.rows.map((row, idx) => {
+          const typeLabel = row.isWeekend ? '주말' : row.isHoliday ? '휴일' : '평일';
+          const notes = row.notes.join(' / ');
+          return {
+            no: idx + 1,
+            date: row.date,
+            weekday: row.weekdayLabel,
+            type: typeLabel,
+            regularBasis: `${row.regularStart || ''} ~ ${row.regularEnd || ''}`.trim(),
+            breakMinutes: row.breakMinutes,
+            overtime: `${row.overtimeStart || ''} ~ ${row.overtimeEnd || ''}`.trim(),
+            paidBreakSpecial: row.paidBreakSpecial ? '예' : '아니오',
+            hourly: row.hourly,
+            paidMinutes: row.paidMinutes,
+            insideMinutes: row.insideMinutes,
+            outsideMinutes: row.outsideMinutes,
+            nightMinutes: row.nightMinutes,
+            holiday150Minutes: row.holiday150Minutes,
+            holiday200Minutes: row.holiday200Minutes,
+            insidePay: row.insidePay,
+            outsidePay: row.outsidePay,
+            nightPay: row.nightPay,
+            holiday150Pay: row.holiday150Pay,
+            holiday200Pay: row.holiday200Pay,
+            amount: row.amount,
+            snapshot: row.snapshotLabel,
+            notes
+          };
+        });
+        return { computed, detailRows };
+      }
+
+      function downloadExcel(){
+        const exportData = getExportData();
+        const wb = {
+          sheets: [
+            {
+              name: '계산결과',
+              rows: buildResultSheetRows(exportData)
+            },
+            {
+              name: '기본설정',
+              rows: buildSettingsSheetRows()
+            }
+          ]
+        };
+        const blob = workbookToXlsxBlob(wb);
+        const fileName = `교육공무직_초과근무수당_${todayYmd().replaceAll('-','')}.xlsx`;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      function buildResultSheetRows(exportData){
+        const { computed, detailRows } = exportData;
+        const rows = [];
+        rows.push(['교육공무직 초과근무수당 계산 결과']);
+        rows.push(['다운로드 시각', new Date().toLocaleString('ko-KR')]);
+        rows.push([]);
+        rows.push([
+          'No','날짜','요일','구분','기준 정규근무','기준 휴게(분)','초과근무','유급휴게특례',
+          '적용시급','유급시간(분)','법내(분)','법외(분)','야간(분)','휴일<=8h(분)','휴일>8h(분)',
+          '법내금액','법외금액','야간가산','휴일<=8h금액','휴일>8h금액','합계','스냅샷','비고'
+        ]);
+        detailRows.forEach(r => {
+          rows.push([
+            r.no, r.date, r.weekday, r.type, r.regularBasis, r.breakMinutes, r.overtime, r.paidBreakSpecial,
+            r.hourly, r.paidMinutes, r.insideMinutes, r.outsideMinutes, r.nightMinutes, r.holiday150Minutes, r.holiday200Minutes,
+            r.insidePay, r.outsidePay, r.nightPay, r.holiday150Pay, r.holiday200Pay, r.amount, r.snapshot, r.notes
+          ]);
+        });
+        rows.push([]);
+        rows.push(['합계']);
+        rows.push(['총 유효 행 수', computed.totals.rows]);
+        rows.push(['총 유급시간(분)', computed.totals.paidMinutes]);
+        rows.push(['법내 연장(분)', computed.totals.insideMinutes, '금액', computed.totals.insidePay]);
+        rows.push(['법외 연장(분)', computed.totals.outsideMinutes, '금액', computed.totals.outsidePay]);
+        rows.push(['야간 가산(분)', computed.totals.nightMinutes, '금액', computed.totals.nightPay]);
+        rows.push(['휴일근로 8시간 이내(분)', computed.totals.holiday150Minutes, '금액', computed.totals.holiday150Pay]);
+        rows.push(['휴일근로 8시간 초과(분)', computed.totals.holiday200Minutes, '금액', computed.totals.holiday200Pay]);
+        rows.push(['총 지급액', computed.totals.amount]);
+        rows.push([]);
+        rows.push(['참고']);
+        rows.push(['주말은 자동 휴일로 계산하며, 평일 공휴일/휴무일은 행의 휴일 체크값을 사용합니다.']);
+        rows.push(['평일 법내/법외는 기본설정 정규근무시간에서 휴게를 뺀 1일 실근무시간을 기준으로 주 40시간 범위 안에서 계산합니다.']);
+        rows.push(['자정 넘김 근무는 선택한 날짜 기준으로 묶어 계산합니다.']);
+        rows.push(['휴게시간은 각 구간에 비례 배분하여 반영하며, 금액은 각 항목별 10원 미만 절삭 후 합산합니다.']);
+        return rows;
+      }
+
+      function buildSettingsSheetRows(){
+        const ref = getWageBreakdown(state.previewDate || todayYmd());
+        const rows = [];
+        rows.push(['기본 설정']);
+        rows.push(['근무지', state.workplace]);
+        rows.push(['직종', state.job]);
+        rows.push(['최초 임용일', state.startDate || '']);
+        rows.push(['수동 근속연수', state.startDate ? '(입사일 기준 자동)' : state.manualYears]);
+        rows.push(['월 통상임금 산정시간', state.monthlyHours]);
+        rows.push(['통상임금 미리보기 기준일', state.previewDate]);
+        rows.push(['기본 정규근무', `${state.defaultRegStart} ~ ${state.defaultRegEnd}`]);
+        rows.push(['기본 휴게(분)', state.defaultBreak]);
+        rows.push(['수기 시급 사용', state.manualHourlyEnabled ? '예' : '아니오']);
+        rows.push(['수기 시급', state.manualHourlyEnabled ? trunc10(state.manualHourly || 0) : '']);
+        rows.push([]);
+        rows.push(['통상임금 미리보기']);
+        rows.push(['적용 스냅샷', ref.snapshot ? (ref.snapshot.label || ref.snapshot.effectiveDate) : '']);
+        rows.push(['기본급', ref.base]);
+        rows.push(['근속연수', ref.years]);
+        rows.push(['근속수당', ref.tenure]);
+        rows.push(['산입수당 합계', ref.allowances.reduce((acc, item)=>acc + item.amount, 0)]);
+        rows.push(['월 통상임금 합계', ref.monthly]);
+        rows.push(['자동 시급', ref.autoHourly]);
+        rows.push(['계산에 쓰는 시급', ref.appliedHourly]);
+        rows.push([]);
+        rows.push(['반영 수당']);
+        ref.allowances.forEach(item => rows.push([item.name, item.amount]));
+        rows.push([]);
+        rows.push(['참고']);
+        rows.push(['운동부지도자는 근속수당 미적용 직종으로 항상 0원 처리합니다.']);
+        return rows;
+      }
+
+      function workbookToXlsxBlob(workbook){
+        const files = [];
+        const sheetXmls = workbook.sheets.map((sheet, idx) => buildSheetXml(sheet.rows, idx + 1));
+        files.push({ name: '[Content_Types].xml', content: buildContentTypesXml(workbook.sheets.length) });
+        files.push({ name: '_rels/.rels', content: buildRootRelsXml() });
+        files.push({ name: 'xl/workbook.xml', content: buildWorkbookXml(workbook.sheets) });
+        files.push({ name: 'xl/_rels/workbook.xml.rels', content: buildWorkbookRelsXml(workbook.sheets.length) });
+        files.push({ name: 'xl/styles.xml', content: buildStylesXml() });
+        workbook.sheets.forEach((sheet, idx) => {
+          files.push({ name: `xl/worksheets/sheet${idx + 1}.xml`, content: sheetXmls[idx] });
+        });
+        const zipBytes = createZip(files.map(file => ({
+          name: file.name,
+          data: new TextEncoder().encode(file.content)
+        })));
+        return new Blob([zipBytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      }
+
+      function xmlEscape(value){
+        return String(value == null ? '' : value)
+          .replaceAll('&','&amp;')
+          .replaceAll('<','&lt;')
+          .replaceAll('>','&gt;')
+          .replaceAll('"','&quot;')
+          .replaceAll("'",'&apos;');
+      }
+      function colLetter(n){
+        let s = '';
+        let x = n;
+        while(x > 0){
+          const mod = (x - 1) % 26;
+          s = String.fromCharCode(65 + mod) + s;
+          x = Math.floor((x - 1) / 26);
+        }
+        return s;
+      }
+      function buildSheetXml(rows, sheetIndex){
+        const maxCols = rows.reduce((m, row)=>Math.max(m, row.length), 0);
+        const dimension = rows.length && maxCols ? `A1:${colLetter(maxCols)}${rows.length}` : 'A1';
+        const rowXml = rows.map((row, rIdx) => {
+          const cells = row.map((cell, cIdx) => buildCellXml(rIdx + 1, cIdx + 1, cell)).join('');
+          return `<row r="${rIdx + 1}">${cells}</row>`;
+        }).join('');
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <dimension ref="${dimension}"/>
+  <sheetViews><sheetView workbookViewId="0"/></sheetViews>
+  <sheetFormatPr defaultRowHeight="15"/>
+  <sheetData>${rowXml}</sheetData>
+</worksheet>`;
+      }
+      function buildCellXml(rowNum, colNum, cellValue){
+        const ref = `${colLetter(colNum)}${rowNum}`;
+        if(cellValue == null || cellValue === ''){
+          return `<c r="${ref}"/>`;
+        }
+        if(typeof cellValue === 'number' && Number.isFinite(cellValue)){
+          return `<c r="${ref}"><v>${cellValue}</v></c>`;
+        }
+        if(typeof cellValue === 'boolean'){
+          return `<c r="${ref}" t="b"><v>${cellValue ? 1 : 0}</v></c>`;
+        }
+        return `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${xmlEscape(cellValue)}</t></is></c>`;
+      }
+      function buildContentTypesXml(sheetCount){
+        const sheetOverrides = Array.from({ length: sheetCount }, (_, i) =>
+          `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`
+        ).join('');
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  ${sheetOverrides}
+</Types>`;
+      }
+      function buildRootRelsXml(){
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+      }
+      function buildWorkbookXml(sheets){
+        const sheetNodes = sheets.map((sheet, idx) =>
+          `<sheet name="${xmlEscape(sheet.name)}" sheetId="${idx + 1}" r:id="rId${idx + 1}"/>`
+        ).join('');
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+ xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>${sheetNodes}</sheets>
+</workbook>`;
+      }
+      function buildWorkbookRelsXml(sheetCount){
+        const sheetRels = Array.from({ length: sheetCount }, (_, i) =>
+          `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`
+        ).join('');
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  ${sheetRels}
+  <Relationship Id="rId${sheetCount + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+      }
+      function buildStylesXml(){
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>
+  <fills count="2">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+  </fills>
+  <borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>
+  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+      }
+
+      function createZip(files){
+        const encoder = new TextEncoder();
+        const parts = [];
+        const centralParts = [];
+        let offset = 0;
+
+        files.forEach(file => {
+          const nameBytes = encoder.encode(file.name);
+          const data = file.data instanceof Uint8Array ? file.data : new Uint8Array(file.data);
+          const crc = crc32(data);
+          const localHeader = new Uint8Array(30 + nameBytes.length);
+          const lh = new DataView(localHeader.buffer);
+          lh.setUint32(0, 0x04034b50, true);
+          lh.setUint16(4, 20, true);
+          lh.setUint16(6, 0, true);
+          lh.setUint16(8, 0, true);
+          lh.setUint16(10, dosTime(), true);
+          lh.setUint16(12, dosDate(), true);
+          lh.setUint32(14, crc, true);
+          lh.setUint32(18, data.length, true);
+          lh.setUint32(22, data.length, true);
+          lh.setUint16(26, nameBytes.length, true);
+          lh.setUint16(28, 0, true);
+          localHeader.set(nameBytes, 30);
+
+          parts.push(localHeader, data);
+
+          const central = new Uint8Array(46 + nameBytes.length);
+          const ch = new DataView(central.buffer);
+          ch.setUint32(0, 0x02014b50, true);
+          ch.setUint16(4, 20, true);
+          ch.setUint16(6, 20, true);
+          ch.setUint16(8, 0, true);
+          ch.setUint16(10, 0, true);
+          ch.setUint16(12, dosTime(), true);
+          ch.setUint16(14, dosDate(), true);
+          ch.setUint32(16, crc, true);
+          ch.setUint32(20, data.length, true);
+          ch.setUint32(24, data.length, true);
+          ch.setUint16(28, nameBytes.length, true);
+          ch.setUint16(30, 0, true);
+          ch.setUint16(32, 0, true);
+          ch.setUint16(34, 0, true);
+          ch.setUint16(36, 0, true);
+          ch.setUint32(38, 0, true);
+          ch.setUint32(42, offset, true);
+          central.set(nameBytes, 46);
+          centralParts.push(central);
+
+          offset += localHeader.length + data.length;
+        });
+
+        const centralSize = centralParts.reduce((sum, arr)=>sum + arr.length, 0);
+        const end = new Uint8Array(22);
+        const eh = new DataView(end.buffer);
+        eh.setUint32(0, 0x06054b50, true);
+        eh.setUint16(4, 0, true);
+        eh.setUint16(6, 0, true);
+        eh.setUint16(8, files.length, true);
+        eh.setUint16(10, files.length, true);
+        eh.setUint32(12, centralSize, true);
+        eh.setUint32(16, offset, true);
+        eh.setUint16(20, 0, true);
+
+        const totalLength = parts.reduce((sum, arr)=>sum + arr.length, 0) + centralSize + end.length;
+        const out = new Uint8Array(totalLength);
+        let pos = 0;
+        [...parts, ...centralParts, end].forEach(arr => {
+          out.set(arr, pos);
+          pos += arr.length;
+        });
+        return out;
+      }
+
+      function dosTime(){
+        const d = new Date();
+        return ((d.getHours() & 0x1f) << 11) | ((d.getMinutes() & 0x3f) << 5) | ((Math.floor(d.getSeconds() / 2)) & 0x1f);
+      }
+      function dosDate(){
+        const d = new Date();
+        const year = Math.max(1980, d.getFullYear());
+        return (((year - 1980) & 0x7f) << 9) | (((d.getMonth() + 1) & 0x0f) << 5) | (d.getDate() & 0x1f);
+      }
+
+      const CRC_TABLE = (() => {
+        const table = new Uint32Array(256);
+        for(let n = 0; n < 256; n++){
+          let c = n;
+          for(let k = 0; k < 8; k++){
+            c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+          }
+          table[n] = c >>> 0;
+        }
+        return table;
+      })();
+
+      function crc32(bytes){
+        let c = 0 ^ (-1);
+        for(let i = 0; i < bytes.length; i++){
+          c = (c >>> 8) ^ CRC_TABLE[(c ^ bytes[i]) & 0xFF];
+        }
+        return (c ^ (-1)) >>> 0;
+      }
+
+      function init(){
+        collectEls();
+        const workplaces = getAllWorkplaces();
+        state.workplace = workplaces.includes('학교') ? '학교' : workplaces[0];
+        state.previewDate = todayYmd();
+        populateWorkplaces();
+        populateJobs();
+
+        const lookup = findSnapshotAndJob(state.workplace, state.previewDate, state.job);
+        if(lookup.job){
+          state.job = lookup.job.직종;
+          state.monthlyHours = defaultMonthlyHoursForJob(lookup.job);
+        } else {
+          state.job = els.job.value || '';
+          state.monthlyHours = 209;
+        }
+
+        state.rows = [makeEmptyRow()];
+        syncSettingsToDom();
+        renderPreview();
+        renderRowsAndSummary();
+        wireEvents();
+      }
+
+      init();
+    })();
+  </script>
+</div>
+</body>
+</html>
