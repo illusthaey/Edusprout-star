@@ -1707,3 +1707,25 @@ body.alien-side-bg .to-top{
     -webkit-backdrop-filter: none !important;
   }
 }
+
+
+/* =========================================================
+   제목/서브문구 정렬 공통 고정 (2026.3.22)
+   - h1은 항상 가운데 정렬
+   - <p class="sub">는 항상 왼쪽 정렬
+   - 상세 페이지 개별 inline CSS보다 우선하도록 specificity를 높임
+   ========================================================= */
+
+body h1,
+body .site-header h1,
+body .page-head h1,
+body main.overtime-app h1{
+  text-align: center !important;
+}
+
+body p.sub,
+body .site-header p.sub,
+body .page-head p.sub,
+body main.overtime-app p.sub{
+  text-align: left !important;
+}
