@@ -989,7 +989,7 @@
           id: "2026-wonju-principal-coach-0101",
           workplace: "학교장 임용",
           effectiveDate: "2026-01-01",
-          label: "2026.01.01 ~ 2026.12.31 (개발자 근무 시(市) 지원)",
+          label: "2026.01.01 ~ 2026.12.31 (**시 교육경비 지원)",
           amounts: {
             "정액급식비": 140000,
             "정기상여금": 146400,
@@ -1019,7 +1019,7 @@
               "일급": 84060
             }
           ],
-          source: "2026.1.~12월 개발자 근무 시(市) 학교운동부지도자 인건비 지원 내역, 교육과 문서 참고"
+          source: "2026.1.~12월 **시 교육경비 학교운동부지도자 인건비 지원 내역, 교육과 문서 참고"
         }
       ]
     };
@@ -1322,7 +1322,7 @@
         if(dateStr && lookup.snapshot){
           const year = parseYmd(dateStr) ? parseYmd(dateStr).getFullYear() : null;
           if(year && year !== 2026){
-            result.notes.push('본 계산기는 2026년 원주시 지원 기준 단일 스냅샷을 적용합니다.');
+            result.notes.push('2026년 기준 인건비 지원 내역 참고함');
           }
         }
         return result;
@@ -2119,7 +2119,7 @@
         rows.push(['기본 설정']);
         rows.push(['임용 구분', FIXED_WORKPLACE]);
         rows.push(['직종', FIXED_JOB]);
-        rows.push(['지원 기준', '원주시 지원 학교운동부지도자']);
+        rows.push(['지원 기준', '**시 지원 학교운동부지도자']);
         rows.push(['월 통상임금 산정시간', state.monthlyHours]);
         rows.push(['기준 정규근무', `${state.defaultRegStart} ~ ${state.defaultRegEnd}`]);
         rows.push(['기준 휴게(분)', state.defaultBreak]);
