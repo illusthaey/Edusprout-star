@@ -29,9 +29,9 @@
       --radius:16px;
       --shadow:0 8px 24px rgba(15,23,42,.06);
       --sticky-no-width:72px;
-      --sticky-entry-width:440px;
+      --sticky-entry-width:452px;
       --rows-header-height:50px;
-      --entry-height:92px;
+      --entry-height:116px;
     }
     *{box-sizing:border-box}
     html{font-size:16px}
@@ -401,7 +401,7 @@
       border-collapse:separate;
       border-spacing:0;
       width:100%;
-      min-width:1460px;
+      min-width:1470px;
       table-layout:fixed;
       background:#fff;
       font-size:.92rem;
@@ -412,9 +412,9 @@
     table.sheet col.col-inside{ width:96px; }
     table.sheet col.col-outside{ width:96px; }
     table.sheet col.col-night{ width:96px; }
-    table.sheet col.col-holiday{ width:128px; }
-    table.sheet col.col-amount{ width:118px; }
-    table.sheet col.col-note{ width:250px; }
+    table.sheet col.col-holiday{ width:122px; }
+    table.sheet col.col-amount{ width:112px; }
+    table.sheet col.col-note{ width:236px; }
     table.sheet col.col-delete{ width:88px; }
 
     table.sheet th,
@@ -492,26 +492,31 @@
     .entry-line{
       display:grid;
       align-items:center;
-      gap:12px;
-      padding:8px 10px;
+      gap:10px;
+      padding:6px 8px;
       min-height:calc(var(--entry-height) / 2);
     }
     .entry-line-top{
-      grid-template-columns:168px 1fr;
+      grid-template-columns:160px 1fr;
       border-bottom:1px dashed #d9e2ef;
     }
     .entry-line-bottom{
-      grid-template-columns:minmax(0,1fr) 118px auto;
+      grid-template-columns:minmax(0,1fr) auto;
+      grid-template-areas:
+        "time request"
+        "special special";
+      align-items:start;
+      gap:6px 10px;
     }
     .entry-date-input{
-      width:160px;
-      min-width:160px;
+      width:156px;
+      min-width:156px;
     }
     .entry-day-wrap{
       display:flex;
       flex-wrap:wrap;
       align-items:center;
-      gap:10px 12px;
+      gap:8px 10px;
     }
     .weekday-badge{
       display:inline-flex;
@@ -542,10 +547,11 @@
       line-height:1.4;
     }
     .time-line{
+      grid-area:time;
       display:grid;
-      grid-template-columns:110px 12px 110px;
+      grid-template-columns:104px 12px 104px;
       align-items:center;
-      gap:8px;
+      gap:6px;
       min-width:0;
     }
     .time-line span{
@@ -553,36 +559,42 @@
       color:var(--muted);
     }
     .time-input{
-      width:110px;
-      min-width:110px;
+      width:104px;
+      min-width:104px;
       text-align:center;
     }
     .request-box{
+      grid-area:request;
       display:grid;
       gap:4px;
       justify-items:center;
+      align-self:start;
+      min-width:110px;
       background:var(--soft);
       border:1px solid #d6dde8;
       border-radius:10px;
-      padding:8px 10px;
+      padding:6px 8px;
       white-space:nowrap;
     }
     .request-box .box-label{
-      font-size:.74rem;
+      font-size:.72rem;
       color:#667085;
       line-height:1.2;
     }
     .request-box .box-value{
       font-weight:800;
       color:#0f172a;
+      font-size:1.02rem;
       line-height:1.2;
     }
     .holiday-option{
       white-space:nowrap;
     }
     .special-check{
+      grid-area:special;
       white-space:nowrap;
-      justify-self:end;
+      justify-self:start;
+      margin-left:2px;
     }
     .readonly{
       background:var(--soft);
@@ -674,13 +686,10 @@
 
     @media (max-width: 1100px){
       :root{
-        --sticky-entry-width:420px;
+        --sticky-entry-width:430px;
       }
       .entry-line-top{
-        grid-template-columns:160px 1fr;
-      }
-      .entry-line-bottom{
-        grid-template-columns:minmax(0,1fr) 110px auto;
+        grid-template-columns:156px 1fr;
       }
     }
 
@@ -700,6 +709,20 @@
       }
       .entry-line-bottom{
         grid-template-columns:1fr;
+        grid-template-areas:
+          "time"
+          "request"
+          "special";
+      }
+      .time-line{
+        grid-template-columns:minmax(0,1fr) 12px minmax(0,1fr);
+      }
+      .time-input{
+        width:100%;
+        min-width:0;
+      }
+      .request-box{
+        justify-self:start;
       }
       .special-check{
         justify-self:start;
