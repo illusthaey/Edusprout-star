@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>사업관리카드 엑셀표 뷰어</title>
 
-
+  
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-BQLFX9NXE4"></script>
 <script>
@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="/static/style.css" />
   <script defer src="/static/global-loader.js"></script>
   <script defer src="/static/footer.js"></script>
-
+  
   <style>
 
 :root{
@@ -431,6 +431,31 @@ button:disabled{
   box-shadow: inset -10px 0 10px -10px rgba(15, 23, 42, 0.28);
 }
 
+
+.grid-table tbody tr.is-detail-subtotal td{
+  background: #4b5563;
+  color: #ffffff;
+  font-weight: 700;
+  border-color: #374151;
+}
+
+.grid-table tbody tr.is-detail-subtotal:nth-child(even) td,
+.grid-table tbody tr.is-detail-subtotal:nth-child(odd) td{
+  background: #4b5563;
+}
+
+.grid-table tbody tr.is-detail-subtotal td.is-frozen{
+  background: #4b5563;
+}
+
+.grid-table tbody tr.is-detail-subtotal td.is-empty{
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.grid-table tbody tr.is-detail-subtotal td.freeze-boundary::after{
+  box-shadow: inset -10px 0 10px -10px rgba(0, 0, 0, 0.38);
+}
+
 .grid-table td.is-empty{
   color: #cbd5e1;
 }
@@ -549,19 +574,19 @@ button:disabled{
   </style>
 </head>
 
+
 <body class="alien-side-bg">
-<div class="alien-page-frame">
   <main class="viewer-app">
     <section class="section">
       <div class="hero-top">
         <div>
           <h1>사업관리카드 엑셀표 뷰어</h1>
-          <p class="sub">엑셀 파일을 드래그해서 올리면 브라우저에서 바로 표를 보여줍니다. 헤더 행은 항상 틀고정되고, 기본은 4열까지 고정됩니다. 필요하면 고정 열 수를 바꿔서 볼 수 있습니다.</p>
+          <p class="sub">엑셀 파일을 드래그해서 올리면 브라우저에서 바로 표를 보여줍니다. 헤더 행은 항상 틀고정되고, 기본은 1열까지 고정됩니다. 필요하면 고정 열 수를 바꿔서 볼 수 있습니다.</p>
         </div>
         <div class="hero-pills" aria-hidden="true">
           <span class="pill">단일 HTML</span>
           <span class="pill">헤더 고정</span>
-          <span class="pill">기본 4열 고정</span>
+          <span class="pill">기본 1열 고정</span>
         </div>
       </div>
 
@@ -734,6 +759,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
   function normalizeText(value) {
     return value == null ? "" : String(value);
+  }
+
+  function normalizeCompareText(value) {
+    return normalizeText(value)
+      .toLowerCase()
+      .replace(/[\s\[\]\(\){}<>【】「」『』]/g, "");
   }
 
   function stripQuotesAndEscapes(formatCode) {
@@ -1175,7 +1206,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     if (!state.sheetSettings[sheet.name]) {
       state.sheetSettings[sheet.name] = {
         headerRow: sheet.detectedHeaderRow || 1,
-        freezeCount: Math.min(4, Math.max(sheet.maxCol, 0)),
+        freezeCount: Math.min(1, Math.max(sheet.maxCol, 0)),
         expandMerged: true
       };
     }
@@ -1206,6 +1237,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     return items;
   }
 
+  function isDetailSubtotalRow(cells) {
+    const normalizedRowText = cells.map((cell) => normalizeCompareText(cell?.text)).join("");
+    return normalizedRowText.includes("세부항목소계");
+  }
+
   function buildViewModel(sheet, settings) {
     const headerRow = clamp(Number(settings.headerRow) || 1, 1, Math.max(sheet.maxRow, 1));
     const matrix = settings.expandMerged ? sheet.expandedMatrix : sheet.rawMatrix;
@@ -1228,9 +1264,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         if (!matches) continue;
       }
 
+      const cells = Array.from({ length: sheet.maxCol }, (_, idx) => row[idx] || EMPTY_CELL);
       rows.push({
         excelRow: rowIndex + 1,
-        cells: Array.from({ length: sheet.maxCol }, (_, idx) => row[idx] || EMPTY_CELL)
+        cells,
+        isDetailSubtotal: isDetailSubtotalRow(cells)
       });
     }
 
@@ -1416,6 +1454,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     const tbody = document.createElement("tbody");
     viewModel.rows.forEach((row) => {
       const tr = document.createElement("tr");
+      if (row.isDetailSubtotal) {
+        tr.classList.add("is-detail-subtotal");
+      }
       row.cells.forEach((cell, colIndex) => {
         const td = document.createElement("td");
         td.dataset.colIndex = String(colIndex);
@@ -1482,7 +1523,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     const firstSheet = await getSheetData(state.currentSheetName);
     const settings = getCurrentSettings(firstSheet);
     settings.headerRow = firstSheet.detectedHeaderRow || 1;
-    settings.freezeCount = Math.min(4, Math.max(firstSheet.maxCol, 0));
+    settings.freezeCount = Math.min(1, Math.max(firstSheet.maxCol, 0));
     settings.expandMerged = true;
 
     syncControls(firstSheet, settings);
