@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>사업관리카드 엑셀표 뷰어</title>
 
-  
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-BQLFX9NXE4"></script>
 <script>
@@ -253,6 +252,12 @@ button:disabled{
   font-size: 0.95rem;
 }
 
+.action-buttons{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .btn{
   display: inline-flex;
   align-items: center;
@@ -275,6 +280,12 @@ button:disabled{
   background: #fff;
   color: #111827;
   border-color: var(--line-strong);
+}
+
+.btn.danger-ghost{
+  background: #fff5f5;
+  color: #991b1b;
+  border-color: #fca5a5;
 }
 
 .alert{
@@ -456,6 +467,29 @@ button:disabled{
   box-shadow: inset -10px 0 10px -10px rgba(0, 0, 0, 0.38);
 }
 
+.grid-table td.is-negative-balance{
+  background: #fee2e2;
+  color: #b91c1c;
+  font-weight: 800;
+  border-color: #fecaca;
+}
+
+.grid-table tbody tr:nth-child(even) td.is-negative-balance,
+.grid-table tbody tr:nth-child(odd) td.is-negative-balance,
+.grid-table td.is-negative-balance.is-frozen{
+  background: #fee2e2;
+}
+
+.grid-table tbody tr.is-detail-subtotal td.is-negative-balance{
+  background: #b91c1c;
+  color: #ffffff;
+  border-color: #991b1b;
+}
+
+.grid-table tbody tr.is-detail-subtotal td.is-negative-balance.is-frozen{
+  background: #b91c1c;
+}
+
 .grid-table td.is-empty{
   color: #cbd5e1;
 }
@@ -574,7 +608,6 @@ button:disabled{
   </style>
 </head>
 
-
 <body class="alien-side-bg">
   <main class="viewer-app">
     <section class="section">
@@ -603,6 +636,7 @@ button:disabled{
         <ul class="note-list">
           <li>사업관리카드처럼 병합 셀이 많은 표는 기본으로 값을 아래 행까지 펼쳐서 보여줍니다.</li>
           <li>헤더 행은 자동 감지되며, 필요하면 직접 행 번호를 바꿔서 다시 볼 수 있습니다.</li>
+          <li>K열 예산 잔액이 음수이면 해당 셀을 자동으로 빨갛게 강조합니다.</li>
         </ul>
       </div>
     </section>
@@ -640,7 +674,10 @@ button:disabled{
 
       <div class="meta-row">
         <div id="metaInfo" class="meta-info">아직 불러온 파일이 없습니다.</div>
-        <button type="button" class="btn ghost" id="clearSearchBtn" disabled>검색 지우기</button>
+        <div class="action-buttons">
+          <button type="button" class="btn ghost" id="clearSearchBtn" disabled>검색 지우기</button>
+          <button type="button" class="btn ghost danger-ghost" id="removeFileBtn" disabled>업로드 파일 삭제</button>
+        </div>
       </div>
 
       <div id="alertBox" class="alert" hidden></div>
@@ -681,6 +718,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 (() => {
   const EMPTY_CELL = Object.freeze({ text: "", raw: "", numeric: false });
+  const BUDGET_BALANCE_COL_INDEX = 10;
   const BUILTIN_DATE_IDS = new Set([14, 15, 16, 17, 18, 19, 20, 21, 22, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 45, 46, 47, 50, 51, 52, 53, 54, 55, 56, 57, 58]);
   const BUILTIN_FORMATS = {
     14: "m/d/yy",
@@ -714,6 +752,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     expandMerged: document.getElementById("expandMerged"),
     filterInput: document.getElementById("filterInput"),
     clearSearchBtn: document.getElementById("clearSearchBtn"),
+    removeFileBtn: document.getElementById("removeFileBtn"),
     metaInfo: document.getElementById("metaInfo"),
     alertBox: document.getElementById("alertBox"),
     prefaceCard: document.getElementById("prefaceCard"),
@@ -1202,6 +1241,47 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     return bestRow;
   }
 
+  function getRawNumericValue(cell) {
+    const value = Number(cell?.raw);
+    return Number.isFinite(value) ? value : null;
+  }
+
+  function isNegativeBudgetBalanceCell(cell, colIndex) {
+    if (colIndex !== BUDGET_BALANCE_COL_INDEX) return false;
+    const value = getRawNumericValue(cell);
+    return value !== null && value < 0;
+  }
+
+  function clearLoadedWorkbook(message = "", type = "info") {
+    state.workbook = null;
+    state.currentSheetName = "";
+    state.sheetSettings = {};
+    state.filterText = "";
+    cancelAnimationFrame(state.stickyRaf);
+
+    els.fileInput.value = "";
+    els.filterInput.value = "";
+    els.dropzone.classList.remove("is-dragover");
+    els.sheetSelect.innerHTML = "";
+    els.freezeSelect.innerHTML = "";
+    els.gridTable.innerHTML = "";
+    els.prefaceList.innerHTML = "";
+    els.tableLegend.textContent = "";
+    els.tableShell.querySelectorAll(".no-data").forEach((node) => node.remove());
+    els.tableShell.scrollTop = 0;
+    els.tableShell.scrollLeft = 0;
+    els.tableCard.hidden = true;
+    els.prefaceCard.hidden = true;
+
+    syncControls(null, null);
+    setMeta("아직 불러온 파일이 없습니다.");
+    if (message) {
+      setAlert(message, type);
+    } else {
+      setAlert("");
+    }
+  }
+
   function getCurrentSettings(sheet) {
     if (!state.sheetSettings[sheet.name]) {
       state.sheetSettings[sheet.name] = {
@@ -1316,8 +1396,18 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     els.expandMerged.disabled = !hasWorkbook;
     els.filterInput.disabled = !hasWorkbook;
     els.clearSearchBtn.disabled = !hasWorkbook || !state.filterText;
+    els.removeFileBtn.disabled = !hasWorkbook;
 
-    if (!hasWorkbook || !sheet) return;
+    if (!hasWorkbook || !sheet) {
+      els.sheetSelect.innerHTML = "";
+      els.freezeSelect.innerHTML = "";
+      els.headerRowInput.min = "1";
+      els.headerRowInput.max = "1";
+      els.headerRowInput.value = "1";
+      els.expandMerged.checked = true;
+      els.filterInput.value = "";
+      return;
+    }
 
     els.sheetSelect.innerHTML = "";
     state.workbook.sheets.forEach((sheetMeta) => {
@@ -1464,6 +1554,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         td.title = cell.text;
         if (!cell.text) td.classList.add("is-empty");
         if (cell.numeric) td.classList.add("is-numeric");
+        if (isNegativeBudgetBalanceCell(cell, colIndex)) td.classList.add("is-negative-balance");
         tr.appendChild(td);
       });
       tbody.appendChild(tr);
@@ -1528,21 +1619,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     syncControls(firstSheet, settings);
     await renderCurrentSheet();
-    setAlert("파일을 불러왔습니다. 헤더 행과 틀고정 열은 바로 바꿔서 확인할 수 있습니다.", "info");
+    setAlert("파일을 불러왔습니다. 헤더 행과 틀고정 열을 바꿔서 볼 수 있고, K열 예산 잔액이 음수이면 자동으로 빨갛게 표시됩니다.", "info");
   }
 
   function handleFile(file) {
     loadWorkbookFromFile(file).catch((error) => {
       console.error(error);
-      state.workbook = null;
-      state.currentSheetName = "";
-      state.sheetSettings = {};
-      els.gridTable.innerHTML = "";
-      els.prefaceList.innerHTML = "";
-      els.tableCard.hidden = true;
-      els.prefaceCard.hidden = true;
-      els.sheetSelect.innerHTML = "";
-      syncControls(null, null);
+      clearLoadedWorkbook();
       setMeta("파일을 불러오지 못했습니다.");
       setAlert(error.message || "파일을 읽는 중 문제가 발생했습니다.", "error");
     });
@@ -1636,6 +1719,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       els.filterInput.value = "";
       els.clearSearchBtn.disabled = true;
       await renderCurrentSheet();
+    });
+
+    els.removeFileBtn.addEventListener("click", () => {
+      if (!state.workbook) return;
+      clearLoadedWorkbook("불러온 파일을 화면에서 삭제했습니다. 다른 파일을 다시 올릴 수 있습니다.", "info");
     });
 
     window.addEventListener("resize", queueStickyUpdate);
