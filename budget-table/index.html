@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>사업관리카드 엑셀표 뷰어</title>
 
+  
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-BQLFX9NXE4"></script>
 <script>
@@ -17,12 +18,12 @@
 
 
 
-
+  
   <link rel="icon" href="/static/favicon.ico" />
   <link rel="stylesheet" href="/static/style.css" />
-  <script defer src="/static/global-loader.js"></script>
-  <script defer src="/static/footer.js"></script>
-  
+  <script src="/static/footer.js"></script>
+  <script src="/static/global-loader.js?v=1"></script>
+
   <style>
 
 :root{
@@ -516,6 +517,158 @@ button:disabled{
   font-size: 0.9rem;
 }
 
+
+.picker-stack{
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.picker-card{
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel-2);
+  padding: 14px;
+}
+
+.picker-top{
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.picker-card h3{
+  margin: 0;
+  font-size: 1rem;
+}
+
+.picker-help{
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.picker-toolbar{
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.picker-toolbar .btn{
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+
+.picker-summary{
+  color: #334155;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.checkbox-grid{
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.column-check{
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  min-height: 52px;
+}
+
+.column-check input{
+  margin: 2px 0 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  flex: 0 0 auto;
+}
+
+.column-letter{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: #1e3a8a;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.column-check-text{
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.column-check-title{
+  color: #0f172a;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.column-check-sub{
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.section-title{
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.report-header{
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.report-meta{
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.negative-report-list{
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.negative-report-item{
+  border: 1px solid #fecaca;
+  background: #fff7f7;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.negative-report-line{
+  color: #991b1b;
+  font-weight: 800;
+  word-break: break-word;
+}
+
+.negative-report-sub{
+  margin-top: 4px;
+  color: #7f1d1d;
+  font-size: 0.88rem;
+}
+
 @media (max-width: 1280px){
   .controls-grid{
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -608,12 +761,8 @@ button:disabled{
   </style>
 </head>
 
-
-
 <body class="alien-side-bg">
 <div class="alien-page-frame">
-
-
   <main class="viewer-app">
     <section class="section">
       <div class="hero-top">
@@ -641,7 +790,8 @@ button:disabled{
         <ul class="note-list">
           <li>사업관리카드처럼 병합 셀이 많은 표는 기본으로 값을 아래 행까지 펼쳐서 보여줍니다.</li>
           <li>헤더 행은 자동 감지되며, 필요하면 직접 행 번호를 바꿔서 다시 볼 수 있습니다.</li>
-          <li>K열 예산 잔액이 음수이면 해당 셀을 자동으로 빨갛게 강조합니다.</li>
+          <li>기본 음수 강조 대상은 K열(예산잔액)이며, 아래에서 다른 컬럼도 추가 선택할 수 있습니다.</li>
+          <li>표는 원하는 컬럼만 골라서 볼 수 있고, 다운로드하면 원본 파일에 음수 강조 서식을 반영한 결과물을 받을 수 있습니다.</li>
         </ul>
       </div>
     </section>
@@ -677,9 +827,43 @@ button:disabled{
         </div>
       </div>
 
+      <div class="picker-stack">
+        <div class="picker-card">
+          <div class="picker-top">
+            <div>
+              <h3>보기 컬럼 선택</h3>
+              <div class="picker-help">체크한 컬럼만 표에 표시합니다.</div>
+            </div>
+            <div class="picker-toolbar">
+              <button type="button" class="btn ghost" id="visibleColsAllBtn" disabled>전체 표시</button>
+              <button type="button" class="btn ghost" id="visibleColsCoreBtn" disabled>앞 4개만</button>
+              <span class="picker-summary" id="visibleColsSummary">아직 불러온 파일이 없습니다.</span>
+            </div>
+          </div>
+          <div id="visibleColsList" class="checkbox-grid" aria-live="polite"></div>
+        </div>
+
+        <div class="picker-card">
+          <div class="picker-top">
+            <div>
+              <h3>음수 강조 컬럼 설정</h3>
+              <div class="picker-help">기본은 K열(예산잔액)만 검사합니다. 원하는 컬럼을 추가로 선택할 수 있습니다.</div>
+            </div>
+            <div class="picker-toolbar">
+              <button type="button" class="btn ghost" id="negativeColsDefaultBtn" disabled>기본값(K열)</button>
+              <button type="button" class="btn ghost" id="negativeColsAllBtn" disabled>전체 선택</button>
+              <button type="button" class="btn ghost" id="negativeColsClearBtn" disabled>전체 해제</button>
+              <span class="picker-summary" id="negativeColsSummary">기본 K열</span>
+            </div>
+          </div>
+          <div id="negativeColsList" class="checkbox-grid" aria-live="polite"></div>
+        </div>
+      </div>
+
       <div class="meta-row">
         <div id="metaInfo" class="meta-info">아직 불러온 파일이 없습니다.</div>
         <div class="action-buttons">
+          <button type="button" class="btn" id="downloadBtn" disabled>결과 다운로드</button>
           <button type="button" class="btn ghost" id="clearSearchBtn" disabled>검색 지우기</button>
           <button type="button" class="btn ghost danger-ghost" id="removeFileBtn" disabled>업로드 파일 삭제</button>
         </div>
@@ -691,6 +875,14 @@ button:disabled{
     <section class="section" id="prefaceCard" hidden>
       <h2 style="margin-top:0; font-size:1.15rem;">헤더 위쪽 정보</h2>
       <div id="prefaceList" class="preface-list"></div>
+    </section>
+
+    <section class="section" id="negativeReportCard" hidden>
+      <div class="report-header">
+        <h2 class="section-title">음수 항목 검출 내역</h2>
+        <div id="negativeReportMeta" class="report-meta"></div>
+      </div>
+      <div id="negativeReportList" class="negative-report-list"></div>
     </section>
 
     <section class="section table-card" id="tableCard" hidden>
@@ -739,6 +931,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     46: "[h]:mm:ss",
     47: "mmss.0"
   };
+  const OOXML_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+  const SUMMARY_HEADER_PATTERNS = ["세부사업", "세부항목", "원가통계비목", "산출내역"];
 
   const state = {
     workbook: null,
@@ -758,10 +952,23 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     filterInput: document.getElementById("filterInput"),
     clearSearchBtn: document.getElementById("clearSearchBtn"),
     removeFileBtn: document.getElementById("removeFileBtn"),
+    downloadBtn: document.getElementById("downloadBtn"),
+    visibleColsAllBtn: document.getElementById("visibleColsAllBtn"),
+    visibleColsCoreBtn: document.getElementById("visibleColsCoreBtn"),
+    visibleColsList: document.getElementById("visibleColsList"),
+    visibleColsSummary: document.getElementById("visibleColsSummary"),
+    negativeColsDefaultBtn: document.getElementById("negativeColsDefaultBtn"),
+    negativeColsAllBtn: document.getElementById("negativeColsAllBtn"),
+    negativeColsClearBtn: document.getElementById("negativeColsClearBtn"),
+    negativeColsList: document.getElementById("negativeColsList"),
+    negativeColsSummary: document.getElementById("negativeColsSummary"),
     metaInfo: document.getElementById("metaInfo"),
     alertBox: document.getElementById("alertBox"),
     prefaceCard: document.getElementById("prefaceCard"),
     prefaceList: document.getElementById("prefaceList"),
+    negativeReportCard: document.getElementById("negativeReportCard"),
+    negativeReportMeta: document.getElementById("negativeReportMeta"),
+    negativeReportList: document.getElementById("negativeReportList"),
     tableCard: document.getElementById("tableCard"),
     tableShell: document.getElementById("tableShell"),
     gridTable: document.getElementById("gridTable"),
@@ -1120,6 +1327,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       zip,
       fileName,
       fileSize,
+      originalArrayBuffer: arrayBuffer.slice(0),
       sharedStrings,
       styles,
       sheets,
@@ -1251,8 +1459,34 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     return Number.isFinite(value) ? value : null;
   }
 
-  function isNegativeBudgetBalanceCell(cell, colIndex) {
-    if (colIndex !== BUDGET_BALANCE_COL_INDEX) return false;
+  function getDefaultNegativeColumns(sheet) {
+    return sheet.maxCol > BUDGET_BALANCE_COL_INDEX ? [BUDGET_BALANCE_COL_INDEX] : [];
+  }
+
+  function getDefaultVisibleColumns(sheet) {
+    return Array.from({ length: sheet.maxCol }, (_, idx) => idx);
+  }
+
+  function sanitizeColumnSelection(selection, maxCol, { allowEmpty = true, fallback = [] } = {}) {
+    let values = Array.isArray(selection) ? selection.slice() : [];
+    values = values
+      .map((value) => Number(value))
+      .filter((value) => Number.isInteger(value) && value >= 0 && value < maxCol)
+      .filter((value, index, arr) => arr.indexOf(value) === index)
+      .sort((a, b) => a - b);
+
+    if (!values.length && fallback.length) {
+      values = sanitizeColumnSelection(fallback, maxCol, { allowEmpty: true, fallback: [] });
+    }
+
+    if (!allowEmpty && !values.length && maxCol > 0) {
+      values = [0];
+    }
+    return values;
+  }
+
+  function isConfiguredNegativeCell(cell, originalColIndex, settings) {
+    if (!settings.negativeColumns.includes(originalColIndex)) return false;
     const value = getRawNumericValue(cell);
     return value !== null && value < 0;
   }
@@ -1269,16 +1503,21 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     els.dropzone.classList.remove("is-dragover");
     els.sheetSelect.innerHTML = "";
     els.freezeSelect.innerHTML = "";
+    els.visibleColsList.innerHTML = "";
+    els.negativeColsList.innerHTML = "";
     els.gridTable.innerHTML = "";
     els.prefaceList.innerHTML = "";
+    els.negativeReportList.innerHTML = "";
     els.tableLegend.textContent = "";
+    els.negativeReportMeta.textContent = "";
     els.tableShell.querySelectorAll(".no-data").forEach((node) => node.remove());
     els.tableShell.scrollTop = 0;
     els.tableShell.scrollLeft = 0;
     els.tableCard.hidden = true;
     els.prefaceCard.hidden = true;
+    els.negativeReportCard.hidden = true;
 
-    syncControls(null, null);
+    syncControls(null, null, null);
     setMeta("아직 불러온 파일이 없습니다.");
     if (message) {
       setAlert(message, type);
@@ -1292,10 +1531,26 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       state.sheetSettings[sheet.name] = {
         headerRow: sheet.detectedHeaderRow || 1,
         freezeCount: Math.min(1, Math.max(sheet.maxCol, 0)),
-        expandMerged: true
+        expandMerged: true,
+        negativeColumns: getDefaultNegativeColumns(sheet),
+        visibleColumns: getDefaultVisibleColumns(sheet)
       };
     }
-    return state.sheetSettings[sheet.name];
+
+    const settings = state.sheetSettings[sheet.name];
+    settings.headerRow = clamp(Number(settings.headerRow) || 1, 1, Math.max(sheet.maxRow, 1));
+    settings.freezeCount = clamp(Number(settings.freezeCount) || 0, 0, Math.max(sheet.maxCol, 0));
+    settings.expandMerged = !!settings.expandMerged;
+    settings.negativeColumns = sanitizeColumnSelection(settings.negativeColumns, sheet.maxCol, {
+      allowEmpty: true,
+      fallback: getDefaultNegativeColumns(sheet)
+    });
+    settings.visibleColumns = sanitizeColumnSelection(settings.visibleColumns, sheet.maxCol, {
+      allowEmpty: false,
+      fallback: getDefaultVisibleColumns(sheet)
+    });
+    settings.freezeCount = clamp(settings.freezeCount, 0, settings.visibleColumns.length);
+    return settings;
   }
 
   function getHeaderLabels(sheet, settings) {
@@ -1331,68 +1586,79 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     const headerRow = clamp(Number(settings.headerRow) || 1, 1, Math.max(sheet.maxRow, 1));
     const matrix = settings.expandMerged ? sheet.expandedMatrix : sheet.rawMatrix;
     const headerSource = matrix[headerRow - 1] || [];
-    const headers = Array.from({ length: sheet.maxCol }, (_, idx) => {
+    const allHeaders = Array.from({ length: sheet.maxCol }, (_, idx) => {
       const cell = headerSource[idx] || EMPTY_CELL;
       return normalizeText(cell.text).trim() || `열 ${idx + 1}`;
     });
 
+    const visibleColumns = sanitizeColumnSelection(settings.visibleColumns, sheet.maxCol, {
+      allowEmpty: false,
+      fallback: getDefaultVisibleColumns(sheet)
+    });
+    const visibleHeaders = visibleColumns.map((originalIndex) => ({
+      originalIndex,
+      label: allHeaders[originalIndex] || `열 ${originalIndex + 1}`,
+      letter: indexToColumnLetters(originalIndex + 1)
+    }));
+
     const filterText = normalizeText(state.filterText).trim().toLowerCase();
     const rows = [];
+    let totalDataRows = 0;
 
     for (let rowIndex = headerRow; rowIndex < matrix.length; rowIndex += 1) {
       const row = matrix[rowIndex] || [];
-      const hasContent = row.some((cell) => normalizeText(cell?.text).trim() !== "");
+      const allCells = Array.from({ length: sheet.maxCol }, (_, idx) => row[idx] || EMPTY_CELL);
+      const hasContent = allCells.some((cell) => normalizeText(cell?.text).trim() !== "");
       if (!hasContent) continue;
 
+      totalDataRows += 1;
+
       if (filterText) {
-        const matches = row.some((cell) => normalizeText(cell?.text).toLowerCase().includes(filterText));
+        const matches = allCells.some((cell) => normalizeText(cell?.text).toLowerCase().includes(filterText));
         if (!matches) continue;
       }
 
-      const cells = Array.from({ length: sheet.maxCol }, (_, idx) => row[idx] || EMPTY_CELL);
       rows.push({
         excelRow: rowIndex + 1,
-        cells,
-        isDetailSubtotal: isDetailSubtotalRow(cells)
+        allCells,
+        visibleCells: visibleColumns.map((colIndex) => allCells[colIndex] || EMPTY_CELL),
+        isDetailSubtotal: isDetailSubtotalRow(allCells)
       });
     }
 
     return {
-      headers,
+      allHeaders,
+      visibleHeaders,
+      visibleColumns,
       rows,
       prefaceRows: extractPrefaceRows(sheet, headerRow),
       headerRow,
       colCount: sheet.maxCol,
-      totalDataRows: (() => {
-        let count = 0;
-        for (let rowIndex = headerRow; rowIndex < matrix.length; rowIndex += 1) {
-          const row = matrix[rowIndex] || [];
-          if (row.some((cell) => normalizeText(cell?.text).trim() !== "")) count += 1;
-        }
-        return count;
-      })()
+      visibleColCount: visibleColumns.length,
+      totalDataRows
     };
   }
 
-  function updateFreezeOptions(headers, currentValue) {
+  function updateFreezeOptions(visibleHeaders, currentValue) {
     const existing = Number(currentValue);
     els.freezeSelect.innerHTML = "";
-    const maxColumns = headers.length;
+    const maxColumns = visibleHeaders.length;
     for (let count = 0; count <= maxColumns; count += 1) {
       const option = document.createElement("option");
       option.value = String(count);
       if (count === 0) {
         option.textContent = "고정 안 함";
       } else {
-        const lastHeader = headers[count - 1] ? ` (${headers[count - 1]})` : "";
-        option.textContent = `${count}열까지 고정${lastHeader}`;
+        const lastHeader = visibleHeaders[count - 1];
+        const suffix = lastHeader ? ` (${lastHeader.letter} ${lastHeader.label})` : "";
+        option.textContent = `${count}열까지 고정${suffix}`;
       }
       if (count === existing) option.selected = true;
       els.freezeSelect.appendChild(option);
     }
   }
 
-  function syncControls(sheet, settings) {
+  function syncControls(sheet, settings, viewModel) {
     const hasWorkbook = !!state.workbook;
 
     els.sheetSelect.disabled = !hasWorkbook;
@@ -1402,8 +1668,14 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     els.filterInput.disabled = !hasWorkbook;
     els.clearSearchBtn.disabled = !hasWorkbook || !state.filterText;
     els.removeFileBtn.disabled = !hasWorkbook;
+    els.downloadBtn.disabled = !hasWorkbook;
+    els.visibleColsAllBtn.disabled = !hasWorkbook;
+    els.visibleColsCoreBtn.disabled = !hasWorkbook;
+    els.negativeColsDefaultBtn.disabled = !hasWorkbook;
+    els.negativeColsAllBtn.disabled = !hasWorkbook;
+    els.negativeColsClearBtn.disabled = !hasWorkbook;
 
-    if (!hasWorkbook || !sheet) {
+    if (!hasWorkbook || !sheet || !viewModel) {
       els.sheetSelect.innerHTML = "";
       els.freezeSelect.innerHTML = "";
       els.headerRowInput.min = "1";
@@ -1411,6 +1683,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       els.headerRowInput.value = "1";
       els.expandMerged.checked = true;
       els.filterInput.value = "";
+      els.visibleColsList.innerHTML = "";
+      els.negativeColsList.innerHTML = "";
+      els.visibleColsSummary.textContent = "아직 불러온 파일이 없습니다.";
+      els.negativeColsSummary.textContent = "기본 K열";
       return;
     }
 
@@ -1429,11 +1705,62 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     els.expandMerged.checked = !!settings.expandMerged;
     els.filterInput.value = state.filterText;
 
-    const headers = getHeaderLabels(sheet, settings);
-    const freezeValue = clamp(Number(settings.freezeCount) || 0, 0, headers.length);
-    settings.freezeCount = freezeValue;
-    updateFreezeOptions(headers, freezeValue);
-    els.freezeSelect.value = String(freezeValue);
+    settings.freezeCount = clamp(Number(settings.freezeCount) || 0, 0, viewModel.visibleHeaders.length);
+    updateFreezeOptions(viewModel.visibleHeaders, settings.freezeCount);
+    els.freezeSelect.value = String(settings.freezeCount);
+
+    renderColumnCheckboxes(els.visibleColsList, viewModel.allHeaders, settings.visibleColumns, "visible");
+    renderColumnCheckboxes(els.negativeColsList, viewModel.allHeaders, settings.negativeColumns, "negative");
+    els.visibleColsSummary.textContent = `${settings.visibleColumns.length}/${viewModel.allHeaders.length}개 선택 · ${formatColumnSummary(viewModel.allHeaders, settings.visibleColumns)}`;
+    els.negativeColsSummary.textContent = settings.negativeColumns.length
+      ? formatColumnSummary(viewModel.allHeaders, settings.negativeColumns)
+      : "선택 없음";
+  }
+
+  function formatColumnSummary(headers, selectedIndices) {
+    if (!selectedIndices.length) return "선택 없음";
+    const labels = selectedIndices.map((index) => `${indexToColumnLetters(index + 1)} ${headers[index]}`);
+    if (labels.length <= 3) return labels.join(", ");
+    return `${labels.slice(0, 3).join(", ")} 외 ${labels.length - 3}개`;
+  }
+
+  function renderColumnCheckboxes(container, headers, selectedIndices, mode) {
+    container.innerHTML = "";
+    const selectedSet = new Set(selectedIndices);
+
+    headers.forEach((headerText, index) => {
+      const label = document.createElement("label");
+      label.className = "column-check";
+
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.dataset.colIndex = String(index);
+      input.dataset.mode = mode;
+      input.checked = selectedSet.has(index);
+
+      const badge = document.createElement("span");
+      badge.className = "column-letter";
+      badge.textContent = indexToColumnLetters(index + 1);
+
+      const textWrap = document.createElement("span");
+      textWrap.className = "column-check-text";
+
+      const title = document.createElement("span");
+      title.className = "column-check-title";
+      title.textContent = headerText || `열 ${index + 1}`;
+
+      const sub = document.createElement("span");
+      sub.className = "column-check-sub";
+      sub.textContent = `${index + 1}번째 컬럼`;
+
+      textWrap.appendChild(title);
+      textWrap.appendChild(sub);
+
+      label.appendChild(input);
+      label.appendChild(badge);
+      label.appendChild(textWrap);
+      container.appendChild(label);
+    });
   }
 
   function renderPreface(prefaceRows) {
@@ -1463,6 +1790,147 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     });
   }
 
+  function resolveSummaryKeyIndices(headers) {
+    const indices = [];
+    const used = new Set();
+
+    SUMMARY_HEADER_PATTERNS.forEach((pattern) => {
+      const normalizedPattern = normalizeCompareText(pattern);
+      const index = headers.findIndex((header, headerIndex) => {
+        return !used.has(headerIndex) && normalizeCompareText(header).includes(normalizedPattern);
+      });
+      if (index >= 0) {
+        used.add(index);
+        indices.push(index);
+      }
+    });
+
+    if (!indices.length) {
+      for (let idx = 0; idx < Math.min(headers.length, 4); idx += 1) {
+        indices.push(idx);
+      }
+    }
+
+    return indices;
+  }
+
+  function formatNegativeSummaryValue(cell, headerText) {
+    const baseText = normalizeText(cell?.text).trim() || normalizeText(cell?.raw).trim();
+    if (!baseText) return "";
+    if (/%|％/.test(baseText) || /률/.test(normalizeText(headerText))) {
+      return baseText;
+    }
+    if (cell?.numeric && !/원$/.test(baseText)) {
+      return `${baseText}원`;
+    }
+    return baseText;
+  }
+
+  function collectNegativeHits(viewModel, settings) {
+    const selectedColumns = sanitizeColumnSelection(settings.negativeColumns, viewModel.colCount, {
+      allowEmpty: true,
+      fallback: []
+    });
+    if (!selectedColumns.length) return [];
+
+    const keyIndices = resolveSummaryKeyIndices(viewModel.allHeaders);
+    const hits = [];
+
+    viewModel.rows.forEach((row) => {
+      selectedColumns.forEach((colIndex) => {
+        const cell = row.allCells[colIndex] || EMPTY_CELL;
+        if (!isConfiguredNegativeCell(cell, colIndex, settings)) return;
+
+        let keyValues = keyIndices
+          .map((idx) => normalizeText(row.allCells[idx]?.text).trim())
+          .filter(Boolean);
+
+        if (!keyValues.length) {
+          keyValues = row.allCells
+            .slice(0, Math.min(4, row.allCells.length))
+            .map((sourceCell) => normalizeText(sourceCell?.text).trim())
+            .filter(Boolean);
+        }
+
+        const pathText = keyValues.join("/");
+        const headerText = viewModel.allHeaders[colIndex] || `열 ${colIndex + 1}`;
+        const valueText = formatNegativeSummaryValue(cell, headerText);
+        const summaryText = `${pathText || `${row.excelRow}행`} ${headerText} ${valueText}`.trim();
+
+        hits.push({
+          excelRow: row.excelRow,
+          columnLetter: indexToColumnLetters(colIndex + 1),
+          colIndex,
+          headerText,
+          valueText,
+          summaryText
+        });
+      });
+    });
+
+    return hits;
+  }
+
+  function renderNegativeReport(viewModel, settings) {
+    if (!state.workbook) {
+      els.negativeReportCard.hidden = true;
+      els.negativeReportList.innerHTML = "";
+      els.negativeReportMeta.textContent = "";
+      return;
+    }
+
+    const hits = collectNegativeHits(viewModel, settings);
+    const selectedColumns = sanitizeColumnSelection(settings.negativeColumns, viewModel.colCount, {
+      allowEmpty: true,
+      fallback: []
+    });
+
+    els.negativeReportCard.hidden = false;
+    els.negativeReportList.innerHTML = "";
+
+    if (!selectedColumns.length) {
+      const empty = document.createElement("div");
+      empty.className = "alert";
+      empty.dataset.type = "info";
+      empty.textContent = "음수 검사 컬럼이 선택되지 않았습니다. 위에서 컬럼을 선택하면 검출 내역이 표시됩니다.";
+      els.negativeReportList.appendChild(empty);
+      els.negativeReportMeta.textContent = "검출 기준 컬럼 없음";
+      return;
+    }
+
+    const selectedColumnText = formatColumnSummary(viewModel.allHeaders, selectedColumns);
+    const filterSuffix = state.filterText ? " · 검색 적용" : "";
+
+    if (!hits.length) {
+      const empty = document.createElement("div");
+      empty.className = "alert";
+      empty.dataset.type = "info";
+      empty.textContent = "현재 화면 기준으로 선택한 컬럼에서 음수 항목이 없습니다.";
+      els.negativeReportList.appendChild(empty);
+      els.negativeReportMeta.textContent = `0건 · 검사 컬럼 ${selectedColumnText}${filterSuffix}`;
+      return;
+    }
+
+    hits.forEach((hit) => {
+      const item = document.createElement("div");
+      item.className = "negative-report-item";
+
+      const line = document.createElement("div");
+      line.className = "negative-report-line";
+      line.textContent = hit.summaryText;
+
+      const sub = document.createElement("div");
+      sub.className = "negative-report-sub";
+      sub.textContent = `${hit.excelRow}행 · ${hit.columnLetter}열 · ${hit.headerText}`;
+
+      item.appendChild(line);
+      item.appendChild(sub);
+      els.negativeReportList.appendChild(item);
+    });
+
+    els.negativeReportMeta.textContent = `${hits.length}건 · 검사 컬럼 ${selectedColumnText}${filterSuffix}`;
+  }
+
   function queueStickyUpdate() {
     cancelAnimationFrame(state.stickyRaf);
     state.stickyRaf = requestAnimationFrame(() => {
@@ -1474,7 +1942,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     const table = els.gridTable;
     if (!table.tHead || !table.tHead.rows.length) return;
 
-    const freezeCount = Number(els.freezeSelect.value || "0");
+    const headerCells = Array.from(table.tHead.rows[0].cells);
+    const freezeCount = clamp(Number(els.freezeSelect.value || "0"), 0, headerCells.length);
+
     table.querySelectorAll(".is-frozen, .freeze-boundary").forEach((cell) => {
       cell.classList.remove("is-frozen", "freeze-boundary");
       cell.style.left = "";
@@ -1482,7 +1952,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     if (!freezeCount) return;
 
-    const headerCells = Array.from(table.tHead.rows[0].cells);
     const leftOffsets = [];
     let currentLeft = 0;
 
@@ -1492,43 +1961,55 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       currentLeft += width;
     }
 
-    table.querySelectorAll("[data-col-index]").forEach((cell) => {
-      const colIndex = Number(cell.getAttribute("data-col-index"));
-      if (colIndex >= freezeCount) return;
+    table.querySelectorAll("[data-visible-col-index]").forEach((cell) => {
+      const visibleColIndex = Number(cell.getAttribute("data-visible-col-index"));
+      if (visibleColIndex >= freezeCount) return;
       cell.classList.add("is-frozen");
-      cell.style.left = `${leftOffsets[colIndex] || 0}px`;
-      if (colIndex === freezeCount - 1) {
+      cell.style.left = `${leftOffsets[visibleColIndex] || 0}px`;
+      if (visibleColIndex === freezeCount - 1) {
         cell.classList.add("freeze-boundary");
       }
     });
+  }
+
+  function renderNoData(text, viewModel, sheet) {
+    els.tableCard.hidden = false;
+    els.tableShell.querySelectorAll(".no-data").forEach((node) => node.remove());
+
+    const noData = document.createElement("div");
+    noData.className = "no-data";
+    noData.textContent = text;
+    els.tableShell.appendChild(noData);
+
+    const totalRows = viewModel.totalDataRows;
+    const filePart = `${state.workbook.fileName} (${formatFileSize(state.workbook.fileSize)})`;
+    const sheetPart = `시트: ${sheet.name}`;
+    const headerPart = `헤더: ${viewModel.headerRow}행`;
+    const rowPart = state.filterText ? `행: 0 / ${totalRows}` : "행: 0";
+    const colPart = `열: ${viewModel.visibleColCount} / ${viewModel.colCount}`;
+    setMeta([filePart, sheetPart, headerPart, rowPart, colPart].join(" · "));
+    els.tableLegend.textContent = state.filterText
+      ? `검색 결과 0행 / 전체 ${totalRows}행 · ${viewModel.visibleColCount}/${viewModel.colCount}열`
+      : `0행 · ${viewModel.visibleColCount}/${viewModel.colCount}열`;
+
+    queueStickyUpdate();
   }
 
   function renderTable(sheet, settings, viewModel) {
     const table = els.gridTable;
     table.innerHTML = "";
 
+    if (!viewModel.visibleHeaders.length) {
+      renderNoData("표에 표시할 컬럼을 1개 이상 선택해 주세요.", viewModel, sheet);
+      return;
+    }
+
     if (!viewModel.rows.length) {
-      els.tableCard.hidden = false;
-      els.tableShell.querySelectorAll(".no-data").forEach((node) => node.remove());
-      const noData = document.createElement("div");
-      noData.className = "no-data";
-      noData.textContent = state.filterText
-        ? "검색 조건에 맞는 행이 없습니다."
-        : "표시할 데이터 행이 없습니다.";
-      els.tableShell.appendChild(noData);
-
-      const totalRows = viewModel.totalDataRows;
-      const filePart = `${state.workbook.fileName} (${formatFileSize(state.workbook.fileSize)})`;
-      const sheetPart = `시트: ${sheet.name}`;
-      const headerPart = `헤더: ${viewModel.headerRow}행`;
-      const rowPart = state.filterText ? `행: 0 / ${totalRows}` : "행: 0";
-      const colPart = `열: ${viewModel.colCount}`;
-      setMeta([filePart, sheetPart, headerPart, rowPart, colPart].join(" · "));
-      els.tableLegend.textContent = state.filterText
-        ? `검색 결과 0행 / 전체 ${totalRows}행 · ${viewModel.colCount}열`
-        : `0행 · ${viewModel.colCount}열`;
-
-      queueStickyUpdate();
+      renderNoData(
+        state.filterText ? "검색 조건에 맞는 행이 없습니다." : "표시할 데이터 행이 없습니다.",
+        viewModel,
+        sheet
+      );
       return;
     }
 
@@ -1536,12 +2017,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     const thead = document.createElement("thead");
     const headRow = document.createElement("tr");
-    viewModel.headers.forEach((headerText, colIndex) => {
+    viewModel.visibleHeaders.forEach((header, visibleIndex) => {
       const th = document.createElement("th");
       th.scope = "col";
-      th.dataset.colIndex = String(colIndex);
-      th.textContent = headerText;
-      th.title = headerText;
+      th.dataset.visibleColIndex = String(visibleIndex);
+      th.dataset.originalColIndex = String(header.originalIndex);
+      th.textContent = header.label;
+      th.title = `${header.letter}열 · ${header.label}`;
       headRow.appendChild(th);
     });
     thead.appendChild(headRow);
@@ -1552,16 +2034,22 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       if (row.isDetailSubtotal) {
         tr.classList.add("is-detail-subtotal");
       }
-      row.cells.forEach((cell, colIndex) => {
+
+      row.visibleCells.forEach((cell, visibleIndex) => {
+        const header = viewModel.visibleHeaders[visibleIndex];
         const td = document.createElement("td");
-        td.dataset.colIndex = String(colIndex);
+        td.dataset.visibleColIndex = String(visibleIndex);
+        td.dataset.originalColIndex = String(header.originalIndex);
         td.textContent = cell.text;
         td.title = cell.text;
         if (!cell.text) td.classList.add("is-empty");
         if (cell.numeric) td.classList.add("is-numeric");
-        if (isNegativeBudgetBalanceCell(cell, colIndex)) td.classList.add("is-negative-balance");
+        if (isConfiguredNegativeCell(cell, header.originalIndex, settings)) {
+          td.classList.add("is-negative-balance");
+        }
         tr.appendChild(td);
       });
+
       tbody.appendChild(tr);
     });
 
@@ -1576,12 +2064,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     const rowPart = state.filterText
       ? `행: ${shownRows} / ${totalRows}`
       : `행: ${shownRows}`;
-    const colPart = `열: ${viewModel.colCount}`;
+    const colPart = `열: ${viewModel.visibleColCount} / ${viewModel.colCount}`;
     setMeta([filePart, sheetPart, headerPart, rowPart, colPart].join(" · "));
 
     els.tableLegend.textContent = state.filterText
-      ? `검색 결과 ${shownRows}행 / 전체 ${totalRows}행 · ${viewModel.colCount}열`
-      : `${shownRows}행 · ${viewModel.colCount}열`;
+      ? `검색 결과 ${shownRows}행 / 전체 ${totalRows}행 · ${viewModel.visibleColCount}/${viewModel.colCount}열`
+      : `${shownRows}행 · ${viewModel.visibleColCount}/${viewModel.colCount}열`;
 
     els.tableCard.hidden = false;
     queueStickyUpdate();
@@ -1592,14 +2080,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     const sheet = await getSheetData(state.currentSheetName);
     const settings = getCurrentSettings(sheet);
-
-    settings.headerRow = clamp(Number(settings.headerRow) || 1, 1, Math.max(sheet.maxRow, 1));
-    settings.freezeCount = clamp(Number(settings.freezeCount) || 0, 0, sheet.maxCol);
-    settings.expandMerged = !!settings.expandMerged;
-
-    syncControls(sheet, settings);
     const viewModel = buildViewModel(sheet, settings);
+
+    syncControls(sheet, settings, viewModel);
     renderPreface(viewModel.prefaceRows);
+    renderNegativeReport(viewModel, settings);
     renderTable(sheet, settings, viewModel);
   }
 
@@ -1609,6 +2094,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     setMeta("파일을 읽는 중입니다...");
     els.tableCard.hidden = true;
     els.prefaceCard.hidden = true;
+    els.negativeReportCard.hidden = true;
 
     const workbook = await parseWorkbook(await file.arrayBuffer(), file.name, file.size);
     state.workbook = workbook;
@@ -1621,10 +2107,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     settings.headerRow = firstSheet.detectedHeaderRow || 1;
     settings.freezeCount = Math.min(1, Math.max(firstSheet.maxCol, 0));
     settings.expandMerged = true;
+    settings.negativeColumns = getDefaultNegativeColumns(firstSheet);
+    settings.visibleColumns = getDefaultVisibleColumns(firstSheet);
 
-    syncControls(firstSheet, settings);
     await renderCurrentSheet();
-    setAlert("파일을 불러왔습니다. 헤더 행과 틀고정 열을 바꿔서 볼 수 있고, K열 예산 잔액이 음수이면 자동으로 빨갛게 표시됩니다.", "info");
+    setAlert("파일을 불러왔습니다. 기본 음수 강조는 K열이며, 원하는 컬럼을 추가 선택할 수 있습니다. 표는 보고 싶은 컬럼만 골라서 볼 수 있고, 결과 다운로드도 가능합니다.", "info");
   }
 
   function handleFile(file) {
@@ -1697,7 +2184,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       if (!state.workbook) return;
       const sheet = await getSheetData(state.currentSheetName);
       const settings = getCurrentSettings(sheet);
-      settings.freezeCount = clamp(Number(els.freezeSelect.value) || 0, 0, sheet.maxCol);
+      settings.freezeCount = clamp(Number(els.freezeSelect.value) || 0, 0, settings.visibleColumns.length);
       await renderCurrentSheet();
     });
 
@@ -1731,10 +2218,442 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       clearLoadedWorkbook("불러온 파일을 화면에서 삭제했습니다. 다른 파일을 다시 올릴 수 있습니다.", "info");
     });
 
+    els.downloadBtn.addEventListener("click", downloadHighlightedWorkbook);
+    els.visibleColsAllBtn.addEventListener("click", () => applyVisibleColumnShortcut("all"));
+    els.visibleColsCoreBtn.addEventListener("click", () => applyVisibleColumnShortcut("core"));
+    els.negativeColsDefaultBtn.addEventListener("click", () => applyNegativeColumnShortcut("default"));
+    els.negativeColsAllBtn.addEventListener("click", () => applyNegativeColumnShortcut("all"));
+    els.negativeColsClearBtn.addEventListener("click", () => applyNegativeColumnShortcut("clear"));
+
+    els.visibleColsList.addEventListener("change", async (event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement) || input.type !== "checkbox") return;
+      if (!state.workbook) return;
+
+      const sheet = await getSheetData(state.currentSheetName);
+      const settings = getCurrentSettings(sheet);
+      const colIndex = Number(input.dataset.colIndex);
+      const next = new Set(settings.visibleColumns);
+
+      if (input.checked) {
+        next.add(colIndex);
+      } else {
+        next.delete(colIndex);
+      }
+
+      if (!next.size) {
+        input.checked = true;
+        setAlert("표에 표시할 컬럼은 1개 이상 선택해야 합니다.", "error");
+        return;
+      }
+
+      settings.visibleColumns = Array.from(next).sort((a, b) => a - b);
+      settings.freezeCount = clamp(settings.freezeCount, 0, settings.visibleColumns.length);
+      await renderCurrentSheet();
+    });
+
+    els.negativeColsList.addEventListener("change", async (event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement) || input.type !== "checkbox") return;
+      if (!state.workbook) return;
+
+      const sheet = await getSheetData(state.currentSheetName);
+      const settings = getCurrentSettings(sheet);
+      const colIndex = Number(input.dataset.colIndex);
+      const next = new Set(settings.negativeColumns);
+
+      if (input.checked) {
+        next.add(colIndex);
+      } else {
+        next.delete(colIndex);
+      }
+
+      settings.negativeColumns = Array.from(next).sort((a, b) => a - b);
+      await renderCurrentSheet();
+    });
+
     window.addEventListener("resize", queueStickyUpdate);
     if ("ResizeObserver" in window) {
       const resizeObserver = new ResizeObserver(() => queueStickyUpdate());
       resizeObserver.observe(els.tableShell);
+    }
+  }
+
+  function applyVisibleColumnShortcut(type) {
+    if (!state.workbook || !state.currentSheetName) return;
+    getSheetData(state.currentSheetName).then(async (sheet) => {
+      const settings = getCurrentSettings(sheet);
+      if (type === "all") {
+        settings.visibleColumns = getDefaultVisibleColumns(sheet);
+      } else if (type === "core") {
+        settings.visibleColumns = Array.from({ length: Math.min(4, sheet.maxCol) }, (_, idx) => idx);
+      }
+      settings.freezeCount = clamp(settings.freezeCount, 0, settings.visibleColumns.length);
+      await renderCurrentSheet();
+    }).catch((error) => {
+      console.error(error);
+      setAlert(error.message || "컬럼 설정을 바꾸는 중 문제가 발생했습니다.", "error");
+    });
+  }
+
+  function applyNegativeColumnShortcut(type) {
+    if (!state.workbook || !state.currentSheetName) return;
+    getSheetData(state.currentSheetName).then(async (sheet) => {
+      const settings = getCurrentSettings(sheet);
+      if (type === "default") {
+        settings.negativeColumns = getDefaultNegativeColumns(sheet);
+      } else if (type === "all") {
+        settings.negativeColumns = getDefaultVisibleColumns(sheet);
+      } else if (type === "clear") {
+        settings.negativeColumns = [];
+      }
+      await renderCurrentSheet();
+    }).catch((error) => {
+      console.error(error);
+      setAlert(error.message || "음수 강조 컬럼 설정 중 문제가 발생했습니다.", "error");
+    });
+  }
+
+  function getMinimalStylesXml() {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<styleSheet xmlns="${OOXML_NS}">
+  <fonts count="1">
+    <font><sz val="11"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font>
+  </fonts>
+  <fills count="2">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+  </fills>
+  <borders count="1">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+  </borders>
+  <cellStyleXfs count="1">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
+  </cellStyleXfs>
+  <cellXfs count="1">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+  </cellXfs>
+  <cellStyles count="1">
+    <cellStyle name="Normal" xfId="0" builtinId="0"/>
+  </cellStyles>
+</styleSheet>`;
+  }
+
+  function createXmlElement(doc, tagName) {
+    const namespace = doc.documentElement?.namespaceURI || OOXML_NS;
+    return doc.createElementNS(namespace, tagName);
+  }
+
+  function ensureStylesDoc(xmlText) {
+    const fallback = parseXml(getMinimalStylesXml());
+    if (!xmlText) return fallback;
+    const doc = parseXml(xmlText);
+    if (doc.getElementsByTagName("parsererror").length) return fallback;
+    if (!doc.documentElement || doc.documentElement.localName !== "styleSheet") return fallback;
+    return doc;
+  }
+
+  function updateCount(node, tagName) {
+    node.setAttribute("count", String(node.getElementsByTagName(tagName).length));
+  }
+
+  function ensureStylesNode(doc, tagName, builder) {
+    let node = doc.getElementsByTagName(tagName)[0];
+    if (!node) {
+      node = builder();
+      doc.documentElement.appendChild(node);
+    }
+    return node;
+  }
+
+  function buildDefaultFont(doc) {
+    const font = createXmlElement(doc, "font");
+    const sz = createXmlElement(doc, "sz");
+    sz.setAttribute("val", "11");
+    font.appendChild(sz);
+    const color = createXmlElement(doc, "color");
+    color.setAttribute("theme", "1");
+    font.appendChild(color);
+    const name = createXmlElement(doc, "name");
+    name.setAttribute("val", "Calibri");
+    font.appendChild(name);
+    const family = createXmlElement(doc, "family");
+    family.setAttribute("val", "2");
+    font.appendChild(family);
+    const scheme = createXmlElement(doc, "scheme");
+    scheme.setAttribute("val", "minor");
+    font.appendChild(scheme);
+    return font;
+  }
+
+  function buildDefaultFill(doc, patternType) {
+    const fill = createXmlElement(doc, "fill");
+    const patternFill = createXmlElement(doc, "patternFill");
+    patternFill.setAttribute("patternType", patternType);
+    fill.appendChild(patternFill);
+    return fill;
+  }
+
+  function buildDefaultBorder(doc) {
+    const border = createXmlElement(doc, "border");
+    ["left", "right", "top", "bottom", "diagonal"].forEach((tagName) => {
+      border.appendChild(createXmlElement(doc, tagName));
+    });
+    return border;
+  }
+
+  function createNegativeStyleManager(stylesDoc) {
+    const fontsNode = ensureStylesNode(stylesDoc, "fonts", () => {
+      const node = createXmlElement(stylesDoc, "fonts");
+      node.appendChild(buildDefaultFont(stylesDoc));
+      updateCount(node, "font");
+      return node;
+    });
+    const fillsNode = ensureStylesNode(stylesDoc, "fills", () => {
+      const node = createXmlElement(stylesDoc, "fills");
+      node.appendChild(buildDefaultFill(stylesDoc, "none"));
+      node.appendChild(buildDefaultFill(stylesDoc, "gray125"));
+      updateCount(node, "fill");
+      return node;
+    });
+    ensureStylesNode(stylesDoc, "borders", () => {
+      const node = createXmlElement(stylesDoc, "borders");
+      node.appendChild(buildDefaultBorder(stylesDoc));
+      updateCount(node, "border");
+      return node;
+    });
+    ensureStylesNode(stylesDoc, "cellStyleXfs", () => {
+      const node = createXmlElement(stylesDoc, "cellStyleXfs");
+      const xf = createXmlElement(stylesDoc, "xf");
+      xf.setAttribute("numFmtId", "0");
+      xf.setAttribute("fontId", "0");
+      xf.setAttribute("fillId", "0");
+      xf.setAttribute("borderId", "0");
+      node.appendChild(xf);
+      updateCount(node, "xf");
+      return node;
+    });
+    const cellXfsNode = ensureStylesNode(stylesDoc, "cellXfs", () => {
+      const node = createXmlElement(stylesDoc, "cellXfs");
+      const xf = createXmlElement(stylesDoc, "xf");
+      xf.setAttribute("numFmtId", "0");
+      xf.setAttribute("fontId", "0");
+      xf.setAttribute("fillId", "0");
+      xf.setAttribute("borderId", "0");
+      xf.setAttribute("xfId", "0");
+      node.appendChild(xf);
+      updateCount(node, "xf");
+      return node;
+    });
+    ensureStylesNode(stylesDoc, "cellStyles", () => {
+      const node = createXmlElement(stylesDoc, "cellStyles");
+      const cellStyle = createXmlElement(stylesDoc, "cellStyle");
+      cellStyle.setAttribute("name", "Normal");
+      cellStyle.setAttribute("xfId", "0");
+      cellStyle.setAttribute("builtinId", "0");
+      node.appendChild(cellStyle);
+      node.setAttribute("count", "1");
+      return node;
+    });
+
+    const fill = createXmlElement(stylesDoc, "fill");
+    const patternFill = createXmlElement(stylesDoc, "patternFill");
+    patternFill.setAttribute("patternType", "solid");
+    const fgColor = createXmlElement(stylesDoc, "fgColor");
+    fgColor.setAttribute("rgb", "FFFFC7CE");
+    const bgColor = createXmlElement(stylesDoc, "bgColor");
+    bgColor.setAttribute("indexed", "64");
+    patternFill.appendChild(fgColor);
+    patternFill.appendChild(bgColor);
+    fill.appendChild(patternFill);
+    fillsNode.appendChild(fill);
+    updateCount(fillsNode, "fill");
+    const negativeFillId = fillsNode.getElementsByTagName("fill").length - 1;
+
+    const fontVariantCache = new Map();
+    const styleVariantCache = new Map();
+
+    function getOrCreateNegativeFontId(baseFontId) {
+      if (fontVariantCache.has(baseFontId)) return fontVariantCache.get(baseFontId);
+
+      const fonts = Array.from(fontsNode.getElementsByTagName("font"));
+      const baseFont = fonts[baseFontId] || fonts[0] || buildDefaultFont(stylesDoc);
+      const derivedFont = baseFont.cloneNode(true);
+
+      Array.from(derivedFont.childNodes)
+        .filter((child) => child.nodeType === 1 && child.localName === "color")
+        .forEach((child) => derivedFont.removeChild(child));
+
+      const color = createXmlElement(stylesDoc, "color");
+      color.setAttribute("rgb", "FF9C0006");
+      derivedFont.appendChild(color);
+
+      fontsNode.appendChild(derivedFont);
+      updateCount(fontsNode, "font");
+
+      const newFontId = fontsNode.getElementsByTagName("font").length - 1;
+      fontVariantCache.set(baseFontId, newFontId);
+      return newFontId;
+    }
+
+    function getDerivedStyleIndex(baseStyleIndex) {
+      if (styleVariantCache.has(baseStyleIndex)) return styleVariantCache.get(baseStyleIndex);
+
+      const xfs = Array.from(cellXfsNode.getElementsByTagName("xf"));
+      let baseXf = xfs[baseStyleIndex] || xfs[0];
+      if (!baseXf) {
+        baseXf = createXmlElement(stylesDoc, "xf");
+        baseXf.setAttribute("numFmtId", "0");
+        baseXf.setAttribute("fontId", "0");
+        baseXf.setAttribute("fillId", "0");
+        baseXf.setAttribute("borderId", "0");
+        baseXf.setAttribute("xfId", "0");
+        cellXfsNode.appendChild(baseXf);
+        updateCount(cellXfsNode, "xf");
+      }
+
+      const derivedXf = baseXf.cloneNode(true);
+      const baseFontId = Number(baseXf.getAttribute("fontId") || 0);
+
+      derivedXf.setAttribute("fontId", String(getOrCreateNegativeFontId(baseFontId)));
+      derivedXf.setAttribute("fillId", String(negativeFillId));
+      derivedXf.setAttribute("applyFont", "1");
+      derivedXf.setAttribute("applyFill", "1");
+
+      cellXfsNode.appendChild(derivedXf);
+      updateCount(cellXfsNode, "xf");
+
+      const newStyleIndex = cellXfsNode.getElementsByTagName("xf").length - 1;
+      styleVariantCache.set(baseStyleIndex, newStyleIndex);
+      return newStyleIndex;
+    }
+
+    return { getDerivedStyleIndex };
+  }
+
+  function getNegativeTargetRefsForSheet(sheet, settings) {
+    const headerRow = clamp(Number(settings.headerRow) || 1, 1, Math.max(sheet.maxRow, 1));
+    const selectedColumns = sanitizeColumnSelection(settings.negativeColumns, sheet.maxCol, {
+      allowEmpty: true,
+      fallback: []
+    });
+
+    if (!selectedColumns.length) return new Set();
+
+    const refs = new Set();
+    for (let rowIndex = headerRow; rowIndex < sheet.rawMatrix.length; rowIndex += 1) {
+      const row = sheet.rawMatrix[rowIndex] || [];
+      const hasContent = row.some((cell) => normalizeText(cell?.text).trim() !== "");
+      if (!hasContent) continue;
+
+      selectedColumns.forEach((colIndex) => {
+        const cell = row[colIndex] || EMPTY_CELL;
+        const value = getRawNumericValue(cell);
+        if (value !== null && value < 0) {
+          refs.add(`${indexToColumnLetters(colIndex + 1)}${rowIndex + 1}`);
+        }
+      });
+    }
+    return refs;
+  }
+
+  function applyNegativeStylesToSheetDoc(sheetDoc, targetRefs, styleManager) {
+    if (!targetRefs.size) return 0;
+
+    let appliedCount = 0;
+    Array.from(sheetDoc.getElementsByTagName("c")).forEach((cellNode) => {
+      const ref = cellNode.getAttribute("r") || "";
+      if (!targetRefs.has(ref)) return;
+      const baseStyleIndex = Number(cellNode.getAttribute("s") || 0);
+      const newStyleIndex = styleManager.getDerivedStyleIndex(baseStyleIndex);
+      cellNode.setAttribute("s", String(newStyleIndex));
+      appliedCount += 1;
+    });
+
+    return appliedCount;
+  }
+
+  function deriveDownloadFileName(fileName) {
+    const dotIndex = fileName.lastIndexOf(".");
+    if (dotIndex <= 0) return `${fileName}_음수강조.xlsx`;
+    const base = fileName.slice(0, dotIndex);
+    const ext = fileName.slice(dotIndex);
+    return `${base}_음수강조${ext}`;
+  }
+
+  function triggerDownload(blob, fileName) {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function downloadHighlightedWorkbook() {
+    if (!state.workbook) return;
+
+    try {
+      els.downloadBtn.disabled = true;
+      setAlert("다운로드용 엑셀 파일을 준비하고 있습니다...", "info");
+
+      const zip = await JSZip.loadAsync(state.workbook.originalArrayBuffer.slice(0));
+      const stylesEntry = zip.file("xl/styles.xml");
+      const stylesDoc = ensureStylesDoc(stylesEntry ? await stylesEntry.async("string") : "");
+      const styleManager = createNegativeStyleManager(stylesDoc);
+
+      let appliedCellCount = 0;
+      let appliedSheetCount = 0;
+
+      for (const sheetMeta of state.workbook.sheets) {
+        const sheet = await getSheetData(sheetMeta.name);
+        const settings = getCurrentSettings(sheet);
+        const targetRefs = getNegativeTargetRefsForSheet(sheet, settings);
+        if (!targetRefs.size) continue;
+
+        const sheetEntry = zip.file(sheetMeta.path);
+        if (!sheetEntry) continue;
+
+        const sheetDoc = parseXml(await sheetEntry.async("string"));
+        const applied = applyNegativeStylesToSheetDoc(sheetDoc, targetRefs, styleManager);
+        if (applied > 0) {
+          zip.file(sheetMeta.path, serializeXml(sheetDoc));
+          appliedCellCount += applied;
+          appliedSheetCount += 1;
+        }
+      }
+
+      zip.file("xl/styles.xml", serializeXml(stylesDoc));
+
+      const ext = state.workbook.fileName.toLowerCase().endsWith(".xlsm")
+        ? ".xlsm"
+        : ".xlsx";
+      const mimeType = ext === ".xlsm"
+        ? "application/vnd.ms-excel.sheet.macroEnabled.12"
+        : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+      const blob = await zip.generateAsync({
+        type: "blob",
+        compression: "DEFLATE",
+        mimeType
+      });
+
+      triggerDownload(blob, deriveDownloadFileName(state.workbook.fileName));
+
+      if (appliedCellCount > 0) {
+        setAlert(`음수 강조가 적용된 결과 파일을 다운로드했습니다. ${appliedSheetCount}개 시트, ${appliedCellCount}개 셀에 빨간 표시를 반영했습니다.`, "info");
+      } else {
+        setAlert("선택한 음수 검사 컬럼에서 음수 값이 없어 원본과 같은 내용으로 다운로드했습니다.", "info");
+      }
+    } catch (error) {
+      console.error(error);
+      setAlert(error.message || "다운로드 파일을 만드는 중 문제가 발생했습니다.", "error");
+    } finally {
+      if (state.workbook) {
+        els.downloadBtn.disabled = false;
+      }
     }
   }
 
@@ -1759,7 +2678,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     }
   }
 
-  syncControls(null, null);
+  syncControls(null, null, null);
   bindDropzone();
   bindControls();
   loadDemoFileIfPresent();
