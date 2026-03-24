@@ -602,38 +602,21 @@
     </div>
   </section>
 
-
-
-  
   
 </main>
 
+
+
+
+
+
+  
 <script>
   const EXPENSE_URL =
     "https://drive.google.com/file/d/1MWqffcPAzERlKSW_Qp-dph9G808UmO5O/view?usp=drive_link";
 
   const AFTERSCHOOL_PAY_URL =
     "https://drive.google.com/file/d/16Nc2oCjoHVBOExbE1mRIWFdJk_x7--re/view?usp=drive_link";
-
-  const INDEX_TITLE = "업무천재 고주무관의 교육행정 업무 효율화 지원 웹페이지";
-
-  const DETAIL_SECTION_IDS = new Set([
-    "notice",
-    "dlSection",
-    "budget",
-    "income",
-    "labor",
-    "insurance",
-    "leave",
-    "payroll",
-    "coach",
-    "special-payroll",
-    "fixed-teacher",
-    "other-workers",
-    "tools",
-    "links",
-    "allowanceNotice"
-  ]);
 
   window.addEventListener("DOMContentLoaded", () => {
     const afterschoolPay = document.getElementById("downloadAfterschoolpay");
@@ -642,29 +625,32 @@
     if (expense) expense.href = EXPENSE_URL;
     if (afterschoolPay) afterschoolPay.href = AFTERSCHOOL_PAY_URL;
 
-    const detailBasePath = window.location.pathname || "/";
+    const currentPath = window.location.pathname.replace(/\/index\.html$/, "/");
 
-    /* 1) 목차의 #섹션 버튼들을 새 탭 상세보기 링크로 자동 변경 */
     document
-      .querySelectorAll('nav.section .link-item > a.btn[href^="#"]')
+      .querySelectorAll('main section.section a.btn[href]:not([download])')
       .forEach((link) => {
-        const raw = (link.getAttribute("href") || "").trim();
-        const sectionId = raw.slice(1);
+        const rawHref = (link.getAttribute("href") || "").trim();
 
-        if (!DETAIL_SECTION_IDS.has(sectionId)) return;
+        if (!rawHref) return;
+        if (rawHref.startsWith("#")) return;
+        if (/^(javascript:|mailto:|tel:)/i.test(rawHref)) return;
 
-        link.href = `${detailBasePath}?section=${encodeURIComponent(sectionId)}`;
-        link.target = "_blank";
-        link.rel = "noopener";
-      });
+        let url;
+        try {
+          url = new URL(rawHref, window.location.origin);
+        } catch (error) {
+          return;
+        }
 
-    /* 2) 메인 index 안의 실제 기능 버튼들도 전부 새 탭으로 열기 */
-    document
-      .querySelectorAll('main .link-item > a.btn[href]:not([href^="#"]):not([download])')
-      .forEach((link) => {
-        const href = (link.getAttribute("href") || "").trim();
-        if (!href) return;
-        if (/^(javascript:|mailto:|tel:)/i.test(href)) return;
+        const normalizedLinkPath = url.pathname.replace(/\/index\.html$/, "/");
+        const isSameOrigin = url.origin === window.location.origin;
+        const isSamePage =
+          normalizedLinkPath === currentPath &&
+          !url.search &&
+          !url.hash;
+
+        if (!isSameOrigin || isSamePage) return;
 
         link.target = "_blank";
 
@@ -678,49 +664,8 @@
         relTokens.add("noopener");
         link.rel = Array.from(relTokens).join(" ");
       });
-
-    /* 3) ?section=budget 같은 값이 있으면 해당 섹션만 보여주는 상세보기 모드 */
-    const sectionId = new URLSearchParams(window.location.search).get("section");
-    if (!sectionId || !DETAIL_SECTION_IDS.has(sectionId)) return;
-
-    const main = document.querySelector("main.container");
-    const targetSection = document.getElementById(sectionId);
-    if (!main || !targetSection) return;
-
-    Array.from(main.children).forEach((node) => {
-      const keepNode =
-        node.tagName === "H1" ||
-        (node.classList && node.classList.contains("subtitle")) ||
-        node === targetSection;
-
-      node.hidden = !keepNode;
-    });
-
-    const homeWrap = document.createElement("div");
-    homeWrap.className = "home-link-wrap";
-    homeWrap.innerHTML = `<a class="btn" href="${detailBasePath}">메인으로 돌아가기</a>`;
-    main.insertBefore(homeWrap, targetSection);
-
-    const heading = targetSection.querySelector("h1, h2, h3");
-    const pageTitle = heading ? heading.textContent.trim() : "상세 페이지";
-    document.title = `${pageTitle} | ${INDEX_TITLE}`;
-
-    /* exe 섹션은 상세보기로 열릴 때 자동 펼침 */
-    if (sectionId === "dlSection") {
-      const btn = document.getElementById("dlToggleBtn");
-      const body = document.getElementById("dlSectionBody");
-
-      if (btn && body) {
-        body.hidden = false;
-        btn.setAttribute("aria-expanded", "true");
-        btn.textContent = "다운로드 목록 접기 ▾";
-      }
-    }
-
-    window.scrollTo(0, 0);
   });
 </script>
-
 
 </div>
 </body>
