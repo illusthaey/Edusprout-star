@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>엑셀 행렬 뒤집기</title>
+
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BQLFX9NXE4"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BQLFX9NXE4');
+</script>
+
+
+
+  
+  <link rel="icon" href="/static/favicon.ico" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <script defer src="/static/global-loader.js"></script>
+  <script defer src="/static/footer.js"></script>
+
+
+  
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: #f6f7fb;
+      color: #111827;
+      line-height: 1.55;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 16px 56px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 2rem;
+      text-align: center;
+    }
+    .sub {
+      margin: 0 auto 20px;
+      max-width: 780px;
+      color: #4b5563;
+      text-align: center;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 18px;
+      margin-top: 16px;
+      box-shadow: 0 10px 28px rgba(17, 24, 39, 0.05);
+    }
+    .dropzone {
+      border: 2px dashed #cbd5e1;
+      border-radius: 14px;
+      padding: 24px;
+      text-align: center;
+      background: #f8fafc;
+      transition: border-color .15s ease, background-color .15s ease;
+    }
+    .dropzone.dragover {
+      border-color: #2563eb;
+      background: #eff6ff;
+    }
+    .dropzone strong {
+      display: block;
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    button,
+    .fake-btn,
+    input[type="file"]::file-selector-button {
+      font: inherit;
+    }
+    button,
+    .fake-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border: 1px solid #111827;
+      border-radius: 12px;
+      background: #fff;
+      color: #111827;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    button:hover,
+    .fake-btn:hover {
+      background: #f3f4f6;
+    }
+    button.primary {
+      background: #111827;
+      color: #fff;
+      border-color: #111827;
+    }
+    button.primary:hover {
+      background: #000;
+    }
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+    .file-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-top: 16px;
+    }
+    input[type="file"] {
+      max-width: 100%;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .stat {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #fafafa;
+    }
+    .stat-label {
+      color: #6b7280;
+      font-size: .92rem;
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-weight: 700;
+      word-break: break-all;
+    }
+    .status {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      white-space: pre-wrap;
+    }
+    .status.error {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+    .note {
+      margin-top: 10px;
+      color: #4b5563;
+      font-size: .95rem;
+    }
+    .preview-wrap {
+      overflow: auto;
+      margin-top: 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      max-height: 520px;
+      background: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+      background: #fff;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #f9fafb;
+      z-index: 1;
+    }
+    tbody th {
+      position: sticky;
+      left: 0;
+      background: #f9fafb;
+      z-index: 1;
+      min-width: 70px;
+    }
+    code {
+      background: #f3f4f6;
+      border-radius: 6px;
+      padding: 2px 6px;
+    }
+    ul {
+      margin: 10px 0 0;
+      padding-left: 20px;
+    }
+    .hidden { display: none !important; }
+    @media (max-width: 640px) {
+      .wrap { padding-top: 20px; }
+      h1 { font-size: 1.6rem; }
+      .card { padding: 14px; }
+      .dropzone { padding: 18px; }
+      table { min-width: 560px; }
+    }
+  </style>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <h1>엑셀 행·열 뒤집기</h1>
+    <p class="sub">
+      엑셀 파일 올리면 행이랑 열 서로 뒤바꿔줌. 단, 수식이나 너비, 높이 등은 복원 못 함
+    </p>
+
+    <section class="card">
+      <div id="dropzone" class="dropzone">
+        <strong>엑셀 파일을 여기로 끌어놓거나 아래에서 선택하세요.</strong>
+        <div class="muted">지원 예시: .xlsx, .xls, .xlsm, .xlsb, .csv</div>
+      </div>
+
+      <div class="file-row">
+        <input id="fileInput" type="file" accept=".xlsx,.xls,.xlsm,.xlsb,.csv" />
+        <button id="processBtn" class="primary" disabled>변환 후 다운로드</button>
+        <button id="resetBtn" type="button">초기화하기</button>
+      </div>
+
+      <div id="stats" class="stats hidden">
+        <div class="stat">
+          <div class="stat-label">파일명</div>
+          <div id="statFile" class="stat-value">-</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">시트명</div>
+          <div id="statSheet" class="stat-value">-</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">원본 크기</div>
+          <div id="statBefore" class="stat-value">-</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">변환 후 크기</div>
+          <div id="statAfter" class="stat-value">-</div>
+        </div>
+      </div>
+
+      <div id="status" class="status">파일을 선택해 주세요.</div>
+    </section>
+
+    <section class="card">
+      <h2 style="margin-top:0;">미리보기</h2>
+      <div class="muted">변환 결과 일부만 미리보기 지원. 다운로드 파일에는 전체 데이터 다 있음.</div>
+      <div id="previewWrap" class="preview-wrap">
+        <table id="previewTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <ul class="muted">
+        <li>첫 번째 시트만 처리합니다.</li>
+        <li>시트의 실제 사용 범위(<code>!ref</code>)를 기준으로 빈 셀도 포함해 변환함.</li>
+        <li>맨 끝의 완전 빈 행/열이 원래 사용 범위에 없으면 결과에도 포함되지 않습니다.</li>
+      </ul>
+    </section>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const processBtn = document.getElementById('processBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const dropzone = document.getElementById('dropzone');
+    const statusEl = document.getElementById('status');
+    const statsEl = document.getElementById('stats');
+    const statFile = document.getElementById('statFile');
+    const statSheet = document.getElementById('statSheet');
+    const statBefore = document.getElementById('statBefore');
+    const statAfter = document.getElementById('statAfter');
+    const previewTable = document.getElementById('previewTable');
+    const previewHead = previewTable.querySelector('thead');
+    const previewBody = previewTable.querySelector('tbody');
+
+    const state = {
+      file: null,
+      workbook: null,
+      sheetName: '',
+      sourceMatrix: [],
+      transposedMatrix: []
+    };
+
+    function setStatus(message, isError = false) {
+      statusEl.textContent = message;
+      statusEl.classList.toggle('error', isError);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatDate(value) {
+      if (!(value instanceof Date) || Number.isNaN(value.getTime())) return '';
+      const pad = n => String(n).padStart(2, '0');
+      const y = value.getFullYear();
+      const m = pad(value.getMonth() + 1);
+      const d = pad(value.getDate());
+      const hh = pad(value.getHours());
+      const mm = pad(value.getMinutes());
+      const ss = pad(value.getSeconds());
+      if (hh === '00' && mm === '00' && ss === '00') return `${y}-${m}-${d}`;
+      return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+    }
+
+    function cellToValue(cell) {
+      if (!cell) return '';
+      if (cell.t === 'd') {
+        if (cell.w != null && cell.w !== '') return cell.w;
+        return formatDate(cell.v);
+      }
+      if (cell.t === 'e') {
+        return cell.w != null ? cell.w : '';
+      }
+      return cell.v ?? '';
+    }
+
+    function sheetToMatrix(ws) {
+      const ref = ws['!ref'];
+      if (!ref) return [['']];
+
+      const range = XLSX.utils.decode_range(ref);
+      const rowCount = range.e.r - range.s.r + 1;
+      const colCount = range.e.c - range.s.c + 1;
+      const matrix = Array.from({ length: rowCount }, () => Array(colCount).fill(''));
+
+      for (let r = range.s.r; r <= range.e.r; r += 1) {
+        for (let c = range.s.c; c <= range.e.c; c += 1) {
+          const cellAddress = XLSX.utils.encode_cell({ r, c });
+          const cell = ws[cellAddress];
+          matrix[r - range.s.r][c - range.s.c] = cellToValue(cell);
+        }
+      }
+
+      return matrix;
+    }
+
+    function transposeMatrix(matrix) {
+      const rows = matrix.length;
+      const cols = matrix.reduce((max, row) => Math.max(max, row.length), 0);
+      const normalized = matrix.map(row => {
+        const copy = row.slice();
+        while (copy.length < cols) copy.push('');
+        return copy;
+      });
+      return Array.from({ length: cols }, (_, c) =>
+        Array.from({ length: rows }, (_, r) => normalized[r][c])
+      );
+    }
+
+    function autoColWidths(matrix, maxCols = 120) {
+      const colCount = Math.min(matrix[0]?.length ?? 0, maxCols);
+      const widths = [];
+      for (let c = 0; c < colCount; c += 1) {
+        let maxLen = 6;
+        for (let r = 0; r < matrix.length; r += 1) {
+          const text = matrix[r][c] == null ? '' : String(matrix[r][c]);
+          maxLen = Math.max(maxLen, text.length);
+        }
+        widths.push({ wch: Math.min(maxLen + 2, 40) });
+      }
+      return widths;
+    }
+
+    function renderPreview(matrix, maxRows = 20, maxCols = 20) {
+      previewHead.innerHTML = '';
+      previewBody.innerHTML = '';
+
+      const rows = matrix.length;
+      const cols = matrix.reduce((max, row) => Math.max(max, row.length), 0);
+      const showRows = Math.min(rows, maxRows);
+      const showCols = Math.min(cols, maxCols);
+
+      const headCells = ['<th scope="col">행\\열</th>'];
+      for (let c = 0; c < showCols; c += 1) {
+        headCells.push(`<th scope="col">${c + 1}열</th>`);
+      }
+      if (cols > showCols) {
+        headCells.push(`<th scope="col">… ${cols - showCols}열 더 있음</th>`);
+      }
+      previewHead.innerHTML = `<tr>${headCells.join('')}</tr>`;
+
+      const bodyRows = [];
+      for (let r = 0; r < showRows; r += 1) {
+        const cells = [`<th scope="row">${r + 1}행</th>`];
+        for (let c = 0; c < showCols; c += 1) {
+          const value = matrix[r]?.[c] ?? '';
+          cells.push(`<td>${escapeHtml(value)}</td>`);
+        }
+        if (cols > showCols) {
+          cells.push('<td>…</td>');
+        }
+        bodyRows.push(`<tr>${cells.join('')}</tr>`);
+      }
+      if (rows > showRows) {
+        const span = 1 + showCols + (cols > showCols ? 1 : 0);
+        bodyRows.push(`<tr><td colspan="${span}">… ${rows - showRows}행 더 있음</td></tr>`);
+      }
+      previewBody.innerHTML = bodyRows.join('');
+    }
+
+    function updateStats(fileName, sheetName, sourceMatrix, transposedMatrix) {
+      const beforeRows = sourceMatrix.length;
+      const beforeCols = sourceMatrix.reduce((max, row) => Math.max(max, row.length), 0);
+      const afterRows = transposedMatrix.length;
+      const afterCols = transposedMatrix.reduce((max, row) => Math.max(max, row.length), 0);
+
+      statFile.textContent = fileName;
+      statSheet.textContent = sheetName;
+      statBefore.textContent = `${beforeRows}행 × ${beforeCols}열`;
+      statAfter.textContent = `${afterRows}행 × ${afterCols}열`;
+      statsEl.classList.remove('hidden');
+    }
+
+    function resetAll() {
+      state.file = null;
+      state.workbook = null;
+      state.sheetName = '';
+      state.sourceMatrix = [];
+      state.transposedMatrix = [];
+      fileInput.value = '';
+      processBtn.disabled = true;
+      statsEl.classList.add('hidden');
+      previewHead.innerHTML = '';
+      previewBody.innerHTML = '';
+      setStatus('파일을 선택해 주세요.');
+    }
+
+    async function readWorkbookFromFile(file) {
+      const buffer = await file.arrayBuffer();
+      return XLSX.read(buffer, {
+        type: 'array',
+        cellDates: true,
+        dense: false
+      });
+    }
+
+    async function prepareFile(file) {
+      if (!file) {
+        resetAll();
+        return;
+      }
+
+      try {
+        setStatus('파일을 읽는 중입니다...');
+        const workbook = await readWorkbookFromFile(file);
+        if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+          throw new Error('시트가 없는 파일입니다.');
+        }
+
+        const sheetName = workbook.SheetNames[0];
+        const ws = workbook.Sheets[sheetName];
+        const sourceMatrix = sheetToMatrix(ws);
+        const transposedMatrix = transposeMatrix(sourceMatrix);
+
+        state.file = file;
+        state.workbook = workbook;
+        state.sheetName = sheetName;
+        state.sourceMatrix = sourceMatrix;
+        state.transposedMatrix = transposedMatrix;
+
+        updateStats(file.name, sheetName, sourceMatrix, transposedMatrix);
+        renderPreview(transposedMatrix);
+        processBtn.disabled = false;
+        setStatus('준비 완료. “전치 후 다운로드”를 누르면 새 파일이 생성됩니다.');
+      } catch (error) {
+        console.error(error);
+        processBtn.disabled = true;
+        statsEl.classList.add('hidden');
+        previewHead.innerHTML = '';
+        previewBody.innerHTML = '';
+        setStatus(`처리 중 오류가 발생했습니다.\n${error.message || error}`, true);
+      }
+    }
+
+    function buildOutputName(originalName) {
+      const dotIndex = originalName.lastIndexOf('.');
+      const base = dotIndex > 0 ? originalName.slice(0, dotIndex) : originalName;
+      return `${base}_전치.xlsx`;
+    }
+
+    function downloadTransposedFile() {
+      try {
+        if (!state.file || !state.transposedMatrix.length) {
+          throw new Error('먼저 파일을 선택해 주세요.');
+        }
+
+        setStatus('전치 파일을 생성하는 중입니다...');
+        const outWs = XLSX.utils.aoa_to_sheet(state.transposedMatrix, { cellDates: true });
+        outWs['!cols'] = autoColWidths(state.transposedMatrix);
+
+        const outWb = XLSX.utils.book_new();
+        const newSheetName = `${state.sheetName}_전치`.slice(0, 31);
+        XLSX.utils.book_append_sheet(outWb, outWs, newSheetName || '전치');
+
+        const outName = buildOutputName(state.file.name);
+        XLSX.writeFile(outWb, outName, { compression: true });
+        setStatus(`완료되었습니다.\n다운로드 파일명: ${outName}`);
+      } catch (error) {
+        console.error(error);
+        setStatus(`다운로드 중 오류가 발생했습니다.\n${error.message || error}`, true);
+      }
+    }
+
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files?.[0] || null;
+      await prepareFile(file);
+    });
+
+    processBtn.addEventListener('click', downloadTransposedFile);
+    resetBtn.addEventListener('click', resetAll);
+
+    ['dragenter', 'dragover'].forEach(type => {
+      dropzone.addEventListener(type, (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        dropzone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(type => {
+      dropzone.addEventListener(type, (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        dropzone.classList.remove('dragover');
+      });
+    });
+
+    dropzone.addEventListener('drop', async (event) => {
+      const file = event.dataTransfer?.files?.[0] || null;
+      if (file) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+      }
+      await prepareFile(file);
+    });
+  </script>
+</body>
+</html>
