@@ -1,0 +1,2888 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>사회보험료 1년치 대용량 집계기</title>
+  <style>
+    :root {
+      --sib-bg: #f5f7fb;
+      --sib-card: #ffffff;
+      --sib-border: #d7deea;
+      --sib-border-strong: #b9c3d4;
+      --sib-text: #1f2937;
+      --sib-muted: #5b6473;
+      --sib-primary: #2563eb;
+      --sib-primary-dark: #1d4ed8;
+      --sib-success: #166534;
+      --sib-success-bg: #f0fdf4;
+      --sib-warn: #92400e;
+      --sib-warn-bg: #fffbeb;
+      --sib-danger: #b91c1c;
+      --sib-danger-bg: #fef2f2;
+      --sib-info: #1d4ed8;
+      --sib-info-bg: #eff6ff;
+      --sib-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      --sib-radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--sib-bg);
+      color: var(--sib-text);
+      font-family: "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif;
+      line-height: 1.55;
+    }
+
+    body { min-height: 100vh; }
+
+    .sib-app {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 18px 56px;
+    }
+
+    .sib-hero,
+    .sib-section {
+      background: var(--sib-card);
+      border: 1px solid var(--sib-border);
+      border-radius: 24px;
+      box-shadow: var(--sib-shadow);
+    }
+
+    .sib-hero {
+      padding: 28px 24px;
+      margin-bottom: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+    }
+
+    .sib-hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.9rem, 3.3vw, 2.5rem);
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    .sib-hero p {
+      margin: 0;
+      color: var(--sib-muted);
+      font-size: 1.02rem;
+    }
+
+    .sib-banner {
+      margin-top: 14px;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1e3a8a;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 0.98rem;
+    }
+
+    .sib-section {
+      padding: 22px 20px;
+      margin-bottom: 18px;
+    }
+
+    .sib-section h2 {
+      margin: 0 0 14px;
+      font-size: clamp(1.25rem, 2.4vw, 1.7rem);
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+
+    .sib-grid-3,
+    .sib-grid-4,
+    .sib-grid-kpi,
+    .sib-control-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .sib-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .sib-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .sib-grid-kpi { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .sib-control-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .sib-card {
+      border: 1px solid var(--sib-border);
+      border-radius: 16px;
+      padding: 16px;
+      background: #fcfdff;
+      min-width: 0;
+    }
+
+    .sib-card h3 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+    }
+
+    .sib-card ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .sib-card li + li {
+      margin-top: 8px;
+    }
+
+    .sib-dropzone {
+      border: 2px dashed var(--sib-border-strong);
+      background: linear-gradient(180deg, #fbfcff 0%, #f7f9fd 100%);
+      border-radius: 18px;
+      padding: 28px 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 8px;
+      min-height: 168px;
+      cursor: pointer;
+      transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+    }
+
+    .sib-dropzone:hover,
+    .sib-dropzone.is-dragover {
+      border-color: var(--sib-primary);
+      background: #f4f8ff;
+      transform: translateY(-1px);
+    }
+
+    .sib-dropzone-title {
+      font-size: clamp(1.05rem, 2vw, 1.3rem);
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .sib-dropzone-desc {
+      color: var(--sib-muted);
+      max-width: 820px;
+      word-break: keep-all;
+    }
+
+    .sib-hidden-input {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      margin: -1px !important;
+      padding: 0 !important;
+      border: 0 !important;
+      clip: rect(0 0 0 0) !important;
+      overflow: hidden !important;
+      white-space: nowrap !important;
+    }
+
+    .sib-actions,
+    .sib-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .sib-actions { margin-top: 14px; }
+
+    .sib-btn {
+      appearance: none;
+      border: 1px solid var(--sib-border-strong);
+      background: #fff;
+      color: #111827;
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-size: 0.98rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.14s ease, border-color 0.14s ease, transform 0.14s ease, opacity 0.14s ease;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+    }
+
+    .sib-btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .sib-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .sib-btn-primary { background: var(--sib-primary); color: #fff; border-color: var(--sib-primary); }
+    .sib-btn-primary:hover:not(:disabled) { background: var(--sib-primary-dark); border-color: var(--sib-primary-dark); }
+    .sib-btn-green { background: #16a34a; color: #fff; border-color: #16a34a; }
+    .sib-btn-green:hover:not(:disabled) { background: #15803d; border-color: #15803d; }
+
+    .sib-meta,
+    .sib-note,
+    .sib-preview-meta,
+    .sib-mini-footer {
+      color: var(--sib-muted);
+      font-size: 0.95rem;
+    }
+
+    .sib-mini-footer {
+      text-align: center;
+      padding: 8px 0 0;
+    }
+
+    .sib-table-wrap {
+      width: 100%;
+      overflow: auto;
+      border: 1px solid var(--sib-border);
+      border-radius: 16px;
+      background: #fff;
+      margin-top: 14px;
+    }
+
+    .sib-table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+      font-size: 0.96rem;
+      table-layout: auto;
+    }
+
+    .sib-table thead th {
+      background: #f8fafc;
+      color: #111827;
+      font-weight: 800;
+      border-bottom: 1px solid var(--sib-border);
+    }
+
+    .sib-table th,
+    .sib-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #edf2f7;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .sib-table tbody tr:last-child td { border-bottom: 0; }
+
+    .sib-num {
+      text-align: right;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    .sib-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--sib-border);
+      background: #f8fafc;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+
+    .sib-badge-ok { color: var(--sib-success); background: var(--sib-success-bg); border-color: #bbf7d0; }
+    .sib-badge-warn { color: var(--sib-warn); background: var(--sib-warn-bg); border-color: #fde68a; }
+    .sib-badge-error { color: var(--sib-danger); background: var(--sib-danger-bg); border-color: #fecaca; }
+    .sib-badge-info { color: var(--sib-info); background: var(--sib-info-bg); border-color: #bfdbfe; }
+
+    .sib-field label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .sib-input,
+    .sib-select {
+      width: 100%;
+      border: 1px solid var(--sib-border-strong);
+      background: #fff;
+      color: #111827;
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 0.98rem;
+      min-height: 46px;
+    }
+
+    .sib-kpi {
+      border: 1px solid var(--sib-border);
+      border-radius: 18px;
+      padding: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%);
+      min-width: 0;
+    }
+
+    .sib-kpi-label {
+      margin: 0 0 8px;
+      color: var(--sib-muted);
+      font-size: 0.95rem;
+    }
+
+    .sib-kpi-value {
+      margin: 0;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      font-size: clamp(1.7rem, 3vw, 2.2rem);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sib-kpi-sub {
+      margin: 8px 0 0;
+      color: var(--sib-muted);
+      font-size: 0.93rem;
+    }
+
+    .sib-preview-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .sib-preview-empty {
+      border: 1px dashed var(--sib-border-strong);
+      border-radius: 16px;
+      background: #fafcff;
+      padding: 28px 18px;
+      text-align: center;
+      color: var(--sib-muted);
+    }
+
+    .sib-log {
+      border: 1px solid var(--sib-border);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .sib-log-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .sib-log-item {
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #eef2f7;
+      align-items: start;
+    }
+
+    .sib-log-item:last-child { border-bottom: 0; }
+
+    .sib-log-level {
+      font-weight: 900;
+      font-size: 0.92rem;
+    }
+
+    .sib-log-level-info { color: var(--sib-info); }
+    .sib-log-level-ok { color: var(--sib-success); }
+    .sib-log-level-warn { color: var(--sib-warn); }
+    .sib-log-level-error { color: var(--sib-danger); }
+
+    .sib-debug-output { display: none; }
+
+    @media (max-width: 1120px) {
+      .sib-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sib-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sib-grid-kpi { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .sib-control-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .sib-app { padding: 16px 12px 40px; }
+      .sib-section, .sib-hero { padding: 18px 16px; }
+      .sib-grid-3, .sib-grid-4, .sib-grid-kpi, .sib-control-grid { grid-template-columns: 1fr; }
+      .sib-log-item { grid-template-columns: 1fr; gap: 6px; }
+      .sib-dropzone { min-height: 150px; padding: 24px 16px; }
+      .sib-table { min-width: 640px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="sib-app">
+    <section class="sib-hero">
+      <h1>사회보험료 1년치 대용량 집계기</h1>
+      <p>국민연금 CSV, 건강보험 CSV, 근로자 고용보험 XLSX, 근로자 산재보험 XLSX를 여러 달치 한 번에 올리면 개인별 총액과 월별 상세를 한 번에 정리합니다.</p>
+      <div class="sib-banner">
+        브라우저 안에서만 동작하는 오프라인 단독 실행 버전입니다. 건강보험과 장기요양은 <strong>고지보험료</strong>를 기준으로 반영해서
+        <strong>산출보험료 + 고지보험료 중복 합산 오류</strong>가 나지 않게 구성했습니다.
+      </div>
+    </section>
+
+    <section class="sib-section">
+      <h2>입력 파일 안내</h2>
+      <div class="sib-grid-3">
+        <article class="sib-card">
+          <h3>필수 파일</h3>
+          <ul>
+            <li>국민연금 CSV</li>
+            <li>건강보험 CSV</li>
+            <li>근로자 고용보험 XLSX</li>
+            <li>근로자 산재보험 XLSX</li>
+          </ul>
+        </article>
+        <article class="sib-card">
+          <h3>출력 시트</h3>
+          <ul>
+            <li>개인별총괄</li>
+            <li>월별상세</li>
+            <li>파일별요약</li>
+            <li>오류및미분류</li>
+          </ul>
+        </article>
+        <article class="sib-card">
+          <h3>집계 기준</h3>
+          <ul>
+            <li>개인 식별키: 성명 + 생년월일 6자리</li>
+            <li>국민연금: 결정보험료 50:50 분할</li>
+            <li>건강/요양: 고지보험료 50:50 분할</li>
+            <li>산재보험: 근로자 파일은 기관부담으로 처리</li>
+          </ul>
+        </article>
+      </div>
+      <p class="sib-note">
+        파일명에 <strong>YYYY.M월</strong> 형식이 들어 있으면 월별 상세와 다운로드 파일명이 더 정확하게 생성됩니다.
+        구형 <strong>.xls</strong>는 브라우저 단독 처리 한계가 있어 가능하면 <strong>.xlsx</strong>로 다시 저장해서 사용해주세요.
+      </p>
+    </section>
+
+    <section class="sib-section">
+      <h2>파일 업로드</h2>
+      <div id="dropzone" class="sib-dropzone" role="button" tabindex="0" aria-label="파일 업로드">
+        <div class="sib-dropzone-title">여기로 파일을 드래그하거나 클릭해서 선택</div>
+        <div class="sib-dropzone-desc">CSV / XLSX / XLS 파일을 여러 개 한 번에 올릴 수 있습니다.</div>
+        <div class="sib-dropzone-desc">예시: 2025.3월 건강보험료.csv, 2025.3월 국민연금.csv, 2025.3월 근로자 고용.xlsx, 2025.3월 근로자 산재.xlsx</div>
+      </div>
+      <input id="fileInput" class="sib-hidden-input" type="file" multiple accept=".csv,.xlsx,.xls" />
+
+      <div class="sib-actions">
+        <button type="button" class="sib-btn" id="selectFilesBtn">파일 선택</button>
+        <button type="button" class="sib-btn" id="clearFilesBtn">선택 파일 초기화</button>
+        <span class="sib-meta" id="fileCountText">선택된 파일 0개</span>
+      </div>
+
+      <div class="sib-table-wrap">
+        <table class="sib-table" aria-label="선택 파일 목록">
+          <thead>
+            <tr>
+              <th style="width:34%;">파일명</th>
+              <th style="width:12%;">크기</th>
+              <th style="width:14%;">감지월</th>
+              <th style="width:16%;">감지 결과</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody id="fileTableBody">
+            <tr>
+              <td colspan="5" class="sib-meta">아직 선택한 파일이 없습니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="sib-section">
+      <h2>집계 실행</h2>
+      <div class="sib-control-grid">
+        <div class="sib-field">
+          <label for="previewCountInput">미리보기 행 수</label>
+          <input class="sib-input" type="number" id="previewCountInput" min="1" max="100" value="12" />
+        </div>
+        <div class="sib-field">
+          <label for="previewSheetSelect">미리보기 시트</label>
+          <select class="sib-select" id="previewSheetSelect" disabled>
+            <option value="">먼저 집계하기 실행</option>
+          </select>
+        </div>
+        <div class="sib-field">
+          <label>실행</label>
+          <div class="sib-row">
+            <button type="button" class="sib-btn sib-btn-primary" id="processBtn">집계하기</button>
+            <button type="button" class="sib-btn sib-btn-green" id="downloadBtn" disabled>엑셀 다운로드</button>
+          </div>
+        </div>
+      </div>
+      <p class="sib-note">
+        다운로드 파일명은 감지된 월 범위가 있으면 <strong>사회보험료_연간집계_YYYYMM-YYYYMM.xlsx</strong> 형식으로 저장됩니다.
+      </p>
+    </section>
+
+    <section class="sib-section">
+      <h2>집계 요약</h2>
+      <div class="sib-grid-kpi" id="kpiGrid"></div>
+      <p class="sib-note" id="rangeText">집계 전</p>
+    </section>
+
+    <section class="sib-section">
+      <div class="sib-preview-head">
+        <h2 style="margin:0;">미리보기</h2>
+        <div class="sib-preview-meta" id="previewMeta">집계 전</div>
+      </div>
+      <div id="previewBox">
+        <div class="sib-preview-empty">집계를 실행하면 선택한 시트의 상위 N행을 보여줍니다.</div>
+      </div>
+    </section>
+
+    <section class="sib-section">
+      <h2>상태 로그</h2>
+      <div class="sib-log" id="statusLog"></div>
+    </section>
+
+    <p class="sib-mini-footer">로컬 브라우저에서만 동작하는 단일 파일 버전입니다. 업로드한 파일 내용은 서버로 전송되지 않습니다.</p>
+    <pre class="sib-debug-output" id="autotestResult"></pre>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const $ = (selector) => document.querySelector(selector);
+      const collator = new Intl.Collator("ko-KR", { sensitivity: "base", numeric: true });
+
+      const fileInput = $("#fileInput");
+      const dropzone = $("#dropzone");
+      const selectFilesBtn = $("#selectFilesBtn");
+      const clearFilesBtn = $("#clearFilesBtn");
+      const processBtn = $("#processBtn");
+      const downloadBtn = $("#downloadBtn");
+      const previewCountInput = $("#previewCountInput");
+      const previewSheetSelect = $("#previewSheetSelect");
+      const previewMeta = $("#previewMeta");
+      const previewBox = $("#previewBox");
+      const fileCountText = $("#fileCountText");
+      const fileTableBody = $("#fileTableBody");
+      const statusLog = $("#statusLog");
+      const kpiGrid = $("#kpiGrid");
+      const rangeText = $("#rangeText");
+      const autotestResult = $("#autotestResult");
+
+      const FILE_KIND_LABELS = {
+        pension: "국민연금 CSV",
+        health: "건강보험 CSV",
+        employmentGeneral: "고용보험(근로자)",
+        employmentSpecial: "고용보험(특수)",
+        accidentGeneral: "산재보험(근로자)",
+        accidentSpecial: "산재보험(특수)",
+        unknown: "미분류 파일"
+      };
+
+      const AMOUNT_KEYS = [
+        "npPersonal",
+        "npEmployer",
+        "healthPersonal",
+        "healthEmployer",
+        "carePersonal",
+        "careEmployer",
+        "empPersonal",
+        "empEmployer",
+        "empEmployerStab",
+        "accPersonal",
+        "accEmployer"
+      ];
+
+      const state = {
+        files: [],
+        detections: [],
+        logs: [],
+        outputSheets: [],
+        workbookName: "",
+        summary: null
+      };
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function escapeXml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&apos;");
+      }
+
+      function textNeedsPreserve(value) {
+        return /^\s|\s$/.test(String(value ?? "")) || /\n/.test(String(value ?? ""));
+      }
+
+      function normalizeHeader(value) {
+        return String(value ?? "")
+          .replace(/[\s\u200B-\u200D\uFEFF]/g, "")
+          .replace(/\n/g, "")
+          .trim();
+      }
+
+      function normalizeName(value) {
+        return String(value ?? "").replace(/\s+/g, "").trim();
+      }
+
+      function formatBytes(bytes) {
+        const value = Number(bytes) || 0;
+        if (value < 1024) return value + " B";
+        if (value < 1024 * 1024) return (value / 1024).toFixed(1).replace(/\.0$/, "") + " KB";
+        return (value / (1024 * 1024)).toFixed(1).replace(/\.0$/, "") + " MB";
+      }
+
+      function formatNumber(value) {
+        if (value === null || value === undefined || value === "") return "";
+        if (typeof value === "number") {
+          const hasDecimal = Math.abs(value % 1) > 0;
+          return new Intl.NumberFormat("ko-KR", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: hasDecimal ? 1 : 0
+          }).format(value);
+        }
+        return String(value);
+      }
+
+      function pad2(value) {
+        return String(value).padStart(2, "0");
+      }
+
+      function formatMonthText(month) {
+        if (!month || !/^\d{6}$/.test(String(month))) return "월미상";
+        const text = String(month);
+        return text.slice(0, 4) + "-" + text.slice(4, 6);
+      }
+
+      function cleanAmount(value) {
+        const number = Number(value) || 0;
+        if (Math.abs(number) < 1e-9) return 0;
+        return Math.round(number * 10) / 10;
+      }
+
+      function parseMoney(value) {
+        if (value === null || value === undefined || value === "") return 0;
+        if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+        if (typeof value === "boolean") return value ? 1 : 0;
+
+        let text = String(value).trim();
+        if (!text) return 0;
+
+        let negative = false;
+        if (/^\(.*\)$/.test(text)) {
+          negative = true;
+          text = text.slice(1, -1);
+        }
+
+        text = text
+          .replace(/[\s,원]/g, "")
+          .replace(/[﹣－]/g, "-");
+
+        const match = text.match(/-?\d+(?:\.\d+)?/);
+        if (!match) return 0;
+
+        let number = Number(match[0]);
+        if (!Number.isFinite(number)) return 0;
+        if (negative) number = -Math.abs(number);
+        return number;
+      }
+
+      function splitHalf(total) {
+        return cleanAmount(parseMoney(total) / 2);
+      }
+
+      function sumAmounts(values) {
+        return cleanAmount(values.reduce((sum, value) => sum + parseMoney(value), 0));
+      }
+
+      function isRowEmpty(row) {
+        return !Array.isArray(row) || row.every((cell) => String(cell ?? "").trim() === "");
+      }
+
+      function looksLikeTotalRow(row) {
+        const first = normalizeHeader(row?.[0]);
+        return first === "합계" || first.startsWith("합계");
+      }
+
+      function chooseDisplayName(currentName, nextName) {
+        const current = String(currentName ?? "").trim();
+        const next = String(nextName ?? "").trim();
+        if (!current && next) return next;
+        if (current && !next) return current;
+        if (!current && !next) return "";
+        if (normalizeName(current) === normalizeName(next)) {
+          return current.length >= next.length ? current : next;
+        }
+        return current || next;
+      }
+
+      function makeKey(name, birth6) {
+        const normalized = normalizeName(name);
+        const birth = String(birth6 ?? "").trim();
+        if (!normalized || !birth) return "";
+        return normalized + "|" + birth;
+      }
+
+      function birth6FromRRN(value) {
+        if (value === null || value === undefined || value === "") return "";
+        if (typeof value === "number" && Number.isFinite(value)) {
+          const digits = String(Math.trunc(value));
+          return digits.padStart(6, "0").slice(0, 6);
+        }
+        const digits = String(value).replace(/[^0-9]/g, "");
+        return digits.length >= 6 ? digits.slice(0, 6) : "";
+      }
+
+      function excelSerialToDateText(serial) {
+        if (!Number.isFinite(serial)) return "";
+        const whole = Math.floor(serial);
+        const utc = Date.UTC(1899, 11, 30) + whole * 86400000;
+        const date = new Date(utc);
+        if (Number.isNaN(date.getTime())) return "";
+        const yy = pad2(date.getUTCFullYear() % 100);
+        const mm = pad2(date.getUTCMonth() + 1);
+        const dd = pad2(date.getUTCDate());
+        return yy + mm + dd;
+      }
+
+      function birth6FromDate(value) {
+        if (value === null || value === undefined || value === "") return "";
+
+        if (value instanceof Date && !Number.isNaN(value.getTime())) {
+          return pad2(value.getFullYear() % 100) + pad2(value.getMonth() + 1) + pad2(value.getDate());
+        }
+
+        if (typeof value === "number" && Number.isFinite(value)) {
+          const converted = excelSerialToDateText(value);
+          if (converted) return converted;
+        }
+
+        const text = String(value).trim();
+        if (!text) return "";
+
+        let match = text.match(/^(\d{2})[-./](\d{2})[-./](\d{2})$/);
+        if (match) return match[1] + match[2] + match[3];
+
+        match = text.match(/^(\d{4})[-./](\d{2})[-./](\d{2})$/);
+        if (match) return match[1].slice(2) + match[2] + match[3];
+
+        const digits = text.replace(/[^0-9]/g, "");
+        if (digits.length === 8) {
+          const year = Number(digits.slice(0, 4));
+          if (year >= 1900 && year <= 2099) return digits.slice(2, 8);
+        }
+        if (digits.length >= 6) return digits.slice(0, 6);
+        return "";
+      }
+
+      function extractMonthFromFilename(fileName) {
+        const text = String(fileName ?? "");
+        let match = text.match(/(20\d{2})\s*[.\-_/ ]\s*(\d{1,2})\s*월/i);
+        if (match) return match[1] + pad2(match[2]);
+
+        match = text.match(/(20\d{2})(\d{2})/);
+        if (match) return match[1] + pad2(match[2]);
+
+        return "";
+      }
+
+      function formatMonthRange(months) {
+        const cleanMonths = Array.from(new Set(months.filter((month) => /^\d{6}$/.test(String(month)))))
+          .sort();
+        if (!cleanMonths.length) return "감지된 월 없음";
+        if (cleanMonths.length === 1) return formatMonthText(cleanMonths[0]);
+        return formatMonthText(cleanMonths[0]) + " ~ " + formatMonthText(cleanMonths[cleanMonths.length - 1]);
+      }
+
+      function makeWorkbookName(months) {
+        const cleanMonths = Array.from(new Set(months.filter((month) => /^\d{6}$/.test(String(month)))))
+          .sort();
+        if (!cleanMonths.length) return "사회보험료_연간집계.xlsx";
+        if (cleanMonths.length === 1) return "사회보험료_연간집계_" + cleanMonths[0] + ".xlsx";
+        return "사회보험료_연간집계_" + cleanMonths[0] + "-" + cleanMonths[cleanMonths.length - 1] + ".xlsx";
+      }
+
+      function displayLength(text) {
+        const value = String(text ?? "");
+        let len = 0;
+        for (const ch of value) {
+          const code = ch.charCodeAt(0);
+          len += code > 255 ? 2 : 1;
+        }
+        return len;
+      }
+
+      function friendlyKind(kind) {
+        return FILE_KIND_LABELS[kind] || kind || "미분류";
+      }
+
+      function createEmptyAmounts() {
+        return {
+          npPersonal: 0,
+          npEmployer: 0,
+          healthPersonal: 0,
+          healthEmployer: 0,
+          carePersonal: 0,
+          careEmployer: 0,
+          empPersonal: 0,
+          empEmployer: 0,
+          empEmployerStab: 0,
+          accPersonal: 0,
+          accEmployer: 0
+        };
+      }
+
+      function addAmounts(target, source) {
+        for (const key of AMOUNT_KEYS) {
+          target[key] = cleanAmount((target[key] || 0) + parseMoney(source[key]));
+        }
+      }
+
+      function calcPersonalTotal(amounts) {
+        return cleanAmount(
+          parseMoney(amounts.npPersonal) +
+          parseMoney(amounts.healthPersonal) +
+          parseMoney(amounts.carePersonal) +
+          parseMoney(amounts.empPersonal) +
+          parseMoney(amounts.accPersonal)
+        );
+      }
+
+      function calcEmployerTotal(amounts) {
+        return cleanAmount(
+          parseMoney(amounts.npEmployer) +
+          parseMoney(amounts.healthEmployer) +
+          parseMoney(amounts.careEmployer) +
+          parseMoney(amounts.empEmployer) +
+          parseMoney(amounts.empEmployerStab) +
+          parseMoney(amounts.accEmployer)
+        );
+      }
+
+      function createOrderTracker() {
+        let value = 0;
+        return {
+          next() {
+            value += 1;
+            return value;
+          }
+        };
+      }
+
+      function createContext() {
+        return {
+          people: new Map(),
+          monthly: new Map(),
+          issues: [],
+          stats: {
+            filesByKind: {
+              pension: 0,
+              health: 0,
+              employmentGeneral: 0,
+              employmentSpecial: 0,
+              accidentGeneral: 0,
+              accidentSpecial: 0,
+              unknown: 0
+            },
+            rowsByKind: {
+              pension: 0,
+              health: 0,
+              employmentGeneral: 0,
+              employmentSpecial: 0,
+              accidentGeneral: 0,
+              accidentSpecial: 0
+            },
+            skippedRows: 0
+          },
+          coverage: {
+            pension: new Set(),
+            health: new Set(),
+            employmentGeneral: new Set(),
+            employmentSpecial: new Set(),
+            accidentGeneral: new Set(),
+            accidentSpecial: new Set()
+          },
+          orderTracker: createOrderTracker()
+        };
+      }
+
+      function getOrCreatePerson(context, key, name, birth6) {
+        if (!context.people.has(key)) {
+          context.people.set(key, {
+            key,
+            name: String(name ?? "").trim(),
+            birth6: String(birth6 ?? "").trim(),
+            amounts: createEmptyAmounts(),
+            months: new Set(),
+            sourceKinds: new Set(),
+            sourceFiles: new Set(),
+            order: Number.POSITIVE_INFINITY
+          });
+        }
+        const person = context.people.get(key);
+        person.name = chooseDisplayName(person.name, name);
+        person.birth6 = person.birth6 || String(birth6 ?? "").trim();
+        return person;
+      }
+
+      function getOrCreateMonthlyRecord(context, month, key, name, birth6) {
+        const monthlyKey = (month || "월미상") + "|" + key;
+        if (!context.monthly.has(monthlyKey)) {
+          context.monthly.set(monthlyKey, {
+            month: month || "",
+            key,
+            name: String(name ?? "").trim(),
+            birth6: String(birth6 ?? "").trim(),
+            amounts: createEmptyAmounts(),
+            sourceKinds: new Set(),
+            sourceFiles: new Set(),
+            order: Number.POSITIVE_INFINITY
+          });
+        }
+        const record = context.monthly.get(monthlyKey);
+        record.name = chooseDisplayName(record.name, name);
+        record.birth6 = record.birth6 || String(birth6 ?? "").trim();
+        return record;
+      }
+
+      function registerIssue(context, issue) {
+        context.issues.push({
+          type: issue.type || "경고",
+          fileName: issue.fileName || "",
+          month: issue.month || "",
+          rowNumber: issue.rowNumber ?? "",
+          name: issue.name || "",
+          birth6: issue.birth6 || "",
+          message: issue.message || ""
+        });
+      }
+
+      function applyRow(context, payload) {
+        const { key, name, birth6, month, kind, fileName, amounts, orderValue } = payload;
+        const person = getOrCreatePerson(context, key, name, birth6);
+        addAmounts(person.amounts, amounts);
+        if (month) person.months.add(month);
+        person.sourceKinds.add(kind);
+        person.sourceFiles.add(fileName);
+        person.order = Math.min(person.order, orderValue);
+
+        const monthly = getOrCreateMonthlyRecord(context, month, key, name, birth6);
+        addAmounts(monthly.amounts, amounts);
+        monthly.sourceKinds.add(kind);
+        monthly.sourceFiles.add(fileName);
+        monthly.order = Math.min(monthly.order, orderValue);
+      }
+
+      function findHeaderRowIndex(rows, requiredKeywords, maxScan = 12) {
+        const keywords = requiredKeywords.map((keyword) => normalizeHeader(keyword));
+        for (let i = 0; i < Math.min(rows.length, maxScan); i += 1) {
+          const rowText = (rows[i] || []).map((cell) => normalizeHeader(cell)).join("|");
+          if (keywords.every((keyword) => rowText.includes(keyword))) {
+            return i;
+          }
+        }
+        return -1;
+      }
+
+      function fillRight(values) {
+        const result = [];
+        let last = "";
+        for (let i = 0; i < values.length; i += 1) {
+          const text = String(values[i] ?? "").trim();
+          if (text) last = text;
+          result.push(last);
+        }
+        return result;
+      }
+
+      function buildTwoRowHeaders(row1, row2) {
+        const len = Math.max(row1?.length || 0, row2?.length || 0);
+        const top = fillRight(Array.from({ length: len }, (_, index) => row1?.[index] ?? ""));
+        const headers = [];
+        for (let i = 0; i < len; i += 1) {
+          const a = normalizeHeader(top[i]);
+          const b = normalizeHeader(row2?.[i]);
+          headers.push(a && b ? a + "|" + b : a || b || "");
+        }
+        return headers;
+      }
+
+      function findIndex(headers, includesAll, exactCandidates = []) {
+        const normalizedHeaders = headers.map((header) => normalizeHeader(header));
+        const exacts = exactCandidates.map((value) => normalizeHeader(value));
+        let index = normalizedHeaders.findIndex((header) => exacts.includes(header));
+        if (index >= 0) return index;
+
+        const fragments = includesAll.map((fragment) => normalizeHeader(fragment));
+        return normalizedHeaders.findIndex((header) => fragments.every((fragment) => header.includes(fragment)));
+      }
+
+      function guessEmploymentSubtype(rows, headerRowCount, fileName) {
+        const values = rows
+          .slice(headerRowCount)
+          .filter((row) => !isRowEmpty(row) && !looksLikeTotalRow(row))
+          .map((row) => normalizeHeader(row[1]));
+
+        if (values.some((value) => value.includes("특수"))) return "employmentSpecial";
+        if (values.some((value) => value.includes("일반"))) return "employmentGeneral";
+        if (String(fileName).includes("특수")) return "employmentSpecial";
+        return "employmentGeneral";
+      }
+
+      function guessAccidentSubtype(rows, headerRowCount, fileName) {
+        const values = rows
+          .slice(headerRowCount)
+          .filter((row) => !isRowEmpty(row) && !looksLikeTotalRow(row))
+          .map((row) => normalizeHeader(row[1]));
+
+        if (values.some((value) => value.includes("특수"))) return "accidentSpecial";
+        if (values.some((value) => value.includes("일반"))) return "accidentGeneral";
+        if (String(fileName).includes("특수")) return "accidentSpecial";
+        return "accidentGeneral";
+      }
+
+      function scoreDecodedText(text) {
+        let score = 0;
+        const sample = String(text || "");
+        const headerKeywords = ["주민번호", "가입자명", "결정보험료", "고지보험료", "성명"];
+        for (const keyword of headerKeywords) {
+          if (sample.includes(keyword)) score += 3;
+        }
+        const replacementCount = (sample.match(/�/g) || []).length;
+        score -= replacementCount * 5;
+        return score;
+      }
+
+      function decodeCsvBuffer(arrayBuffer) {
+        const attempts = [];
+        const encodings = ["utf-8", "utf-8-sig", "euc-kr", "cp949"];
+        for (const encoding of encodings) {
+          try {
+            attempts.push({
+              encoding,
+              text: new TextDecoder(encoding).decode(arrayBuffer)
+            });
+          } catch (_) {
+            // ignore
+          }
+        }
+        if (!attempts.length) return "";
+        attempts.sort((a, b) => scoreDecodedText(b.text) - scoreDecodedText(a.text));
+        return attempts[0].text;
+      }
+
+      function parseCsvText(text) {
+        const value = String(text ?? "").replace(/^\uFEFF/, "");
+        const rows = [];
+        let row = [];
+        let field = "";
+        let inQuotes = false;
+
+        for (let i = 0; i < value.length; i += 1) {
+          const ch = value[i];
+
+          if (inQuotes) {
+            if (ch === '"') {
+              if (value[i + 1] === '"') {
+                field += '"';
+                i += 1;
+              } else {
+                inQuotes = false;
+              }
+            } else {
+              field += ch;
+            }
+          } else {
+            if (ch === '"') {
+              inQuotes = true;
+            } else if (ch === ",") {
+              row.push(field);
+              field = "";
+            } else if (ch === "\n") {
+              row.push(field);
+              rows.push(row);
+              row = [];
+              field = "";
+            } else if (ch === "\r") {
+              // ignore
+            } else {
+              field += ch;
+            }
+          }
+        }
+
+        row.push(field);
+        rows.push(row);
+        return rows;
+      }
+
+      function readU16(u8, offset) {
+        return u8[offset] | (u8[offset + 1] << 8);
+      }
+
+      function readU32(u8, offset) {
+        return (u8[offset]) |
+          (u8[offset + 1] << 8) |
+          (u8[offset + 2] << 16) |
+          (u8[offset + 3] * 0x1000000);
+      }
+
+      function writeU16(target, offset, value) {
+        target[offset] = value & 0xff;
+        target[offset + 1] = (value >>> 8) & 0xff;
+      }
+
+      function writeU32(target, offset, value) {
+        target[offset] = value & 0xff;
+        target[offset + 1] = (value >>> 8) & 0xff;
+        target[offset + 2] = (value >>> 16) & 0xff;
+        target[offset + 3] = (value >>> 24) & 0xff;
+      }
+
+      const textEncoder = new TextEncoder();
+      const textDecoder = new TextDecoder("utf-8");
+
+      function toUtf8(text) {
+        return textEncoder.encode(String(text ?? ""));
+      }
+
+      function fromUtf8(bytes) {
+        return textDecoder.decode(bytes);
+      }
+
+      function isZipBuffer(u8) {
+        return u8 && u8.length >= 4 && u8[0] === 0x50 && u8[1] === 0x4b;
+      }
+
+      function isOldXlsBuffer(u8) {
+        return u8 && u8.length >= 8 &&
+          u8[0] === 0xd0 && u8[1] === 0xcf && u8[2] === 0x11 && u8[3] === 0xe0 &&
+          u8[4] === 0xa1 && u8[5] === 0xb1 && u8[6] === 0x1a && u8[7] === 0xe1;
+      }
+
+      async function inflateRaw(data) {
+        if (typeof DecompressionStream !== "function") {
+          throw new Error("이 브라우저는 ZIP 해제를 위한 DecompressionStream을 지원하지 않습니다. 최신 Chrome/Edge에서 열어주세요.");
+        }
+        const ds = new DecompressionStream("deflate-raw");
+        const stream = new Blob([data]).stream().pipeThrough(ds);
+        const buf = await new Response(stream).arrayBuffer();
+        return new Uint8Array(buf);
+      }
+
+      function findEndOfCentralDirectory(u8) {
+        const minOffset = Math.max(0, u8.length - 65557);
+        for (let i = u8.length - 22; i >= minOffset; i -= 1) {
+          if (readU32(u8, i) === 0x06054b50) return i;
+        }
+        return -1;
+      }
+
+      async function unzipEntries(arrayBuffer) {
+        const u8 = new Uint8Array(arrayBuffer);
+        if (!isZipBuffer(u8)) {
+          throw new Error("ZIP 기반 XLSX 파일이 아닙니다.");
+        }
+
+        const eocdOffset = findEndOfCentralDirectory(u8);
+        if (eocdOffset < 0) {
+          throw new Error("ZIP 중앙 디렉터리를 찾지 못했습니다.");
+        }
+
+        const totalEntries = readU16(u8, eocdOffset + 10);
+        const centralOffset = readU32(u8, eocdOffset + 16);
+
+        const entries = new Map();
+        let ptr = centralOffset;
+
+        for (let i = 0; i < totalEntries; i += 1) {
+          if (readU32(u8, ptr) !== 0x02014b50) {
+            throw new Error("ZIP 중앙 디렉터리 엔트리가 손상되었습니다.");
+          }
+
+          const method = readU16(u8, ptr + 10);
+          const compressedSize = readU32(u8, ptr + 20);
+          const fileNameLength = readU16(u8, ptr + 28);
+          const extraLength = readU16(u8, ptr + 30);
+          const commentLength = readU16(u8, ptr + 32);
+          const localHeaderOffset = readU32(u8, ptr + 42);
+
+          const fileNameBytes = u8.slice(ptr + 46, ptr + 46 + fileNameLength);
+          const fileName = fromUtf8(fileNameBytes);
+
+          if (readU32(u8, localHeaderOffset) !== 0x04034b50) {
+            throw new Error("ZIP 로컬 헤더를 찾지 못했습니다.");
+          }
+
+          const localNameLength = readU16(u8, localHeaderOffset + 26);
+          const localExtraLength = readU16(u8, localHeaderOffset + 28);
+          const dataOffset = localHeaderOffset + 30 + localNameLength + localExtraLength;
+          const compressed = u8.slice(dataOffset, dataOffset + compressedSize);
+
+          let data;
+          if (method === 0) {
+            data = compressed;
+          } else if (method === 8) {
+            data = await inflateRaw(compressed);
+          } else {
+            throw new Error("지원하지 않는 ZIP 압축 방식입니다: " + method);
+          }
+
+          entries.set(fileName.replace(/^\/+/, ""), data);
+          ptr += 46 + fileNameLength + extraLength + commentLength;
+        }
+
+        return entries;
+      }
+
+      function parseXml(text) {
+        const doc = new DOMParser().parseFromString(String(text ?? ""), "application/xml");
+        const parserError = doc.getElementsByTagName("parsererror")[0];
+        if (parserError) {
+          throw new Error("XML 파싱 오류가 발생했습니다.");
+        }
+        return doc;
+      }
+
+      function xmlElems(node, localName) {
+        const byNs = node.getElementsByTagNameNS ? Array.from(node.getElementsByTagNameNS("*", localName)) : [];
+        return byNs.length ? byNs : Array.from(node.getElementsByTagName(localName));
+      }
+
+      function xmlChild(node, localName) {
+        const byNs = node.getElementsByTagNameNS ? Array.from(node.getElementsByTagNameNS("*", localName)) : [];
+        const arr = byNs.length ? byNs : Array.from(node.getElementsByTagName(localName));
+        return arr[0] || null;
+      }
+
+      function colLettersToIndex(letters) {
+        let result = 0;
+        const value = String(letters || "").toUpperCase();
+        for (let i = 0; i < value.length; i += 1) {
+          result = result * 26 + (value.charCodeAt(i) - 64);
+        }
+        return result - 1;
+      }
+
+      function indexToColLetters(index) {
+        let value = index + 1;
+        let result = "";
+        while (value > 0) {
+          const mod = (value - 1) % 26;
+          result = String.fromCharCode(65 + mod) + result;
+          value = Math.floor((value - 1) / 26);
+        }
+        return result;
+      }
+
+      function resolvePath(basePath, target) {
+        const cleanTarget = String(target || "");
+        if (!cleanTarget) return "";
+        if (cleanTarget.startsWith("/")) return cleanTarget.replace(/^\/+/, "");
+
+        const baseParts = String(basePath || "").split("/");
+        baseParts.pop();
+        const targetParts = cleanTarget.split("/");
+
+        for (const part of targetParts) {
+          if (!part || part === ".") continue;
+          if (part === "..") baseParts.pop();
+          else baseParts.push(part);
+        }
+        return baseParts.join("/");
+      }
+
+      function parseSharedStrings(xmlText) {
+        const doc = parseXml(xmlText);
+        return xmlElems(doc, "si").map((si) => {
+          const texts = xmlElems(si, "t").map((t) => t.textContent || "");
+          return texts.join("");
+        });
+      }
+
+      function parseWorksheetRows(xmlText, sharedStrings) {
+        const doc = parseXml(xmlText);
+        const rowNodes = xmlElems(doc, "row");
+        const rows = [];
+        let maxCol = 0;
+
+        for (let i = 0; i < rowNodes.length; i += 1) {
+          const rowNode = rowNodes[i];
+          const rowNumber = Number(rowNode.getAttribute("r"));
+          const rowIndex = Number.isFinite(rowNumber) && rowNumber > 0 ? rowNumber - 1 : rows.length;
+          const row = [];
+
+          const cellNodes = xmlElems(rowNode, "c");
+          for (const cell of cellNodes) {
+            const ref = cell.getAttribute("r") || "";
+            const letters = (ref.match(/[A-Z]+/i) || [""])[0];
+            const colIndex = letters ? colLettersToIndex(letters) : row.length;
+            const type = cell.getAttribute("t") || "";
+            let value = "";
+
+            if (type === "s") {
+              const idx = Number(xmlChild(cell, "v")?.textContent || 0);
+              value = sharedStrings[idx] ?? "";
+            } else if (type === "inlineStr") {
+              const isNode = xmlChild(cell, "is");
+              value = isNode ? xmlElems(isNode, "t").map((t) => t.textContent || "").join("") : "";
+            } else if (type === "b") {
+              value = (xmlChild(cell, "v")?.textContent || "") === "1";
+            } else if (type === "str" || type === "d") {
+              value = xmlChild(cell, "v")?.textContent ?? "";
+            } else {
+              const raw = xmlChild(cell, "v")?.textContent ?? "";
+              if (raw === "") {
+                value = "";
+              } else {
+                const asNumber = Number(raw);
+                value = Number.isFinite(asNumber) ? asNumber : raw;
+              }
+            }
+
+            row[colIndex] = value;
+            maxCol = Math.max(maxCol, colIndex + 1);
+          }
+
+          rows[rowIndex] = row;
+        }
+
+        for (let i = 0; i < rows.length; i += 1) {
+          if (!rows[i]) rows[i] = [];
+          if (rows[i].length < maxCol) rows[i].length = maxCol;
+        }
+
+        return rows;
+      }
+
+      async function readRowsFromWorkbook(arrayBuffer) {
+        const entries = await unzipEntries(arrayBuffer);
+        const readText = (name) => {
+          const data = entries.get(name.replace(/^\/+/, ""));
+          if (!data) return "";
+          return fromUtf8(data);
+        };
+
+        const workbookXml = readText("xl/workbook.xml");
+        if (!workbookXml) throw new Error("workbook.xml을 찾지 못했습니다.");
+
+        const relsXml = readText("xl/_rels/workbook.xml.rels");
+        const sharedStringsXml = readText("xl/sharedStrings.xml");
+
+        const sharedStrings = sharedStringsXml ? parseSharedStrings(sharedStringsXml) : [];
+        const workbookDoc = parseXml(workbookXml);
+        const relsDoc = relsXml ? parseXml(relsXml) : null;
+
+        const relMap = new Map();
+        if (relsDoc) {
+          for (const rel of xmlElems(relsDoc, "Relationship")) {
+            const id = rel.getAttribute("Id");
+            const target = rel.getAttribute("Target");
+            if (id && target) relMap.set(id, resolvePath("xl/workbook.xml", target));
+          }
+        }
+
+        const sheets = xmlElems(workbookDoc, "sheet").map((sheet) => {
+          const rid = sheet.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "id")
+            || sheet.getAttribute("r:id")
+            || sheet.getAttribute("id")
+            || "";
+          return {
+            name: sheet.getAttribute("name") || "",
+            path: relMap.get(rid) || ""
+          };
+        });
+
+        let sheetPath = sheets[0]?.path || "";
+        if (!sheetPath) {
+          const fallback = Array.from(entries.keys()).find((name) => /^xl\/worksheets\/sheet\d+\.xml$/i.test(name));
+          sheetPath = fallback || "";
+        }
+
+        if (!sheetPath) throw new Error("첫 번째 시트 경로를 찾지 못했습니다.");
+
+        const sheetXml = readText(sheetPath);
+        if (!sheetXml) throw new Error("시트 XML을 읽지 못했습니다.");
+
+        return { rows: parseWorksheetRows(sheetXml, sharedStrings) };
+      }
+
+      function pickHealthSectionAmount(row, section) {
+        const hasFinal = section.finalAmountIndex >= 0 && String(row[section.finalAmountIndex] ?? "").trim() !== "";
+        if (hasFinal) return cleanAmount(parseMoney(row[section.finalAmountIndex]));
+        return cleanAmount(sumAmounts(section.fallbackAmountIndices.map((index) => row[index])));
+      }
+
+      function parsePensionCsv(rows, file, context, month) {
+        const headerIndex = findHeaderRowIndex(rows, ["주민번호", "결정보험료"], 12);
+        if (headerIndex < 0) {
+          throw new Error("국민연금 CSV 헤더를 찾지 못했습니다.");
+        }
+
+        const header = rows[headerIndex];
+        const normalizedHeader = header.map((value) => normalizeHeader(value));
+        const idxName = findIndex(normalizedHeader, ["가입자명"], ["가입자명", "성명"]);
+        const idxRrn = findIndex(normalizedHeader, ["주민번호"], ["주민번호"]);
+        const idxAmount = findIndex(normalizedHeader, ["결정보험료"], ["결정보험료"]);
+
+        let parsedCount = 0;
+        let skippedCount = 0;
+        let filePersonal = 0;
+        let fileEmployer = 0;
+
+        for (let i = headerIndex + 1; i < rows.length; i += 1) {
+          const row = rows[i];
+          if (isRowEmpty(row) || looksLikeTotalRow(row)) continue;
+
+          const name = String(row[idxName] ?? "").trim();
+          const birth6 = birth6FromRRN(row[idxRrn]);
+          const key = makeKey(name, birth6);
+          if (!key) {
+            skippedCount += 1;
+            registerIssue(context, {
+              type: "스킵",
+              fileName: file.name,
+              month,
+              rowNumber: i + 1,
+              name,
+              birth6,
+              message: "이름 또는 생년월일 6자리가 없어 국민연금 행을 건너뛰었습니다."
+            });
+            continue;
+          }
+
+          const total = parseMoney(row[idxAmount]);
+          const personal = splitHalf(total);
+          const employer = splitHalf(total);
+          const orderValue = context.orderTracker.next();
+
+          applyRow(context, {
+            key,
+            name,
+            birth6,
+            month,
+            kind: "pension",
+            fileName: file.name,
+            amounts: {
+              npPersonal: personal,
+              npEmployer: employer
+            },
+            orderValue
+          });
+
+          filePersonal = cleanAmount(filePersonal + personal);
+          fileEmployer = cleanAmount(fileEmployer + employer);
+          parsedCount += 1;
+        }
+
+        context.stats.filesByKind.pension += 1;
+        context.stats.rowsByKind.pension += parsedCount;
+        context.stats.skippedRows += skippedCount;
+        if (month) context.coverage.pension.add(month);
+
+        return {
+          kind: "pension",
+          month,
+          parsedCount,
+          skippedCount,
+          filePersonal,
+          fileEmployer,
+          note: ""
+        };
+      }
+
+      function parseHealthCsv(rows, file, context, month) {
+        const headerIndex = findHeaderRowIndex(rows, ["주민번호", "성명", "고지보험료"], 12);
+        if (headerIndex < 0) {
+          throw new Error("건강보험 CSV 헤더를 찾지 못했습니다.");
+        }
+
+        const header = rows[headerIndex];
+        const normalizedHeader = header.map((value) => normalizeHeader(value));
+        const idxName = findIndex(normalizedHeader, ["성명"], ["성명"]);
+        const idxRrn = findIndex(normalizedHeader, ["주민번호"], ["주민번호"]);
+        const groupIndices = [];
+        normalizedHeader.forEach((value, index) => {
+          if (value === "구분") groupIndices.push(index);
+        });
+
+        const fallbackHeaders = new Set(["산출보험료", "정산보험료", "연말정산", "환급금이자"]);
+        const sections = [];
+
+        for (let i = 0; i < groupIndices.length; i += 1) {
+          const start = groupIndices[i];
+          const end = groupIndices[i + 1] ?? header.length;
+          const finalAmountIndex = findIndex(
+            normalizedHeader.slice(start + 1, end),
+            ["고지보험료"],
+            ["고지보험료"]
+          );
+          const fallbackAmountIndices = [];
+          for (let col = start + 1; col < end; col += 1) {
+            if (fallbackHeaders.has(normalizedHeader[col])) fallbackAmountIndices.push(col);
+          }
+
+          sections.push({
+            typeIndex: start,
+            finalAmountIndex: finalAmountIndex >= 0 ? start + 1 + finalAmountIndex : -1,
+            fallbackAmountIndices
+          });
+        }
+
+        let parsedCount = 0;
+        let skippedCount = 0;
+        let filePersonal = 0;
+        let fileEmployer = 0;
+
+        for (let i = headerIndex + 1; i < rows.length; i += 1) {
+          const row = rows[i];
+          if (isRowEmpty(row) || looksLikeTotalRow(row)) continue;
+
+          const name = String(row[idxName] ?? "").trim();
+          const birth6 = birth6FromRRN(row[idxRrn]);
+          const key = makeKey(name, birth6);
+          if (!key) {
+            skippedCount += 1;
+            registerIssue(context, {
+              type: "스킵",
+              fileName: file.name,
+              month,
+              rowNumber: i + 1,
+              name,
+              birth6,
+              message: "이름 또는 생년월일 6자리가 없어 건강보험 행을 건너뛰었습니다."
+            });
+            continue;
+          }
+
+          let healthTotal = 0;
+          let careTotal = 0;
+
+          for (const section of sections) {
+            const sectionType = normalizeHeader(row[section.typeIndex]);
+            const sectionTotal = pickHealthSectionAmount(row, section);
+            if (!sectionType && !sectionTotal) continue;
+
+            if (sectionType.includes("건강")) {
+              healthTotal = cleanAmount(healthTotal + sectionTotal);
+            } else if (sectionType.includes("요양")) {
+              careTotal = cleanAmount(careTotal + sectionTotal);
+            } else if (healthTotal === 0) {
+              healthTotal = cleanAmount(healthTotal + sectionTotal);
+            } else {
+              careTotal = cleanAmount(careTotal + sectionTotal);
+            }
+          }
+
+          const healthPersonal = splitHalf(healthTotal);
+          const healthEmployer = splitHalf(healthTotal);
+          const carePersonal = splitHalf(careTotal);
+          const careEmployer = splitHalf(careTotal);
+          const orderValue = context.orderTracker.next();
+
+          applyRow(context, {
+            key,
+            name,
+            birth6,
+            month,
+            kind: "health",
+            fileName: file.name,
+            amounts: {
+              healthPersonal,
+              healthEmployer,
+              carePersonal,
+              careEmployer
+            },
+            orderValue
+          });
+
+          filePersonal = cleanAmount(filePersonal + healthPersonal + carePersonal);
+          fileEmployer = cleanAmount(fileEmployer + healthEmployer + careEmployer);
+          parsedCount += 1;
+        }
+
+        context.stats.filesByKind.health += 1;
+        context.stats.rowsByKind.health += parsedCount;
+        context.stats.skippedRows += skippedCount;
+        if (month) context.coverage.health.add(month);
+
+        return {
+          kind: "health",
+          month,
+          parsedCount,
+          skippedCount,
+          filePersonal,
+          fileEmployer,
+          note: "건강/요양은 고지보험료 기준"
+        };
+      }
+
+      function parseEmploymentWorkbook(rows, file, context, month) {
+        if (rows.length < 3) {
+          throw new Error("고용보험 XLSX 데이터가 부족합니다.");
+        }
+
+        const headers = buildTwoRowHeaders(rows[0], rows[1]);
+        const idxGroup = findIndex(headers, ["근로자", "구분"], ["근로자구분"]);
+        const idxName = findIndex(headers, ["근로자명"], ["근로자명"]);
+        const idxBirth = findIndex(headers, ["생년월일"], ["생년월일"]);
+        let idxEmpPersonal = findIndex(headers, ["보험료합계", "근로자실업", "급여보험료"]);
+        let idxEmpEmployer = findIndex(headers, ["보험료합계", "사업주실업", "급여보험료"]);
+        let idxEmpStab = findIndex(headers, ["보험료합계", "사업주고안", "직능보험료"]);
+
+        if (idxEmpPersonal < 0 && headers.length >= 25) idxEmpPersonal = 22;
+        if (idxEmpEmployer < 0 && headers.length >= 26) idxEmpEmployer = 23;
+        if (idxEmpStab < 0 && headers.length >= 27) idxEmpStab = 24;
+
+        const kind = guessEmploymentSubtype(rows, 2, file.name);
+
+        let parsedCount = 0;
+        let skippedCount = 0;
+        let filePersonal = 0;
+        let fileEmployer = 0;
+
+        for (let i = 2; i < rows.length; i += 1) {
+          const row = rows[i];
+          if (isRowEmpty(row) || looksLikeTotalRow(row)) continue;
+
+          const name = String(row[idxName] ?? "").trim();
+          const birth6 = birth6FromDate(row[idxBirth]);
+          const key = makeKey(name, birth6);
+
+          if (!key) {
+            skippedCount += 1;
+            registerIssue(context, {
+              type: "스킵",
+              fileName: file.name,
+              month,
+              rowNumber: i + 1,
+              name,
+              birth6,
+              message: "이름 또는 생년월일 6자리가 없어 고용보험 행을 건너뛰었습니다."
+            });
+            continue;
+          }
+
+          const empPersonal = cleanAmount(parseMoney(row[idxEmpPersonal]));
+          const empEmployer = cleanAmount(parseMoney(row[idxEmpEmployer]));
+          const empEmployerStab = cleanAmount(parseMoney(row[idxEmpStab]));
+          const orderValue = context.orderTracker.next();
+
+          applyRow(context, {
+            key,
+            name,
+            birth6,
+            month,
+            kind,
+            fileName: file.name,
+            amounts: {
+              empPersonal,
+              empEmployer,
+              empEmployerStab
+            },
+            orderValue
+          });
+
+          filePersonal = cleanAmount(filePersonal + empPersonal);
+          fileEmployer = cleanAmount(fileEmployer + empEmployer + empEmployerStab);
+          parsedCount += 1;
+        }
+
+        context.stats.filesByKind[kind] += 1;
+        context.stats.rowsByKind[kind] += parsedCount;
+        context.stats.skippedRows += skippedCount;
+        if (month) context.coverage[kind].add(month);
+
+        return {
+          kind,
+          month,
+          parsedCount,
+          skippedCount,
+          filePersonal,
+          fileEmployer,
+          note: ""
+        };
+      }
+
+      function parseAccidentWorkbook(rows, file, context, month) {
+        if (rows.length < 2) {
+          throw new Error("산재보험 XLSX 데이터가 부족합니다.");
+        }
+
+        let headerRowCount = 1;
+        const secondRowText = (rows[1] || []).map((cell) => normalizeHeader(cell)).join("|");
+        if (secondRowText.includes("보험료") && secondRowText.includes("사업주")) {
+          headerRowCount = 2;
+        }
+
+        const headers = headerRowCount === 2
+          ? buildTwoRowHeaders(rows[0], rows[1])
+          : (rows[0] || []).map((cell) => normalizeHeader(cell));
+
+        const idxGroup = findIndex(headers, ["근로자", "구분"], ["근로자구분"]);
+        const idxName = findIndex(headers, ["근로자명"], ["근로자명", "성명"]);
+        let idxBirth = findIndex(headers, ["주민등록번호"], ["주민등록번호", "주민번호"]);
+        if (idxBirth < 0) idxBirth = findIndex(headers, ["생년월일"], ["생년월일"]);
+        const idxTotal = findIndex(headers, ["보험료합계"], ["보험료합계①+②+③", "보험료합계(①+②+③)"]);
+        const idxAccPersonal = findIndex(headers, ["보험료합계", "개인"], ["산재보험료개인", "개인산재보험료"]);
+        let idxAccEmployer = findIndex(headers, ["보험료합계", "기관"], ["산재보험료기관", "기관산재보험료"]);
+        if (idxAccEmployer < 0) idxAccEmployer = findIndex(headers, ["보험료합계", "사업주"], ["사업주산재보험료"]);
+
+        const kind = guessAccidentSubtype(rows, headerRowCount, file.name);
+
+        let parsedCount = 0;
+        let skippedCount = 0;
+        let filePersonal = 0;
+        let fileEmployer = 0;
+        let fallbackNote = "";
+
+        for (let i = headerRowCount; i < rows.length; i += 1) {
+          const row = rows[i];
+          if (isRowEmpty(row) || looksLikeTotalRow(row)) continue;
+
+          const groupText = String(row[idxGroup] ?? "").trim();
+          const name = String(row[idxName] ?? "").trim();
+
+          let birth6 = "";
+          if (headers[idxBirth] && normalizeHeader(headers[idxBirth]).includes("주민")) {
+            birth6 = birth6FromRRN(row[idxBirth]);
+          } else {
+            birth6 = birth6FromDate(row[idxBirth]);
+          }
+
+          const key = makeKey(name, birth6);
+          if (!key) {
+            skippedCount += 1;
+            registerIssue(context, {
+              type: "스킵",
+              fileName: file.name,
+              month,
+              rowNumber: i + 1,
+              name,
+              birth6,
+              message: "이름 또는 생년월일 6자리가 없어 산재보험 행을 건너뛰었습니다."
+            });
+            continue;
+          }
+
+          const total = cleanAmount(parseMoney(row[idxTotal]));
+          const normalizedGroup = normalizeHeader(groupText);
+          const isSpecial = normalizedGroup.includes("특수") || kind === "accidentSpecial";
+
+          let accPersonal = 0;
+          let accEmployer = 0;
+
+          if (isSpecial) {
+            if (idxAccPersonal >= 0 || idxAccEmployer >= 0) {
+              accPersonal = cleanAmount(parseMoney(row[idxAccPersonal]));
+              accEmployer = cleanAmount(parseMoney(row[idxAccEmployer]));
+            } else {
+              accPersonal = 0;
+              accEmployer = total;
+              fallbackNote = "특수 산재 파일에서 개인/기관 분리 컬럼을 찾지 못해 보험료합계를 기관부담으로 처리했습니다.";
+            }
+          } else {
+            accPersonal = 0;
+            accEmployer = total;
+          }
+
+          const orderValue = context.orderTracker.next();
+          applyRow(context, {
+            key,
+            name,
+            birth6,
+            month,
+            kind,
+            fileName: file.name,
+            amounts: {
+              accPersonal,
+              accEmployer
+            },
+            orderValue
+          });
+
+          filePersonal = cleanAmount(filePersonal + accPersonal);
+          fileEmployer = cleanAmount(fileEmployer + accEmployer);
+          parsedCount += 1;
+        }
+
+        context.stats.filesByKind[kind] += 1;
+        context.stats.rowsByKind[kind] += parsedCount;
+        context.stats.skippedRows += skippedCount;
+        if (month) context.coverage[kind].add(month);
+
+        return {
+          kind,
+          month,
+          parsedCount,
+          skippedCount,
+          filePersonal,
+          fileEmployer,
+          note: fallbackNote
+        };
+      }
+
+      async function detectAndParseFile(file, context) {
+        const lowerName = String(file.name || "").toLowerCase();
+        const month = extractMonthFromFilename(file.name);
+
+        if (lowerName.endsWith(".csv")) {
+          const buffer = await file.arrayBuffer();
+          const text = decodeCsvBuffer(buffer);
+          const rows = parseCsvText(text);
+          const headerIndex = findHeaderRowIndex(rows, ["주민번호"], 12);
+          const headerText = headerIndex >= 0 ? (rows[headerIndex] || []).map((cell) => normalizeHeader(cell)).join("|") : "";
+
+          let result;
+          if (headerText.includes("가입자명") && headerText.includes("결정보험료")) {
+            result = parsePensionCsv(rows, file, context, month);
+          } else if (headerText.includes("성명") && headerText.includes("고지보험료")) {
+            result = parseHealthCsv(rows, file, context, month);
+          } else {
+            context.stats.filesByKind.unknown += 1;
+            registerIssue(context, {
+              type: "미분류",
+              fileName: file.name,
+              month,
+              message: "CSV 헤더를 인식하지 못했습니다."
+            });
+            result = {
+              kind: "unknown",
+              month,
+              parsedCount: 0,
+              skippedCount: 0,
+              filePersonal: 0,
+              fileEmployer: 0,
+              note: "CSV 헤더를 인식하지 못했습니다."
+            };
+          }
+
+          return {
+            ...result,
+            fileName: file.name,
+            fileSize: file.size
+          };
+        }
+
+        if (lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")) {
+          const buffer = await file.arrayBuffer();
+          const u8 = new Uint8Array(buffer);
+
+          if (isOldXlsBuffer(u8)) {
+            context.stats.filesByKind.unknown += 1;
+            registerIssue(context, {
+              type: "미분류",
+              fileName: file.name,
+              month,
+              message: "구형 .xls(바이너리) 형식은 브라우저 단독 처리에서 직접 읽을 수 없습니다."
+            });
+            return {
+              kind: "unknown",
+              month,
+              parsedCount: 0,
+              skippedCount: 0,
+              filePersonal: 0,
+              fileEmployer: 0,
+              note: "구형 .xls(바이너리) 형식은 지원하지 않습니다. .xlsx로 다시 저장 후 사용해주세요.",
+              fileName: file.name,
+              fileSize: file.size
+            };
+          }
+
+          if (!isZipBuffer(u8)) {
+            context.stats.filesByKind.unknown += 1;
+            registerIssue(context, {
+              type: "미분류",
+              fileName: file.name,
+              month,
+              message: "ZIP 기반 XLSX 형식이 아닙니다."
+            });
+            return {
+              kind: "unknown",
+              month,
+              parsedCount: 0,
+              skippedCount: 0,
+              filePersonal: 0,
+              fileEmployer: 0,
+              note: "ZIP 기반 XLSX 형식이 아닙니다.",
+              fileName: file.name,
+              fileSize: file.size
+            };
+          }
+
+          const { rows } = await readRowsFromWorkbook(buffer);
+          const firstText = (rows[0] || []).map((cell) => normalizeHeader(cell)).join("|");
+          const secondText = (rows[1] || []).map((cell) => normalizeHeader(cell)).join("|");
+
+          let result;
+          if (firstText.includes("보험료합계") && secondText.includes("사업주고안직능보험료")) {
+            result = parseEmploymentWorkbook(rows, file, context, month);
+          } else if (
+            firstText.includes("보험료합계") &&
+            (firstText.includes("주민등록번호") || firstText.includes("생년월일")) &&
+            firstText.includes("근로자구분")
+          ) {
+            result = parseAccidentWorkbook(rows, file, context, month);
+          } else {
+            context.stats.filesByKind.unknown += 1;
+            registerIssue(context, {
+              type: "미분류",
+              fileName: file.name,
+              month,
+              message: "엑셀 헤더를 인식하지 못했습니다."
+            });
+            result = {
+              kind: "unknown",
+              month,
+              parsedCount: 0,
+              skippedCount: 0,
+              filePersonal: 0,
+              fileEmployer: 0,
+              note: "엑셀 헤더를 인식하지 못했습니다."
+            };
+          }
+
+          return {
+            ...result,
+            fileName: file.name,
+            fileSize: file.size
+          };
+        }
+
+        context.stats.filesByKind.unknown += 1;
+        registerIssue(context, {
+          type: "미분류",
+          fileName: file.name,
+          month,
+          message: "지원하지 않는 확장자입니다."
+        });
+        return {
+          kind: "unknown",
+          month,
+          parsedCount: 0,
+          skippedCount: 0,
+          filePersonal: 0,
+          fileEmployer: 0,
+          note: "지원하지 않는 확장자입니다.",
+          fileName: file.name,
+          fileSize: file.size
+        };
+      }
+
+      function totalsRowFromRows(headers, rows, labelHeader, labelText) {
+        const totalRow = {};
+        headers.forEach((header) => {
+          if (header === "연번") return;
+          if (header === labelHeader) {
+            totalRow[header] = labelText;
+            return;
+          }
+          const numericValues = rows.map((row) => row[header]).filter((value) => typeof value === "number" && Number.isFinite(value));
+          if (numericValues.length) {
+            totalRow[header] = cleanAmount(numericValues.reduce((sum, value) => sum + value, 0));
+          } else {
+            totalRow[header] = "";
+          }
+        });
+        return totalRow;
+      }
+
+      function joinSorted(values) {
+        return Array.from(values).sort((a, b) => collator.compare(a, b)).join(", ");
+      }
+
+      function buildOutputSheets(context, detections) {
+        const people = Array.from(context.people.values()).sort((a, b) => {
+          if (a.order !== b.order) return a.order - b.order;
+          const nameComp = collator.compare(a.name, b.name);
+          if (nameComp !== 0) return nameComp;
+          return collator.compare(a.birth6, b.birth6);
+        });
+
+        const monthlyRecords = Array.from(context.monthly.values()).sort((a, b) => {
+          const aMonth = a.month || "999999";
+          const bMonth = b.month || "999999";
+          if (aMonth !== bMonth) return aMonth.localeCompare(bMonth);
+          if (a.order !== b.order) return a.order - b.order;
+          const nameComp = collator.compare(a.name, b.name);
+          if (nameComp !== 0) return nameComp;
+          return collator.compare(a.birth6, b.birth6);
+        });
+
+        const months = Array.from(new Set(
+          detections.map((item) => item.month).filter((month) => /^\d{6}$/.test(String(month)))
+        )).sort();
+
+        const personHeaders = [
+          "연번",
+          "성명",
+          "생년월일6",
+          "반영월수",
+          "반영월",
+          "국민연금(개인)",
+          "국민연금(기관)",
+          "건강보험(개인)",
+          "건강보험(기관)",
+          "장기요양(개인)",
+          "장기요양(기관)",
+          "고용보험(개인)",
+          "고용보험(기관)",
+          "고용보험(사업주고안직능)",
+          "산재보험(개인)",
+          "산재보험(기관)",
+          "개인부담금 총액",
+          "기관부담금 총액",
+          "전체합계",
+          "출처종류",
+          "출처파일수"
+        ];
+
+        const personRows = people.map((person, index) => {
+          const personalTotal = calcPersonalTotal(person.amounts);
+          const employerTotal = calcEmployerTotal(person.amounts);
+          return {
+            "연번": index + 1,
+            "성명": person.name,
+            "생년월일6": person.birth6,
+            "반영월수": person.months.size,
+            "반영월": Array.from(person.months).sort().map(formatMonthText).join(", "),
+            "국민연금(개인)": cleanAmount(person.amounts.npPersonal),
+            "국민연금(기관)": cleanAmount(person.amounts.npEmployer),
+            "건강보험(개인)": cleanAmount(person.amounts.healthPersonal),
+            "건강보험(기관)": cleanAmount(person.amounts.healthEmployer),
+            "장기요양(개인)": cleanAmount(person.amounts.carePersonal),
+            "장기요양(기관)": cleanAmount(person.amounts.careEmployer),
+            "고용보험(개인)": cleanAmount(person.amounts.empPersonal),
+            "고용보험(기관)": cleanAmount(person.amounts.empEmployer),
+            "고용보험(사업주고안직능)": cleanAmount(person.amounts.empEmployerStab),
+            "산재보험(개인)": cleanAmount(person.amounts.accPersonal),
+            "산재보험(기관)": cleanAmount(person.amounts.accEmployer),
+            "개인부담금 총액": personalTotal,
+            "기관부담금 총액": employerTotal,
+            "전체합계": cleanAmount(personalTotal + employerTotal),
+            "출처종류": joinSorted(Array.from(person.sourceKinds).map((kind) => friendlyKind(kind))),
+            "출처파일수": person.sourceFiles.size
+          };
+        });
+
+        if (personRows.length) {
+          personRows.push(totalsRowFromRows(personHeaders, personRows, "성명", "합계"));
+        }
+
+        const monthlyHeaders = [
+          "연번",
+          "부과월",
+          "성명",
+          "생년월일6",
+          "국민연금(개인)",
+          "국민연금(기관)",
+          "건강보험(개인)",
+          "건강보험(기관)",
+          "장기요양(개인)",
+          "장기요양(기관)",
+          "고용보험(개인)",
+          "고용보험(기관)",
+          "고용보험(사업주고안직능)",
+          "산재보험(개인)",
+          "산재보험(기관)",
+          "개인부담금",
+          "기관부담금",
+          "전체합계",
+          "출처종류",
+          "출처파일"
+        ];
+
+        const monthlyRows = monthlyRecords.map((record, index) => {
+          const personalTotal = calcPersonalTotal(record.amounts);
+          const employerTotal = calcEmployerTotal(record.amounts);
+          return {
+            "연번": index + 1,
+            "부과월": formatMonthText(record.month),
+            "성명": record.name,
+            "생년월일6": record.birth6,
+            "국민연금(개인)": cleanAmount(record.amounts.npPersonal),
+            "국민연금(기관)": cleanAmount(record.amounts.npEmployer),
+            "건강보험(개인)": cleanAmount(record.amounts.healthPersonal),
+            "건강보험(기관)": cleanAmount(record.amounts.healthEmployer),
+            "장기요양(개인)": cleanAmount(record.amounts.carePersonal),
+            "장기요양(기관)": cleanAmount(record.amounts.careEmployer),
+            "고용보험(개인)": cleanAmount(record.amounts.empPersonal),
+            "고용보험(기관)": cleanAmount(record.amounts.empEmployer),
+            "고용보험(사업주고안직능)": cleanAmount(record.amounts.empEmployerStab),
+            "산재보험(개인)": cleanAmount(record.amounts.accPersonal),
+            "산재보험(기관)": cleanAmount(record.amounts.accEmployer),
+            "개인부담금": personalTotal,
+            "기관부담금": employerTotal,
+            "전체합계": cleanAmount(personalTotal + employerTotal),
+            "출처종류": joinSorted(Array.from(record.sourceKinds).map((kind) => friendlyKind(kind))),
+            "출처파일": joinSorted(Array.from(record.sourceFiles))
+          };
+        });
+
+        if (monthlyRows.length) {
+          monthlyRows.push(totalsRowFromRows(monthlyHeaders, monthlyRows, "성명", "합계"));
+        }
+
+        const fileHeaders = [
+          "연번",
+          "부과월",
+          "파일명",
+          "감지종류",
+          "반영행수",
+          "스킵행수",
+          "개인부담 합계",
+          "기관부담 합계",
+          "전체합계",
+          "비고"
+        ];
+
+        const fileRows = detections
+          .slice()
+          .sort((a, b) => {
+            const aMonth = a.month || "999999";
+            const bMonth = b.month || "999999";
+            if (aMonth !== bMonth) return aMonth.localeCompare(bMonth);
+            const kindComp = collator.compare(friendlyKind(a.kind), friendlyKind(b.kind));
+            if (kindComp !== 0) return kindComp;
+            return collator.compare(a.fileName, b.fileName);
+          })
+          .map((item, index) => ({
+            "연번": index + 1,
+            "부과월": formatMonthText(item.month),
+            "파일명": item.fileName,
+            "감지종류": friendlyKind(item.kind),
+            "반영행수": Number(item.parsedCount) || 0,
+            "스킵행수": Number(item.skippedCount) || 0,
+            "개인부담 합계": cleanAmount(item.filePersonal),
+            "기관부담 합계": cleanAmount(item.fileEmployer),
+            "전체합계": cleanAmount(parseMoney(item.filePersonal) + parseMoney(item.fileEmployer)),
+            "비고": item.note || ""
+          }));
+
+        if (fileRows.length) {
+          fileRows.push(totalsRowFromRows(fileHeaders, fileRows, "파일명", "합계"));
+        }
+
+        const issueHeaders = [
+          "연번",
+          "구분",
+          "파일명",
+          "부과월",
+          "행번호",
+          "성명",
+          "생년월일6",
+          "메시지"
+        ];
+
+        const issueRows = context.issues.length
+          ? context.issues.map((issue, index) => ({
+              "연번": index + 1,
+              "구분": issue.type,
+              "파일명": issue.fileName,
+              "부과월": formatMonthText(issue.month),
+              "행번호": issue.rowNumber === "" ? "" : issue.rowNumber,
+              "성명": issue.name,
+              "생년월일6": issue.birth6,
+              "메시지": issue.message
+            }))
+          : [{
+              "연번": 1,
+              "구분": "안내",
+              "파일명": "",
+              "부과월": "",
+              "행번호": "",
+              "성명": "",
+              "생년월일6": "",
+              "메시지": "오류 또는 미분류 항목이 없습니다."
+            }];
+
+        const totalPersonal = cleanAmount(people.reduce((sum, person) => sum + calcPersonalTotal(person.amounts), 0));
+        const totalEmployer = cleanAmount(people.reduce((sum, person) => sum + calcEmployerTotal(person.amounts), 0));
+
+        return {
+          sheets: [
+            { name: "개인별총괄", headers: personHeaders, rows: personRows },
+            { name: "월별상세", headers: monthlyHeaders, rows: monthlyRows },
+            { name: "파일별요약", headers: fileHeaders, rows: fileRows },
+            { name: "오류및미분류", headers: issueHeaders, rows: issueRows }
+          ],
+          summary: {
+            totalFiles: detections.length,
+            parsedFiles: detections.filter((item) => item.kind !== "unknown").length,
+            totalPeople: people.length,
+            detectedMonths: months,
+            detectedMonthCount: months.length,
+            totalPersonal,
+            totalEmployer,
+            totalGrand: cleanAmount(totalPersonal + totalEmployer),
+            skippedRows: context.stats.skippedRows,
+            unknownFiles: detections.filter((item) => item.kind === "unknown").length
+          }
+        };
+      }
+
+      function sanitizeSheetName(name) {
+        return String(name || "Sheet")
+          .replace(/[\\/*?:\[\]]/g, "_")
+          .slice(0, 31) || "Sheet";
+      }
+
+      function computeColumnWidths(headers, rows) {
+        return headers.map((header) => {
+          let max = displayLength(header);
+          for (const row of rows.slice(0, 5000)) {
+            const value = row[header];
+            const text = typeof value === "number" ? formatNumber(value) : String(value ?? "");
+            max = Math.max(max, displayLength(text));
+          }
+          return Math.min(Math.max(max + 2, 8), 42);
+        });
+      }
+
+      function buildWorksheetXml(sheet) {
+        const headers = sheet.headers;
+        const rows = sheet.rows;
+        const aoa = [headers, ...rows.map((row) => headers.map((header) => row[header] ?? ""))];
+        const rowCount = aoa.length || 1;
+        const colCount = headers.length || 1;
+        const widths = computeColumnWidths(headers, rows);
+
+        let colsXml = "<cols>";
+        for (let i = 0; i < widths.length; i += 1) {
+          colsXml += `<col min="${i + 1}" max="${i + 1}" width="${widths[i]}" customWidth="1"/>`;
+        }
+        colsXml += "</cols>";
+
+        let rowsXml = "<sheetData>";
+        for (let r = 0; r < aoa.length; r += 1) {
+          const row = aoa[r];
+          let cellsXml = "";
+
+          for (let c = 0; c < row.length; c += 1) {
+            const value = row[c];
+            if (value === null || value === undefined || value === "") continue;
+            const ref = indexToColLetters(c) + String(r + 1);
+
+            if (typeof value === "number" && Number.isFinite(value)) {
+              cellsXml += `<c r="${ref}"><v>${String(value)}</v></c>`;
+            } else if (typeof value === "boolean") {
+              cellsXml += `<c r="${ref}" t="b"><v>${value ? 1 : 0}</v></c>`;
+            } else {
+              const text = String(value);
+              const preserve = textNeedsPreserve(text) ? ' xml:space="preserve"' : "";
+              cellsXml += `<c r="${ref}" t="inlineStr"><is><t${preserve}>${escapeXml(text)}</t></is></c>`;
+            }
+          }
+
+          rowsXml += `<row r="${r + 1}">${cellsXml}</row>`;
+        }
+        rowsXml += "</sheetData>";
+
+        const dimension = `A1:${indexToColLetters(colCount - 1)}${rowCount}`;
+
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <dimension ref="${dimension}"/>
+  <sheetViews><sheetView workbookViewId="0"/></sheetViews>
+  ${colsXml}
+  ${rowsXml}
+  <pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>
+</worksheet>`;
+      }
+
+      function buildWorkbookXml(sheets) {
+        const sheetsXml = sheets.map((sheet, index) =>
+          `<sheet name="${escapeXml(sanitizeSheetName(sheet.name))}" sheetId="${index + 1}" r:id="rId${index + 1}"/>`
+        ).join("");
+
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>${sheetsXml}</sheets>
+</workbook>`;
+      }
+
+      function buildWorkbookRelsXml(sheets) {
+        const relsXml = sheets.map((_, index) =>
+          `<Relationship Id="rId${index + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${index + 1}.xml"/>`
+        ).join("");
+
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  ${relsXml}
+</Relationships>`;
+      }
+
+      function buildRootRelsXml() {
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+      }
+
+      function buildContentTypesXml(sheets) {
+        const overrides = [
+          `<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>`,
+          ...sheets.map((_, index) =>
+            `<Override PartName="/xl/worksheets/sheet${index + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`
+          )
+        ].join("");
+
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  ${overrides}
+</Types>`;
+      }
+
+      const crcTable = (() => {
+        const table = new Uint32Array(256);
+        for (let i = 0; i < 256; i += 1) {
+          let c = i;
+          for (let j = 0; j < 8; j += 1) {
+            c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+          }
+          table[i] = c >>> 0;
+        }
+        return table;
+      })();
+
+      function crc32(bytes) {
+        let crc = 0xffffffff;
+        for (let i = 0; i < bytes.length; i += 1) {
+          crc = crcTable[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
+        }
+        return (crc ^ 0xffffffff) >>> 0;
+      }
+
+      function concatUint8(parts) {
+        const total = parts.reduce((sum, part) => sum + part.length, 0);
+        const out = new Uint8Array(total);
+        let offset = 0;
+        for (const part of parts) {
+          out.set(part, offset);
+          offset += part.length;
+        }
+        return out;
+      }
+
+      function buildZipStored(files) {
+        const localParts = [];
+        const centralParts = [];
+        let offset = 0;
+
+        for (const file of files) {
+          const nameBytes = toUtf8(file.name);
+          const dataBytes = file.data instanceof Uint8Array ? file.data : toUtf8(file.data);
+          const crc = crc32(dataBytes);
+
+          const localHeader = new Uint8Array(30 + nameBytes.length);
+          writeU32(localHeader, 0, 0x04034b50);
+          writeU16(localHeader, 4, 20);
+          writeU16(localHeader, 6, 0);
+          writeU16(localHeader, 8, 0);
+          writeU16(localHeader, 10, 0);
+          writeU16(localHeader, 12, 0);
+          writeU32(localHeader, 14, crc);
+          writeU32(localHeader, 18, dataBytes.length);
+          writeU32(localHeader, 22, dataBytes.length);
+          writeU16(localHeader, 26, nameBytes.length);
+          writeU16(localHeader, 28, 0);
+          localHeader.set(nameBytes, 30);
+
+          localParts.push(localHeader, dataBytes);
+
+          const centralHeader = new Uint8Array(46 + nameBytes.length);
+          writeU32(centralHeader, 0, 0x02014b50);
+          writeU16(centralHeader, 4, 20);
+          writeU16(centralHeader, 6, 20);
+          writeU16(centralHeader, 8, 0);
+          writeU16(centralHeader, 10, 0);
+          writeU16(centralHeader, 12, 0);
+          writeU16(centralHeader, 14, 0);
+          writeU32(centralHeader, 16, crc);
+          writeU32(centralHeader, 20, dataBytes.length);
+          writeU32(centralHeader, 24, dataBytes.length);
+          writeU16(centralHeader, 28, nameBytes.length);
+          writeU16(centralHeader, 30, 0);
+          writeU16(centralHeader, 32, 0);
+          writeU16(centralHeader, 34, 0);
+          writeU16(centralHeader, 36, 0);
+          writeU32(centralHeader, 38, 0);
+          writeU32(centralHeader, 42, offset);
+          centralHeader.set(nameBytes, 46);
+
+          centralParts.push(centralHeader);
+          offset += localHeader.length + dataBytes.length;
+        }
+
+        const centralDirectory = concatUint8(centralParts);
+        const localData = concatUint8(localParts);
+
+        const eocd = new Uint8Array(22);
+        writeU32(eocd, 0, 0x06054b50);
+        writeU16(eocd, 4, 0);
+        writeU16(eocd, 6, 0);
+        writeU16(eocd, 8, files.length);
+        writeU16(eocd, 10, files.length);
+        writeU32(eocd, 12, centralDirectory.length);
+        writeU32(eocd, 16, localData.length);
+        writeU16(eocd, 20, 0);
+
+        return concatUint8([localData, centralDirectory, eocd]);
+      }
+
+      function buildXlsxBytes(outputSheets) {
+        const files = [];
+
+        files.push({ name: "[Content_Types].xml", data: buildContentTypesXml(outputSheets) });
+        files.push({ name: "_rels/.rels", data: buildRootRelsXml() });
+        files.push({ name: "xl/workbook.xml", data: buildWorkbookXml(outputSheets) });
+        files.push({ name: "xl/_rels/workbook.xml.rels", data: buildWorkbookRelsXml(outputSheets) });
+
+        outputSheets.forEach((sheet, index) => {
+          files.push({
+            name: `xl/worksheets/sheet${index + 1}.xml`,
+            data: buildWorksheetXml(sheet)
+          });
+        });
+
+        return buildZipStored(files);
+      }
+
+      function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      function renderFileTable() {
+        if (!state.files.length) {
+          fileTableBody.innerHTML = `
+            <tr>
+              <td colspan="5" class="sib-meta">아직 선택한 파일이 없습니다.</td>
+            </tr>
+          `;
+          fileCountText.textContent = "선택된 파일 0개";
+          return;
+        }
+
+        const detectionMap = new Map(state.detections.map((item) => [item.fileName, item]));
+        const rowsHtml = state.files.map((file) => {
+          const detection = detectionMap.get(file.name);
+          let badgeClass = "";
+          let note = "집계 전";
+          let kindText = "대기";
+          const monthText = detection ? formatMonthText(detection.month) : formatMonthText(extractMonthFromFilename(file.name));
+
+          if (detection) {
+            if (detection.kind === "unknown") {
+              badgeClass = "sib-badge-error";
+              kindText = "미분류";
+              note = detection.note || "무시됨";
+            } else {
+              badgeClass = "sib-badge-ok";
+              kindText = friendlyKind(detection.kind);
+              const parts = [];
+              parts.push(`${detection.parsedCount}행`);
+              if (detection.skippedCount) parts.push(`스킵 ${detection.skippedCount}행`);
+              parts.push(`개인 ${formatNumber(detection.filePersonal)}`);
+              parts.push(`기관 ${formatNumber(detection.fileEmployer)}`);
+              if (detection.note) parts.push(detection.note);
+              note = parts.join(" · ");
+            }
+          }
+
+          return `
+            <tr>
+              <td>${escapeHtml(file.name)}</td>
+              <td class="sib-num">${escapeHtml(formatBytes(file.size))}</td>
+              <td>${escapeHtml(monthText)}</td>
+              <td><span class="sib-badge ${badgeClass}">${escapeHtml(kindText)}</span></td>
+              <td>${escapeHtml(note)}</td>
+            </tr>
+          `;
+        }).join("");
+
+        fileTableBody.innerHTML = rowsHtml;
+        fileCountText.textContent = `선택된 파일 ${state.files.length}개`;
+      }
+
+      function setLogs(logs) {
+        state.logs = logs.slice();
+        const items = state.logs.length ? state.logs : [{ level: "info", message: "로그가 없습니다." }];
+        statusLog.innerHTML = `
+          <ul class="sib-log-list">
+            ${items.map((item) => `
+              <li class="sib-log-item">
+                <span class="sib-log-level sib-log-level-${escapeHtml(item.level)}">${escapeHtml(item.level.toUpperCase())}</span>
+                <span>${escapeHtml(item.message)}</span>
+              </li>
+            `).join("")}
+          </ul>
+        `;
+      }
+
+      function buildLogs(context, summary, detections) {
+        const logs = [];
+        logs.push({ level: "info", message: `업로드 파일 ${summary.totalFiles}개 중 ${summary.parsedFiles}개를 집계했습니다.` });
+        logs.push({ level: "info", message: `월 범위: ${formatMonthRange(summary.detectedMonths)} · 병합 인원 ${summary.totalPeople}명` });
+        logs.push({ level: "info", message: `건강보험/장기요양은 고지보험료 기준으로 반영했습니다.` });
+
+        for (const detection of detections) {
+          if (detection.kind === "unknown") {
+            logs.push({ level: "warn", message: `${detection.fileName}: 형식을 인식하지 못해 제외했습니다. ${detection.note || ""}`.trim() });
+          } else {
+            let message = `${detection.fileName}: ${friendlyKind(detection.kind)} · ${formatMonthText(detection.month)} · ${detection.parsedCount}행 반영`;
+            if (detection.skippedCount) message += ` · 스킵 ${detection.skippedCount}행`;
+            if (detection.note) message += ` (${detection.note})`;
+            logs.push({ level: "ok", message });
+          }
+        }
+
+        for (const kind of ["pension", "health", "employmentGeneral", "employmentSpecial", "accidentGeneral", "accidentSpecial"]) {
+          if (!context.stats.filesByKind[kind]) continue;
+          logs.push({
+            level: "info",
+            message: `${friendlyKind(kind)}: 파일 ${context.stats.filesByKind[kind]}개 · 반영행 ${context.stats.rowsByKind[kind]}개 · 감지월 ${context.coverage[kind].size}개`
+          });
+        }
+
+        if (summary.unknownFiles) {
+          logs.push({ level: "warn", message: `미분류 파일 ${summary.unknownFiles}개가 있습니다. 오류및미분류 시트를 확인해주세요.` });
+        }
+
+        if (summary.skippedRows) {
+          logs.push({ level: "warn", message: `이름 또는 생년월일 6자리가 없는 행 ${summary.skippedRows}개는 건너뛰었습니다.` });
+        }
+
+        logs.push({
+          level: "ok",
+          message: `개인부담 총액 ${formatNumber(summary.totalPersonal)}, 기관부담 총액 ${formatNumber(summary.totalEmployer)}, 전체합계 ${formatNumber(summary.totalGrand)}`
+        });
+
+        return logs;
+      }
+
+      function renderKpis(summary) {
+        const source = summary || {
+          totalFiles: 0,
+          detectedMonthCount: 0,
+          totalPeople: 0,
+          totalPersonal: 0,
+          totalEmployer: 0,
+          totalGrand: 0
+        };
+
+        const cards = [
+          { label: "업로드 파일", value: source.totalFiles, sub: "중복 제거 후 기준" },
+          { label: "감지 월수", value: source.detectedMonthCount, sub: "파일명 기준 YYYYMM" },
+          { label: "병합 인원", value: source.totalPeople, sub: "성명 + 생년월일6 기준" },
+          { label: "개인부담 총액", value: source.totalPersonal, sub: "개인 부담 합계" },
+          { label: "기관부담 총액", value: source.totalEmployer, sub: "기관 부담 합계" }
+        ];
+
+        kpiGrid.innerHTML = cards.map((card) => `
+          <article class="sib-kpi">
+            <p class="sib-kpi-label">${escapeHtml(card.label)}</p>
+            <p class="sib-kpi-value">${escapeHtml(formatNumber(card.value))}</p>
+            <p class="sib-kpi-sub">${escapeHtml(card.sub)}</p>
+          </article>
+        `).join("");
+
+        if (summary) {
+          rangeText.textContent = `월 범위: ${formatMonthRange(summary.detectedMonths)} · 전체합계 ${formatNumber(summary.totalGrand)}`;
+        } else {
+          rangeText.textContent = "집계 전";
+        }
+      }
+
+      function renderPreview() {
+        const sheetName = previewSheetSelect.value;
+        const count = Math.max(1, Math.min(100, Number(previewCountInput.value) || 10));
+        const sheet = state.outputSheets.find((item) => item.name === sheetName);
+
+        if (!sheet) {
+          previewMeta.textContent = "집계 전";
+          previewBox.innerHTML = `<div class="sib-preview-empty">집계를 실행하면 선택한 시트의 상위 N행을 보여줍니다.</div>`;
+          return;
+        }
+
+        const rows = sheet.rows.slice(0, count);
+        previewMeta.textContent = `${sheet.name} · 상위 ${rows.length} / 전체 ${sheet.rows.length}행`;
+
+        if (!rows.length) {
+          previewBox.innerHTML = `<div class="sib-preview-empty">선택한 시트에 데이터가 없습니다.</div>`;
+          return;
+        }
+
+        const headHtml = sheet.headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("");
+        const bodyHtml = rows.map((row) => `
+          <tr>
+            ${sheet.headers.map((header) => {
+              const value = row[header];
+              const isNumber = typeof value === "number";
+              return `<td class="${isNumber ? "sib-num" : ""}">${escapeHtml(isNumber ? formatNumber(value) : String(value ?? ""))}</td>`;
+            }).join("")}
+          </tr>
+        `).join("");
+
+        previewBox.innerHTML = `
+          <div class="sib-table-wrap" style="margin-top:0;">
+            <table class="sib-table" aria-label="미리보기">
+              <thead><tr>${headHtml}</tr></thead>
+              <tbody>${bodyHtml}</tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      function refreshPreviewSheetOptions() {
+        if (!state.outputSheets.length) {
+          previewSheetSelect.innerHTML = `<option value="">먼저 집계하기 실행</option>`;
+          previewSheetSelect.disabled = true;
+          renderPreview();
+          return;
+        }
+
+        previewSheetSelect.disabled = false;
+        previewSheetSelect.innerHTML = state.outputSheets
+          .map((sheet, index) => `<option value="${escapeHtml(sheet.name)}"${index === 0 ? " selected" : ""}>${escapeHtml(sheet.name)}</option>`)
+          .join("");
+        renderPreview();
+      }
+
+      function addFiles(fileList) {
+        const existingKeys = new Set(state.files.map((file) => `${file.name}|${file.size}|${file.lastModified}`));
+        const nextFiles = [];
+
+        for (const file of Array.from(fileList || [])) {
+          const key = `${file.name}|${file.size}|${file.lastModified}`;
+          if (!existingKeys.has(key)) {
+            existingKeys.add(key);
+            nextFiles.push(file);
+          }
+        }
+
+        if (nextFiles.length) {
+          state.files = state.files.concat(nextFiles);
+        }
+
+        state.detections = [];
+        state.outputSheets = [];
+        state.workbookName = "";
+        state.summary = null;
+        downloadBtn.disabled = true;
+
+        renderFileTable();
+        refreshPreviewSheetOptions();
+        renderKpis(null);
+        setLogs([
+          { level: "info", message: "파일을 선택했습니다. 집계하기를 눌러주세요." }
+        ]);
+      }
+
+      function resetAll() {
+        state.files = [];
+        state.detections = [];
+        state.logs = [];
+        state.outputSheets = [];
+        state.workbookName = "";
+        state.summary = null;
+        fileInput.value = "";
+        renderFileTable();
+        renderKpis(null);
+        refreshPreviewSheetOptions();
+        setLogs([
+          { level: "info", message: "선택 파일과 집계 결과를 초기화했습니다." }
+        ]);
+      }
+
+      function nextFrame() {
+        return new Promise((resolve) => setTimeout(resolve, 0));
+      }
+
+      async function processFiles() {
+        if (!state.files.length) {
+          setLogs([{ level: "warn", message: "먼저 파일을 업로드해주세요." }]);
+          return;
+        }
+
+        processBtn.disabled = true;
+        downloadBtn.disabled = true;
+        previewSheetSelect.disabled = true;
+        setLogs([{ level: "info", message: "파일 구조를 분석하는 중입니다..." }]);
+
+        try {
+          const context = createContext();
+          const detections = [];
+
+          for (let i = 0; i < state.files.length; i += 1) {
+            const file = state.files[i];
+            try {
+              const detection = await detectAndParseFile(file, context);
+              detections.push(detection);
+            } catch (error) {
+              const fallbackMonth = extractMonthFromFilename(file.name);
+              context.stats.filesByKind.unknown += 1;
+              registerIssue(context, {
+                type: "오류",
+                fileName: file.name,
+                month: fallbackMonth,
+                message: `파일 처리 중 오류: ${error.message || error}`
+              });
+              detections.push({
+                kind: "unknown",
+                month: fallbackMonth,
+                parsedCount: 0,
+                skippedCount: 0,
+                filePersonal: 0,
+                fileEmployer: 0,
+                note: `집계 중 오류: ${error.message || error}`,
+                fileName: file.name,
+                fileSize: file.size
+              });
+            }
+
+            state.detections = detections.slice();
+            renderFileTable();
+            setLogs([
+              { level: "info", message: `파일 분석 중... ${i + 1} / ${state.files.length}` }
+            ]);
+            await nextFrame();
+          }
+
+          state.detections = detections;
+
+          const { sheets, summary } = buildOutputSheets(context, detections);
+          state.outputSheets = sheets;
+          state.summary = summary;
+          state.workbookName = makeWorkbookName(summary.detectedMonths);
+
+          renderKpis(summary);
+          refreshPreviewSheetOptions();
+
+          const logs = buildLogs(context, summary, detections);
+          setLogs(logs);
+
+          downloadBtn.disabled = !state.outputSheets.length;
+
+          autotestResult.textContent = JSON.stringify({
+            summary,
+            workbookName: state.workbookName,
+            detections: state.detections
+          }, null, 2);
+        } catch (error) {
+          console.error(error);
+          setLogs([{ level: "error", message: `집계 중 오류가 발생했습니다: ${error.message || error}` }]);
+          state.outputSheets = [];
+          state.workbookName = "";
+          state.summary = null;
+          refreshPreviewSheetOptions();
+          renderKpis(null);
+        } finally {
+          processBtn.disabled = false;
+        }
+      }
+
+      function downloadWorkbook() {
+        if (!state.outputSheets.length) {
+          setLogs([{ level: "warn", message: "먼저 집계를 실행해주세요." }]);
+          return;
+        }
+
+        try {
+          const bytes = buildXlsxBytes(state.outputSheets);
+          const blob = new Blob([bytes], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          });
+          downloadBlob(blob, state.workbookName || "사회보험료_연간집계.xlsx");
+        } catch (error) {
+          console.error(error);
+          setLogs([{ level: "error", message: `엑셀 생성 중 오류가 발생했습니다: ${error.message || error}` }]);
+        }
+      }
+
+      selectFilesBtn.addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", (event) => addFiles(event.target.files));
+      clearFilesBtn.addEventListener("click", resetAll);
+      processBtn.addEventListener("click", processFiles);
+      downloadBtn.addEventListener("click", downloadWorkbook);
+      previewSheetSelect.addEventListener("change", renderPreview);
+      previewCountInput.addEventListener("input", renderPreview);
+
+      dropzone.addEventListener("click", () => fileInput.click());
+      dropzone.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          fileInput.click();
+        }
+      });
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          dropzone.classList.add("is-dragover");
+        });
+      });
+
+      ["dragleave", "dragend", "drop"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          dropzone.classList.remove("is-dragover");
+        });
+      });
+
+      dropzone.addEventListener("drop", (event) => {
+        const files = event.dataTransfer?.files;
+        if (files?.length) addFiles(files);
+      });
+
+      async function runAutotestIfRequested() {
+        const params = new URLSearchParams(location.search);
+        if (params.get("autotest") !== "1") return;
+
+        const sampleNames = [
+          "2025.3월 건강보험료.csv",
+          "2026.2월 국민연금.csv",
+          "2025.3월 근로자 고용.xlsx",
+          "2026.3월 근로자 산재.xlsx"
+        ];
+
+        try {
+          const files = [];
+          for (const name of sampleNames) {
+            const response = await fetch("./" + encodeURIComponent(name));
+            if (!response.ok) throw new Error(name + " 로드 실패");
+            const blob = await response.blob();
+            files.push(new File([blob], name, { type: blob.type, lastModified: Date.now() }));
+          }
+          addFiles(files);
+          await processFiles();
+          document.body.setAttribute("data-autotest", "done");
+        } catch (error) {
+          console.error(error);
+          setLogs([{ level: "error", message: `자동 테스트 실패: ${error.message || error}` }]);
+          document.body.setAttribute("data-autotest", "error");
+        }
+      }
+
+      renderFileTable();
+      renderKpis(null);
+      refreshPreviewSheetOptions();
+      setLogs([
+        { level: "info", message: "외부 CDN 없이 동작하는 로컬 단독 실행 버전입니다." },
+        { level: "info", message: "파일을 선택한 뒤 집계하기를 눌러주세요." }
+      ]);
+
+      window.__sibState = state;
+      window.__sibProcess = processFiles;
+      window.__sibBuildXlsxBytes = buildXlsxBytes;
+      runAutotestIfRequested();
+    })();
+  </script>
+</body>
+</html>
