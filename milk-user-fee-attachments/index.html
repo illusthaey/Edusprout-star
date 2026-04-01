@@ -452,21 +452,23 @@
     .hidden { display: none !important; }
   </style>
 </head>
+
+  
 <body class="alien-side-bg">
 <div class="alien-page-frame">
   <main class="container">
-    <section class="hero">
+
+    
       <h1>우유 징수 자동화 도구 (개발자용)</h1>
-      <p>우유 신청 현황 엑셀 파일 업로드하면 징수결의 첨부용 명단이랑 학교대상수납요구 에듀파인 업로드용 엑셀 서식 다 채워줌</p>
+      <p>우유 신청 현황 엑셀 파일 업로드하면 징수결의 첨부용 명단이랑 학교대상수납요구 에듀파인 업로드용 엑셀 서식 채워서 다운로드 가능</p>
       <div class="chips">
         <span class="chip">기본 조건: F열 값 1</span>
         <span class="chip">기준 열 변경 가능</span>
         <span class="chip">학교대상수납요구 서식 내장</span>
       </div>
-    </section>
+
 
     <div class="layout">
-      <aside class="left-col">
         <section class="panel">
           <h2>1. 파일 올리기</h2>
           <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="파일 드래그 앤 드롭 영역">
@@ -515,7 +517,6 @@
             <div id="logBox" class="log-box" aria-live="polite"></div>
           </div>
         </section>
-      </aside>
 
       <main>
         <section class="panel">
@@ -552,7 +553,7 @@
           <div class="settings-grid">
             <div class="field span-3">
               <label for="schoolName">학교명</label>
-              <input id="schoolName" type="text" placeholder="예: 문막초등학교" />
+              <input id="schoolName" type="text" placeholder="예: **초등학교" />
             </div>
             <div class="field span-2">
               <label for="yearInput">연도</label>
@@ -564,7 +565,7 @@
             </div>
             <div class="field span-3">
               <label for="refDocNo">관련 문서번호</label>
-              <input id="refDocNo" type="text" placeholder="예: 문막초등학교-3389" />
+              <input id="refDocNo" type="text" placeholder="예: **초등학교-3389" />
             </div>
             <div class="field span-2">
               <label for="refDocDate">문서일자</label>
