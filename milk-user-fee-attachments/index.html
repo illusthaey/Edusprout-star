@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>우유 징수 자동화 도구</title>
+
+  
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BQLFX9NXE4"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BQLFX9NXE4');
+</script>
+
+
+
+  
+  <link rel="icon" href="/static/favicon.ico" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <script defer src="/static/global-loader.js"></script>
+  <script defer src="/static/footer.js"></script>
+
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --line: #dbe3ee;
+      --line-strong: #b7c4d7;
+      --text: #17212b;
+      --muted: #5b6b7c;
+      --primary: #2563eb;
+      --primary-soft: #eff6ff;
+      --green: #0f766e;
+      --green-soft: #ecfdf5;
+      --orange: #b45309;
+      --orange-soft: #fff7ed;
+      --red: #b91c1c;
+      --red-soft: #fef2f2;
+      --shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
+      background: linear-gradient(180deg, #f8fbff 0%, #f5f7fb 100%);
+      color: var(--text);
+    }
+    .page {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 28px 18px 56px;
+    }
+    h1, h2, h3 {
+      margin: 0 0 10px;
+      line-height: 1.35;
+    }
+    p { line-height: 1.6; }
+    .hero {
+      background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+      border: 1px solid #dbeafe;
+      border-radius: 24px;
+      padding: 24px 26px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+    .hero h1 {
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+    }
+    .hero .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.88);
+      border: 1px solid #d6e4ff;
+      font-size: 0.95rem;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    @media (max-width: 1080px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .panel + .panel {
+      margin-top: 18px;
+    }
+    .left-col {
+      position: sticky;
+      top: 18px;
+    }
+    @media (max-width: 1080px) {
+      .left-col {
+        position: static;
+      }
+    }
+    .drop-zone {
+      border: 2px dashed #c5d2e6;
+      border-radius: 20px;
+      padding: 26px 18px;
+      text-align: center;
+      background: linear-gradient(180deg, #fbfdff 0%, #f7faff 100%);
+      transition: 0.15s ease;
+    }
+    .drop-zone.dragover {
+      border-color: var(--primary);
+      background: #eef4ff;
+    }
+    .drop-zone strong {
+      display: block;
+      font-size: 1.08rem;
+      margin-bottom: 8px;
+    }
+    .subtle {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    button, .download-link, .fake-btn {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font: inherit;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: 0.15s ease;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+    }
+    .btn-secondary {
+      background: #eef2ff;
+      color: #3730a3;
+      border: 1px solid #c7d2fe;
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: #e0e7ff;
+    }
+    .btn-ghost {
+      background: #fff;
+      color: #243447;
+      border: 1px solid var(--line);
+    }
+    .btn-ghost:hover:not(:disabled) {
+      background: #f8fafc;
+    }
+    .file-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .file-pill {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      font-size: 0.93rem;
+    }
+    .file-pill .kind {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      background: #eef2ff;
+      color: #3730a3;
+    }
+    .file-pill button {
+      padding: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+    }
+    .status-stack {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .status-card {
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+    }
+    .status-card.ok {
+      border-color: #a7f3d0;
+      background: var(--green-soft);
+    }
+    .status-card.warn {
+      border-color: #fed7aa;
+      background: var(--orange-soft);
+    }
+    .status-card.error {
+      border-color: #fecaca;
+      background: var(--red-soft);
+    }
+    .status-card .label {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .status-card .value {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+    .field label {
+      font-size: 0.93rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+    }
+    .field textarea {
+      min-height: 180px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+    .field.small input,
+    .field.small select {
+      padding: 9px 10px;
+    }
+    .span-2 { grid-column: span 2; }
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+    @media (max-width: 1080px) {
+      .span-2, .span-3, .span-4, .span-5, .span-6, .span-8, .span-12 {
+        grid-column: span 12;
+      }
+    }
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    @media (max-width: 1080px) {
+      .kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 640px) {
+      .kpis {
+        grid-template-columns: 1fr;
+      }
+    }
+    .kpi {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: #fafcff;
+    }
+    .kpi .name {
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+    .kpi .value {
+      margin-top: 6px;
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+    .table-wrap {
+      width: 100%;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      margin-top: 12px;
+      background: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+    }
+    th, td {
+      border-bottom: 1px solid #edf2f7;
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 0.95rem;
+      vertical-align: top;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      background: #f8fbff;
+      z-index: 1;
+      color: #334155;
+      font-weight: 700;
+    }
+    .preview-grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 14px;
+      align-items: start;
+    }
+    @media (max-width: 1180px) {
+      .preview-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .mini-table table {
+      min-width: 0;
+    }
+    .mini-table th, .mini-table td {
+      font-size: 0.92rem;
+    }
+    .log-box {
+      white-space: pre-wrap;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 16px;
+      padding: 14px 16px;
+      min-height: 150px;
+      max-height: 320px;
+      overflow: auto;
+      line-height: 1.6;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+    }
+    .downloads {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .hint-box {
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-top: 12px;
+    }
+    .inline-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      padding-top: 26px;
+    }
+    .inline-check input {
+      width: auto;
+      margin: 0;
+    }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92rem;
+    }
+    .warn-text { color: var(--orange); font-weight: 700; }
+    .ok-text { color: var(--green); font-weight: 700; }
+    .error-text { color: var(--red); font-weight: 700; }
+    .footer-note {
+      margin-top: 14px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1>우유 징수 자동화 도구</h1>
+      <p>우유 신청 현황 엑셀과 본문 PDF를 올리면, <strong>기본값 F열 = 1</strong> 기준으로 학생을 추려서 <strong>징수결의 첨부용 명단</strong>, <strong>학교대상수납요구 업로드용 엑셀</strong>, <strong>징수결의 문안</strong>을 한 번에 만듭니다.</p>
+      <div class="chips">
+        <span class="chip">기본 조건: F열 값 1</span>
+        <span class="chip">기준 열 변경 가능</span>
+        <span class="chip">학교대상수납요구 서식 내장</span>
+        <span class="chip">브라우저 안에서만 처리</span>
+      </div>
+    </section>
+
+    <div class="layout">
+      <aside class="left-col">
+        <section class="panel">
+          <h2>1. 파일 올리기</h2>
+          <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="파일 드래그 앤 드롭 영역">
+            <strong>여기로 파일을 끌어다 놓으세요</strong>
+            <div class="subtle">지원 파일: 우유 신청 현황 엑셀(.xlsx), 본문 PDF(.pdf), 선택형 사용자 서식(.xlsx)</div>
+            <div class="btn-row" style="justify-content:center;">
+              <button type="button" class="btn-primary" id="btnPickFiles">파일 선택</button>
+              <button type="button" class="btn-ghost" id="btnClearFiles">목록 비우기</button>
+            </div>
+            <input id="fileInput" type="file" class="hidden" multiple accept=".xlsx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+          </div>
+
+          <div class="hint-box">
+            <div><strong>내장 서식</strong></div>
+            <div class="subtle">학교대상수납요구 서식은 HTML 안에 내장되어 있습니다. 같은 서식을 따로 업로드하지 않아도 됩니다.</div>
+          </div>
+
+          <div id="fileSummary" class="footer-note">아직 인식된 파일이 없습니다.</div>
+          <div id="filePills" class="file-pills"></div>
+
+          <div class="status-stack">
+            <div id="statusSource" class="status-card">
+              <div class="label">우유 신청 현황 엑셀</div>
+              <div class="value">없음</div>
+            </div>
+            <div id="statusPdf" class="status-card">
+              <div class="label">본문 PDF</div>
+              <div class="value">없음</div>
+            </div>
+            <div id="statusTemplate" class="status-card ok">
+              <div class="label">학교대상수납요구 서식</div>
+              <div class="value">내장 서식 사용</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>2. 실행</h2>
+          <div class="btn-row">
+            <button type="button" id="btnGenerate" class="btn-primary">결과 만들기</button>
+            <button type="button" id="btnResetResults" class="btn-secondary">결과 초기화</button>
+          </div>
+          <div class="footer-note">단가와 일수를 넣으면 1인당 금액과 총 징수예정액이 자동 계산됩니다. 직접 입력으로 바꾸면 1인당 금액을 수동 수정할 수 있습니다.</div>
+          <div style="margin-top:14px;">
+            <h3 style="margin-bottom:8px;">처리 로그</h3>
+            <div id="logBox" class="log-box" aria-live="polite"></div>
+          </div>
+        </section>
+      </aside>
+
+      <main>
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <h2>자동 인식 결과 및 설정</h2>
+              <p>형식이 조금 달라도 열 매핑을 바꿔서 다시 처리할 수 있습니다.</p>
+            </div>
+          </div>
+
+          <div class="kpis">
+            <div class="kpi">
+              <div class="name">선택 학생 수</div>
+              <div id="kpiSelected" class="value">0명</div>
+            </div>
+            <div class="kpi">
+              <div class="name">PDF 신청인원</div>
+              <div id="kpiPdfApplicants" class="value">-</div>
+            </div>
+            <div class="kpi">
+              <div class="name">일수</div>
+              <div id="kpiDays" class="value">0일</div>
+            </div>
+            <div class="kpi">
+              <div class="name">1인당 금액</div>
+              <div id="kpiPerStudent" class="value">0원</div>
+            </div>
+            <div class="kpi">
+              <div class="name">총 징수예정액</div>
+              <div id="kpiTotal" class="value">0원</div>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <div class="field span-3">
+              <label for="schoolName">학교명</label>
+              <input id="schoolName" type="text" placeholder="예: 문막초등학교" />
+            </div>
+            <div class="field span-2">
+              <label for="yearInput">연도</label>
+              <input id="yearInput" type="number" min="2000" max="2100" placeholder="2026" />
+            </div>
+            <div class="field span-2">
+              <label for="monthInput">월</label>
+              <input id="monthInput" type="number" min="1" max="12" placeholder="4" />
+            </div>
+            <div class="field span-3">
+              <label for="refDocNo">관련 문서번호</label>
+              <input id="refDocNo" type="text" placeholder="예: 문막초등학교-3389" />
+            </div>
+            <div class="field span-2">
+              <label for="refDocDate">문서일자</label>
+              <input id="refDocDate" type="text" placeholder="예: 2026. 3. 13." />
+            </div>
+
+            <div class="field span-2 small">
+              <label for="headerRowInput">헤더 행</label>
+              <input id="headerRowInput" type="number" min="1" value="3" />
+            </div>
+            <div class="field span-2 small">
+              <label for="dataStartRowInput">데이터 시작 행</label>
+              <input id="dataStartRowInput" type="number" min="1" value="4" />
+            </div>
+            <div class="field span-2 small">
+              <label for="targetColumnSelect">기준 열</label>
+              <select id="targetColumnSelect"></select>
+            </div>
+            <div class="field span-2 small">
+              <label for="targetValueInput">기준 값</label>
+              <input id="targetValueInput" type="text" value="1" />
+            </div>
+            <div class="field span-2 small">
+              <label for="dayNightColumnSelect">주/야 열</label>
+              <select id="dayNightColumnSelect"></select>
+            </div>
+            <div class="field span-2 small">
+              <label for="gradeColumnSelect">학년 열</label>
+              <select id="gradeColumnSelect"></select>
+            </div>
+
+            <div class="field span-2 small">
+              <label for="classColumnSelect">반 열</label>
+              <select id="classColumnSelect"></select>
+            </div>
+            <div class="field span-2 small">
+              <label for="numberColumnSelect">번호 열</label>
+              <select id="numberColumnSelect"></select>
+            </div>
+            <div class="field span-2 small">
+              <label for="nameColumnSelect">성명 열</label>
+              <select id="nameColumnSelect"></select>
+            </div>
+            <div class="field span-2">
+              <label for="daysInput">일수</label>
+              <input id="daysInput" type="number" min="0" step="1" value="0" />
+            </div>
+            <div class="field span-2">
+              <label for="unitPriceInput">1일 단가</label>
+              <input id="unitPriceInput" type="number" min="0" step="1" value="0" />
+            </div>
+            <div class="field span-2 inline-check">
+              <label style="display:flex;align-items:center;gap:8px;font-size:0.95rem;color:var(--text);font-weight:600;">
+                <input id="manualAmountToggle" type="checkbox" />
+                1인당 금액 직접 입력
+              </label>
+            </div>
+
+            <div class="field span-3">
+              <label for="perStudentAmountInput">1인당 금액</label>
+              <input id="perStudentAmountInput" type="number" min="0" step="1" value="0" disabled />
+            </div>
+            <div class="field span-3">
+              <label for="draftTitleInput">징수결의 제목</label>
+              <input id="draftTitleInput" type="text" placeholder="자동 생성" />
+            </div>
+            <div class="field span-6">
+              <label for="draftAttachInput">붙임 문구</label>
+              <input id="draftAttachInput" type="text" placeholder="자동 생성" />
+            </div>
+          </div>
+
+          <div class="footer-note">
+            기본값은 <strong>F열 = 1</strong>입니다. 다른 양식이면 <strong>기준 열</strong>과 <strong>기준 값</strong>만 바꿔도 다시 추릴 수 있습니다.
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <h2>미리보기</h2>
+              <p>필터링된 학생과 학년·반별 집계를 바로 확인합니다.</p>
+            </div>
+            <div class="btn-row" style="margin-top:0;">
+              <button type="button" id="btnRefreshPreview" class="btn-ghost">미리보기 갱신</button>
+            </div>
+          </div>
+
+          <div id="warningBox" class="hint-box hidden"></div>
+
+          <div class="preview-grid">
+            <div>
+              <div class="table-wrap" id="selectedTableWrap"></div>
+            </div>
+            <div class="mini-table">
+              <div class="table-wrap" id="groupTableWrap"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <h2>생성 결과</h2>
+              <p>다운로드 링크와 징수결의 문안을 확인합니다.</p>
+            </div>
+          </div>
+
+          <div id="downloadArea" class="downloads"></div>
+
+          <div class="settings-grid" style="margin-top:16px;">
+            <div class="field span-12">
+              <label for="draftTextArea">징수결의 문안</label>
+              <textarea id="draftTextArea" placeholder="결과 만들기를 누르면 문안이 생성됩니다."></textarea>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button type="button" id="btnCopyDraft" class="btn-secondary">문안 복사</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const BUILTIN_TEMPLATE_BASE64 = "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";
+
+      if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+
+      const state = {
+        rawFiles: [],
+        analyzeToken: 0,
+        sourceInfo: null,
+        pdfInfo: null,
+        customTemplateInfo: null,
+        templateBuffer: null,
+        selectedRecords: [],
+        groupRows: [],
+        outputUrls: [],
+        outputFiles: [],
+      };
+
+      const el = {
+        dropZone: document.getElementById("dropZone"),
+        fileInput: document.getElementById("fileInput"),
+        btnPickFiles: document.getElementById("btnPickFiles"),
+        btnClearFiles: document.getElementById("btnClearFiles"),
+        btnGenerate: document.getElementById("btnGenerate"),
+        btnResetResults: document.getElementById("btnResetResults"),
+        btnRefreshPreview: document.getElementById("btnRefreshPreview"),
+        btnCopyDraft: document.getElementById("btnCopyDraft"),
+        fileSummary: document.getElementById("fileSummary"),
+        filePills: document.getElementById("filePills"),
+        statusSource: document.getElementById("statusSource"),
+        statusPdf: document.getElementById("statusPdf"),
+        statusTemplate: document.getElementById("statusTemplate"),
+        schoolName: document.getElementById("schoolName"),
+        yearInput: document.getElementById("yearInput"),
+        monthInput: document.getElementById("monthInput"),
+        refDocNo: document.getElementById("refDocNo"),
+        refDocDate: document.getElementById("refDocDate"),
+        headerRowInput: document.getElementById("headerRowInput"),
+        dataStartRowInput: document.getElementById("dataStartRowInput"),
+        targetColumnSelect: document.getElementById("targetColumnSelect"),
+        targetValueInput: document.getElementById("targetValueInput"),
+        dayNightColumnSelect: document.getElementById("dayNightColumnSelect"),
+        gradeColumnSelect: document.getElementById("gradeColumnSelect"),
+        classColumnSelect: document.getElementById("classColumnSelect"),
+        numberColumnSelect: document.getElementById("numberColumnSelect"),
+        nameColumnSelect: document.getElementById("nameColumnSelect"),
+        daysInput: document.getElementById("daysInput"),
+        unitPriceInput: document.getElementById("unitPriceInput"),
+        manualAmountToggle: document.getElementById("manualAmountToggle"),
+        perStudentAmountInput: document.getElementById("perStudentAmountInput"),
+        draftTitleInput: document.getElementById("draftTitleInput"),
+        draftAttachInput: document.getElementById("draftAttachInput"),
+        kpiSelected: document.getElementById("kpiSelected"),
+        kpiPdfApplicants: document.getElementById("kpiPdfApplicants"),
+        kpiDays: document.getElementById("kpiDays"),
+        kpiPerStudent: document.getElementById("kpiPerStudent"),
+        kpiTotal: document.getElementById("kpiTotal"),
+        warningBox: document.getElementById("warningBox"),
+        selectedTableWrap: document.getElementById("selectedTableWrap"),
+        groupTableWrap: document.getElementById("groupTableWrap"),
+        logBox: document.getElementById("logBox"),
+        downloadArea: document.getElementById("downloadArea"),
+        draftTextArea: document.getElementById("draftTextArea"),
+      };
+
+      const fieldEls = [
+        el.schoolName, el.yearInput, el.monthInput, el.refDocNo, el.refDocDate,
+        el.headerRowInput, el.dataStartRowInput, el.targetColumnSelect, el.targetValueInput,
+        el.dayNightColumnSelect, el.gradeColumnSelect, el.classColumnSelect,
+        el.numberColumnSelect, el.nameColumnSelect, el.daysInput, el.unitPriceInput,
+        el.perStudentAmountInput, el.draftTitleInput, el.draftAttachInput
+      ];
+
+      function markDirty(evt) {
+        evt.target.dataset.dirty = "1";
+      }
+
+      fieldEls.forEach((node) => {
+        if (!node) return;
+        node.addEventListener("input", markDirty);
+        node.addEventListener("change", markDirty);
+      });
+
+      function log(message, type = "info") {
+        const prefix = type === "error" ? "[오류] " : type === "warn" ? "[주의] " : "[진행] ";
+        el.logBox.textContent += `${prefix}${message}\n`;
+        el.logBox.scrollTop = el.logBox.scrollHeight;
+      }
+
+      function clearLog() {
+        el.logBox.textContent = "";
+      }
+
+      function escapeHtml(str) {
+        return String(str ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function uniqueFiles(existing, incoming) {
+        const seen = new Set(existing.map((file) => `${file.name}__${file.size}__${file.lastModified}`));
+        const merged = [...existing];
+        for (const file of incoming) {
+          const key = `${file.name}__${file.size}__${file.lastModified}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            merged.push(file);
+          }
+        }
+        return merged;
+      }
+
+      function revokeOutputs() {
+        for (const item of state.outputUrls) {
+          try {
+            URL.revokeObjectURL(item);
+          } catch (_) {}
+        }
+        state.outputUrls = [];
+      }
+
+      function clearOutputArea() {
+        revokeOutputs();
+        state.outputFiles = [];
+        el.downloadArea.innerHTML = "";
+        el.draftTextArea.value = "";
+      }
+
+      function base64ToArrayBuffer(base64) {
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes.buffer;
+      }
+
+      function cloneObject(value) {
+        return JSON.parse(JSON.stringify(value || {}));
+      }
+
+      function toDisplayText(value) {
+        if (value == null) return "";
+        if (typeof value === "string") return value;
+        if (typeof value === "number") return String(value);
+        if (value instanceof Date) return formatDateDot(value);
+        if (typeof value === "object") {
+          if (Array.isArray(value.richText)) {
+            return value.richText.map((item) => item.text || "").join("");
+          }
+          if (Object.prototype.hasOwnProperty.call(value, "result")) {
+            return toDisplayText(value.result);
+          }
+          if (value.text) return String(value.text);
+          if (value.hyperlink && value.text) return String(value.text);
+          if (value.formula && value.result != null) return toDisplayText(value.result);
+          if (value.sharedFormula && value.result != null) return toDisplayText(value.result);
+        }
+        return String(value);
+      }
+
+      function normalizeCompact(value) {
+        return toDisplayText(value)
+          .replace(/\r/g, " ")
+          .replace(/\n/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function normalizeCompare(value) {
+        return normalizeCompact(value)
+          .replace(/\s+/g, "")
+          .toLowerCase();
+      }
+
+      function normalizeMarker(value) {
+        const text = normalizeCompact(value);
+        if (!text) return "";
+        if (/^-?\d+(\.0+)?$/.test(text)) return String(parseInt(text, 10));
+        return text;
+      }
+
+      function toNumber(value) {
+        if (value == null || value === "") return 0;
+        if (typeof value === "number" && Number.isFinite(value)) return Math.round(value);
+        const text = normalizeCompact(value).replace(/[^\d.-]/g, "");
+        if (!text) return 0;
+        const num = Number(text);
+        return Number.isFinite(num) ? Math.round(num) : 0;
+      }
+
+      function formatNumber(num) {
+        return Number(num || 0).toLocaleString("ko-KR");
+      }
+
+      function formatCurrency(num) {
+        return `${formatNumber(num)}원`;
+      }
+
+      function formatDateDot(dateObj) {
+        if (!(dateObj instanceof Date) || Number.isNaN(dateObj.getTime())) return "";
+        return `${dateObj.getFullYear()}. ${dateObj.getMonth() + 1}. ${dateObj.getDate()}.`;
+      }
+
+      function sanitizeFileName(name) {
+        return String(name || "")
+          .replace(/[\\/:*?"<>|]+/g, "_")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function pad2(num) {
+        return String(num).padStart(2, "0");
+      }
+
+      function formatStamp(dateObj) {
+        return `${dateObj.getFullYear()}${pad2(dateObj.getMonth() + 1)}${pad2(dateObj.getDate())}_${pad2(dateObj.getHours())}${pad2(dateObj.getMinutes())}`;
+      }
+
+      function getMonthTag() {
+        const year = toNumber(el.yearInput.value);
+        const month = toNumber(el.monthInput.value);
+        if (year && month) return `${year}년${month}월`;
+        if (month) return `${month}월`;
+        return "월미지정";
+      }
+
+      function getMonthTagForFile() {
+        const year = toNumber(el.yearInput.value);
+        const month = toNumber(el.monthInput.value);
+        if (year && month) return `${year}_${pad2(month)}`;
+        if (month) return `month_${pad2(month)}`;
+        return "month_unknown";
+      }
+
+      function columnNumberToLetter(num) {
+        let n = num;
+        let out = "";
+        while (n > 0) {
+          const rem = (n - 1) % 26;
+          out = String.fromCharCode(65 + rem) + out;
+          n = Math.floor((n - 1) / 26);
+        }
+        return out || "A";
+      }
+
+      function columnLetterToNumber(letter) {
+        const cleaned = String(letter || "").toUpperCase().replace(/[^A-Z]/g, "");
+        if (!cleaned) return 1;
+        let sum = 0;
+        for (const ch of cleaned) {
+          sum = sum * 26 + (ch.charCodeAt(0) - 64);
+        }
+        return sum;
+      }
+
+      function getGradeNumber(value) {
+        const text = normalizeCompact(value);
+        const match = text.match(/(\d+)/);
+        return match ? Number(match[1]) : 999;
+      }
+
+      function compareRecords(a, b) {
+        const ga = getGradeNumber(a.grade);
+        const gb = getGradeNumber(b.grade);
+        if (ga !== gb) return ga - gb;
+
+        const ca = normalizeCompact(a.className);
+        const cb = normalizeCompact(b.className);
+        if (ca !== cb) return ca.localeCompare(cb, "ko");
+
+        const na = toNumber(a.number);
+        const nb = toNumber(b.number);
+        if (na !== nb) return na - nb;
+
+        return normalizeCompact(a.name).localeCompare(normalizeCompact(b.name), "ko");
+      }
+
+      function deepCopyStyleCell(fromCell, toCell) {
+        toCell.style = cloneObject(fromCell.style);
+        toCell.numFmt = fromCell.numFmt;
+        toCell.font = cloneObject(fromCell.font);
+        toCell.alignment = cloneObject(fromCell.alignment);
+        toCell.border = cloneObject(fromCell.border);
+        toCell.fill = cloneObject(fromCell.fill);
+        toCell.protection = cloneObject(fromCell.protection);
+      }
+
+      function applyHeaderStyle(row, fillArgb = "FFEFF6FF") {
+        row.font = { bold: true, color: { argb: "FF17212B" } };
+        row.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: fillArgb },
+          };
+          cell.border = {
+            top: { style: "thin", color: { argb: "FFD8E1EC" } },
+            left: { style: "thin", color: { argb: "FFD8E1EC" } },
+            bottom: { style: "thin", color: { argb: "FFD8E1EC" } },
+            right: { style: "thin", color: { argb: "FFD8E1EC" } },
+          };
+        });
+      }
+
+      function applyBodyBorder(worksheet, fromRow, toRow, fromCol, toCol) {
+        for (let r = fromRow; r <= toRow; r += 1) {
+          for (let c = fromCol; c <= toCol; c += 1) {
+            const cell = worksheet.getCell(r, c);
+            cell.border = {
+              top: { style: "thin", color: { argb: "FFE6EDF5" } },
+              left: { style: "thin", color: { argb: "FFE6EDF5" } },
+              bottom: { style: "thin", color: { argb: "FFE6EDF5" } },
+              right: { style: "thin", color: { argb: "FFE6EDF5" } },
+            };
+          }
+        }
+      }
+
+      function blobFromWorkbook(workbook) {
+        return workbook.xlsx.writeBuffer().then((buffer) => new Blob(
+          [buffer],
+          { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }
+        ));
+      }
+
+      function updateStatusCard(card, type, valueText) {
+        card.className = `status-card ${type || ""}`.trim();
+        const valueNode = card.querySelector(".value");
+        if (valueNode) valueNode.textContent = valueText;
+      }
+
+      function setFieldIfPristine(fieldEl, value) {
+        if (!fieldEl) return;
+        if (value == null || value === "") return;
+        const current = String(fieldEl.value ?? "").trim();
+        const dirty = fieldEl.dataset.dirty === "1";
+        if (!dirty || !current) {
+          fieldEl.value = value;
+        }
+      }
+
+      function setSelectIfPristine(selectEl, value) {
+        if (!selectEl) return;
+        const dirty = selectEl.dataset.dirty === "1";
+        if (!dirty || !selectEl.value) {
+          selectEl.value = String(value || "");
+        }
+      }
+
+      function renderFilePills() {
+        el.filePills.innerHTML = "";
+        if (!state.rawFiles.length) {
+          el.fileSummary.textContent = "아직 인식된 파일이 없습니다.";
+          return;
+        }
+
+        const kinds = [];
+        if (state.sourceInfo) kinds.push("우유 신청 현황 1개");
+        if (state.pdfInfo) kinds.push("본문 PDF 1개");
+        if (state.customTemplateInfo) kinds.push("사용자 서식 1개");
+        if (!kinds.length) kinds.push(`업로드 파일 ${state.rawFiles.length}개`);
+
+        el.fileSummary.textContent = kinds.join(" / ");
+
+        state.rawFiles.forEach((file) => {
+          const pill = document.createElement("div");
+          pill.className = "file-pill";
+          const lower = file.name.toLowerCase();
+          const kindLabel = lower.endsWith(".pdf")
+            ? "PDF"
+            : lower.includes("학교대상수납요구")
+              ? "서식"
+              : "엑셀";
+          pill.innerHTML = `
+            <span class="kind">${escapeHtml(kindLabel)}</span>
+            <span>${escapeHtml(file.name)}</span>
+            <button type="button" aria-label="파일 제거">×</button>
+          `;
+          pill.querySelector("button").addEventListener("click", () => {
+            state.rawFiles = state.rawFiles.filter((entry) => entry !== file);
+            analyzeFiles().catch((error) => {
+              console.error(error);
+              log(`파일 재분석 실패: ${error.message || error}`, "error");
+            });
+          });
+          el.filePills.appendChild(pill);
+        });
+      }
+
+      function buildColumnOptions(snapshot, headerRow) {
+        const options = [];
+        if (!snapshot) return options;
+        const maxCol = Math.max(snapshot.colCount, 7);
+        for (let c = 1; c <= maxCol; c += 1) {
+          const letter = columnNumberToLetter(c);
+          const headerText = normalizeCompact(snapshot.rows[headerRow]?.[c]);
+          options.push({
+            value: letter,
+            label: headerText ? `${letter} · ${headerText}` : letter,
+          });
+        }
+        return options;
+      }
+
+      function setSelectOptions(selectEl, options) {
+        const current = selectEl.value;
+        selectEl.innerHTML = options
+          .map((item) => `<option value="${escapeHtml(item.value)}">${escapeHtml(item.label)}</option>`)
+          .join("");
+        if (options.some((item) => item.value === current)) {
+          selectEl.value = current;
+        }
+      }
+
+      function findHeaderRow(snapshot) {
+        if (!snapshot) return 3;
+        let bestRow = 3;
+        let bestScore = -1;
+        const scanLimit = Math.min(snapshot.rowCount, 20);
+        for (let r = 1; r <= scanLimit; r += 1) {
+          let score = 0;
+          for (let c = 1; c <= snapshot.colCount; c += 1) {
+            const text = normalizeCompact(snapshot.rows[r]?.[c]).replace(/^\*\s*/, "");
+            if (!text) continue;
+            if (text.includes("주/야")) score += 2;
+            if (text.includes("학년")) score += 3;
+            if (text === "반" || text.includes(" 반") || text.endsWith("반")) score += 2;
+            if (text.includes("번호")) score += 3;
+            if (text.includes("성명") || text.includes("이름")) score += 3;
+            if (text.includes("희망")) score += 2;
+          }
+          if (score > bestScore) {
+            bestScore = score;
+            bestRow = r;
+          }
+        }
+        return bestRow || 3;
+      }
+
+      function detectColumns(snapshot, headerRow) {
+        const headers = [];
+        for (let c = 1; c <= snapshot.colCount; c += 1) {
+          headers[c] = normalizeCompact(snapshot.rows[headerRow]?.[c]).replace(/^\*\s*/, "");
+        }
+
+        function findCol(predicate, fallback = 1) {
+          for (let c = 1; c <= snapshot.colCount; c += 1) {
+            if (predicate(headers[c] || "", c)) return c;
+          }
+          return fallback;
+        }
+
+        const result = {
+          dayNightCol: findCol((text) => text.includes("주/야"), 1),
+          gradeCol: findCol((text) => text.includes("학년"), 2),
+          classCol: findCol((text) => text === "반" || (text.includes("반") && !text.includes("학년")), 3),
+          numberCol: findCol((text) => text.includes("번호"), 4),
+          nameCol: findCol((text) => text.includes("성명") || text.includes("이름"), 5),
+          targetCol: Math.min(6, snapshot.colCount),
+        };
+
+        const hopeCol = findCol((text) => text.includes("희망") && !text.includes("미희망"), result.targetCol);
+        result.targetCol = hopeCol || result.targetCol;
+
+        return result;
+      }
+
+      function guessSchoolName(snapshot) {
+        if (!snapshot) return "";
+        const scanRows = Math.min(snapshot.rowCount, 12);
+        for (let r = 1; r <= scanRows; r += 1) {
+          for (let c = 1; c <= Math.min(snapshot.colCount, 6); c += 1) {
+            const text = normalizeCompact(snapshot.rows[r]?.[c]);
+            const match = text.match(/학교명\s*[:：]\s*(.+)$/);
+            if (match) return match[1].trim();
+          }
+        }
+        for (let r = 1; r <= scanRows; r += 1) {
+          for (let c = 1; c <= Math.min(snapshot.colCount, 6); c += 1) {
+            const text = normalizeCompact(snapshot.rows[r]?.[c]);
+            const match = text.match(/([가-힣A-Za-z0-9]+학교)/);
+            if (match) return match[1].trim();
+          }
+        }
+        return "";
+      }
+
+      function guessYear(snapshot) {
+        if (!snapshot) return "";
+        const scanRows = Math.min(snapshot.rowCount, 8);
+        for (let r = 1; r <= scanRows; r += 1) {
+          for (let c = 1; c <= Math.min(snapshot.colCount, 4); c += 1) {
+            const text = normalizeCompact(snapshot.rows[r]?.[c]);
+            const match = text.match(/(20\d{2})/);
+            if (match) return match[1];
+          }
+        }
+        return "";
+      }
+
+      function isSubtotalRow(cells) {
+        const texts = cells.map((item) => normalizeCompact(item));
+        const joined = texts.join(" ");
+        if (!joined) return false;
+        if (texts.some((item) => item === "소계" || item === "합계")) return true;
+        if (joined.includes("합계") && !texts[4]) return true;
+        if (joined.startsWith("소계")) return true;
+        return false;
+      }
+
+      function buildCurrentConfig() {
+        return {
+          headerRow: Math.max(1, toNumber(el.headerRowInput.value) || 1),
+          dataStartRow: Math.max(1, toNumber(el.dataStartRowInput.value) || 1),
+          targetColumn: columnLetterToNumber(el.targetColumnSelect.value),
+          targetValue: el.targetValueInput.value,
+          dayNightColumn: columnLetterToNumber(el.dayNightColumnSelect.value),
+          gradeColumn: columnLetterToNumber(el.gradeColumnSelect.value),
+          classColumn: columnLetterToNumber(el.classColumnSelect.value),
+          numberColumn: columnLetterToNumber(el.numberColumnSelect.value),
+          nameColumn: columnLetterToNumber(el.nameColumnSelect.value),
+        };
+      }
+
+      function parseSelectedRecords() {
+        if (!state.sourceInfo || !state.sourceInfo.snapshot) {
+          state.selectedRecords = [];
+          state.groupRows = [];
+          return { records: [], groups: [] };
+        }
+
+        const config = buildCurrentConfig();
+        const snapshot = state.sourceInfo.snapshot;
+        const records = [];
+        let blankRun = 0;
+
+        for (let r = config.dataStartRow; r <= snapshot.rowCount; r += 1) {
+          const rowCells = [];
+          for (let c = 1; c <= snapshot.colCount; c += 1) {
+            rowCells[c - 1] = snapshot.rows[r]?.[c];
+          }
+
+          const name = normalizeCompact(snapshot.rows[r]?.[config.nameColumn]);
+          const grade = normalizeCompact(snapshot.rows[r]?.[config.gradeColumn]);
+          const className = normalizeCompact(snapshot.rows[r]?.[config.classColumn]);
+          const number = normalizeCompact(snapshot.rows[r]?.[config.numberColumn]);
+          const dayNight = normalizeCompact(snapshot.rows[r]?.[config.dayNightColumn]);
+          const targetRaw = snapshot.rows[r]?.[config.targetColumn];
+          const targetDisplay = normalizeCompact(targetRaw);
+
+          const rowHasData = rowCells.some((item) => normalizeCompact(item));
+          if (!rowHasData) {
+            blankRun += 1;
+            if (blankRun >= 10) break;
+            continue;
+          }
+          blankRun = 0;
+
+          if (isSubtotalRow(rowCells)) continue;
+          if (!name) continue;
+
+          const matches = normalizeMarker(targetRaw)
+            ? normalizeMarker(targetRaw) === normalizeMarker(config.targetValue)
+            : normalizeMarker(config.targetValue) === "";
+
+          if (!matches) continue;
+
+          records.push({
+            rowIndex: r,
+            dayNight,
+            grade,
+            className,
+            number,
+            name,
+            targetDisplay,
+            targetRaw: toDisplayText(targetRaw),
+          });
+        }
+
+        records.sort(compareRecords);
+
+        const groupMap = new Map();
+        for (const record of records) {
+          const key = `${normalizeCompact(record.grade)}||${normalizeCompact(record.className)}`;
+          if (!groupMap.has(key)) {
+            groupMap.set(key, {
+              grade: record.grade,
+              className: record.className,
+              count: 0,
+              records: [],
+            });
+          }
+          const bucket = groupMap.get(key);
+          bucket.count += 1;
+          bucket.records.push(record);
+        }
+
+        const groups = [...groupMap.values()].sort((a, b) => {
+          const gradeDiff = getGradeNumber(a.grade) - getGradeNumber(b.grade);
+          if (gradeDiff !== 0) return gradeDiff;
+          return normalizeCompact(a.className).localeCompare(normalizeCompact(b.className), "ko");
+        });
+
+        state.selectedRecords = records;
+        state.groupRows = groups;
+
+        return { records, groups };
+      }
+
+      function getPerStudentAmount() {
+        return Math.max(0, toNumber(el.perStudentAmountInput.value) || 0);
+      }
+
+      function refreshAmountFromInputs() {
+        const manual = el.manualAmountToggle.checked;
+        el.perStudentAmountInput.disabled = !manual;
+        if (!manual) {
+          const days = Math.max(0, toNumber(el.daysInput.value));
+          const unitPrice = Math.max(0, toNumber(el.unitPriceInput.value));
+          el.perStudentAmountInput.value = String(days * unitPrice);
+        }
+      }
+
+      function buildWarningMessages(records) {
+        const warnings = [];
+        if (!state.sourceInfo) {
+          warnings.push("우유 신청 현황 엑셀을 먼저 올려 주세요.");
+        }
+        if (state.pdfInfo && state.pdfInfo.applicantCount) {
+          if (records.length !== state.pdfInfo.applicantCount) {
+            warnings.push(`PDF 신청인원(${state.pdfInfo.applicantCount}명)과 필터 결과(${records.length}명)가 다릅니다.`);
+          }
+        }
+        if (!getPerStudentAmount()) {
+          warnings.push("1인당 금액이 0원입니다. 1일 단가와 일수를 입력하거나 직접 입력으로 금액을 넣어 주세요.");
+        }
+        return warnings;
+      }
+
+      function renderWarnings(records) {
+        const warnings = buildWarningMessages(records);
+        if (!warnings.length) {
+          el.warningBox.classList.add("hidden");
+          el.warningBox.innerHTML = "";
+          return;
+        }
+        el.warningBox.classList.remove("hidden");
+        el.warningBox.innerHTML = `
+          <div class="warn-text" style="margin-bottom:8px;">확인 필요</div>
+          <ul style="margin:0;padding-left:18px;line-height:1.7;">
+            ${warnings.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+          </ul>
+        `;
+      }
+
+      function renderSelectedTable(records) {
+        if (!records.length) {
+          el.selectedTableWrap.innerHTML = `<div style="padding:18px;" class="muted">선택된 학생이 없습니다.</div>`;
+          return;
+        }
+
+        const rows = records.slice(0, 60).map((record) => `
+          <tr>
+            <td>${escapeHtml(record.grade)}</td>
+            <td>${escapeHtml(record.className)}</td>
+            <td>${escapeHtml(record.number)}</td>
+            <td>${escapeHtml(record.name)}</td>
+            <td>${escapeHtml(record.dayNight || "-")}</td>
+            <td>${escapeHtml(record.targetDisplay || "-")}</td>
+            <td style="text-align:right;">${escapeHtml(formatCurrency(getPerStudentAmount()))}</td>
+          </tr>
+        `).join("");
+
+        const moreText = records.length > 60
+          ? `<div class="footer-note">미리보기에는 처음 60명만 보이고, 다운로드 파일에는 전체 ${formatNumber(records.length)}명이 들어갑니다.</div>`
+          : "";
+
+        el.selectedTableWrap.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>학년</th>
+                <th>반</th>
+                <th>번호</th>
+                <th>성명</th>
+                <th>주/야</th>
+                <th>기준열 값</th>
+                <th style="text-align:right;">징수금액</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          ${moreText}
+        `;
+      }
+
+      function renderGroupTable(groups) {
+        if (!groups.length) {
+          el.groupTableWrap.innerHTML = `<div style="padding:18px;" class="muted">집계할 데이터가 없습니다.</div>`;
+          return;
+        }
+        const amount = getPerStudentAmount();
+        const rows = groups.map((group) => `
+          <tr>
+            <td>${escapeHtml(group.grade)}</td>
+            <td>${escapeHtml(group.className)}</td>
+            <td style="text-align:right;">${escapeHtml(formatNumber(group.count))}</td>
+            <td style="text-align:right;">${escapeHtml(formatCurrency(group.count * amount))}</td>
+          </tr>
+        `).join("");
+        el.groupTableWrap.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>학년</th>
+                <th>반</th>
+                <th style="text-align:right;">인원</th>
+                <th style="text-align:right;">합계금액</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+      }
+
+      function buildDefaultDraftTitle() {
+        const year = toNumber(el.yearInput.value);
+        const month = toNumber(el.monthInput.value);
+        if (year && month) return `${year}학년도 우유급식비 징수결의(${month}월)`;
+        if (month) return `우유급식비 징수결의(${month}월)`;
+        return "우유급식비 징수결의";
+      }
+
+      function buildDefaultAttachLine() {
+        const year = toNumber(el.yearInput.value);
+        const month = toNumber(el.monthInput.value);
+        if (year && month) {
+          return `${year}학년도 ${month}월 우유 징수 대상자 명단 1부.  끝.`;
+        }
+        if (month) return `${month}월 우유 징수 대상자 명단 1부.  끝.`;
+        return `우유 징수 대상자 명단 1부.  끝.`;
+      }
+
+      function buildDraftText(records) {
+        const year = toNumber(el.yearInput.value);
+        const month = toNumber(el.monthInput.value);
+        const days = Math.max(0, toNumber(el.daysInput.value));
+        const unitPrice = Math.max(0, toNumber(el.unitPriceInput.value));
+        const perStudent = getPerStudentAmount();
+        const total = records.length * perStudent;
+        const title = (el.draftTitleInput.value || buildDefaultDraftTitle()).trim();
+        const attachLine = (el.draftAttachInput.value || buildDefaultAttachLine()).trim();
+        const refDoc = (el.refDocNo.value || "").trim();
+        const refDate = (el.refDocDate.value || "").trim();
+        const related = refDoc && refDate ? `${refDoc}(${refDate})` : refDoc || refDate || "";
+        const monthText = year && month ? `${year}학년도 ${month}월` : month ? `${month}월` : "";
+        const schoolName = (el.schoolName.value || "").trim();
+
+        const lines = [];
+        if (schoolName) lines.push(schoolName);
+        lines.push(`제목  ${title}`);
+        lines.push("");
+
+        if (related) lines.push(`1. 관련: ${related}`);
+        else lines.push("1. 관련: ");
+        lines.push(`2. ${monthText ? monthText + " " : ""}우유급식비 징수 내역을 다음과 같이 보고합니다.`);
+        lines.push(`  가. 대상: 학생`);
+        lines.push(`  나. 징수인원: ${formatNumber(records.length)}명`);
+        if (unitPrice) lines.push(`  다. 1일 단가: ${formatCurrency(unitPrice)}`);
+        else lines.push(`  다. 1일 단가: `);
+        if (days) lines.push(`  라. 일수: ${formatNumber(days)}일`);
+        else lines.push(`  라. 일수: `);
+        if (perStudent) lines.push(`  마. 1인당 징수금액: ${formatCurrency(perStudent)}`);
+        else lines.push(`  마. 1인당 징수금액: `);
+        if (total) lines.push(`  바. 총 징수예정액: ${formatCurrency(total)}`);
+        else lines.push(`  바. 총 징수예정액: `);
+        lines.push("");
+        lines.push(`붙임  ${attachLine}`);
+
+        return lines.join("\n");
+      }
+
+      function refreshPreview() {
+        refreshAmountFromInputs();
+
+        const { records, groups } = parseSelectedRecords();
+        const pdfApplicants = state.pdfInfo?.applicantCount || 0;
+        const days = Math.max(0, toNumber(el.daysInput.value));
+        const perStudent = getPerStudentAmount();
+        const total = records.length * perStudent;
+
+        if (!el.draftTitleInput.dataset.dirty || !el.draftTitleInput.value.trim()) {
+          el.draftTitleInput.value = buildDefaultDraftTitle();
+        }
+        if (!el.draftAttachInput.dataset.dirty || !el.draftAttachInput.value.trim()) {
+          el.draftAttachInput.value = buildDefaultAttachLine();
+        }
+
+        el.kpiSelected.textContent = `${formatNumber(records.length)}명`;
+        el.kpiPdfApplicants.textContent = pdfApplicants ? `${formatNumber(pdfApplicants)}명` : "-";
+        el.kpiDays.textContent = `${formatNumber(days)}일`;
+        el.kpiPerStudent.textContent = formatCurrency(perStudent);
+        el.kpiTotal.textContent = formatCurrency(total);
+
+        renderWarnings(records);
+        renderSelectedTable(records);
+        renderGroupTable(groups);
+        el.draftTextArea.value = buildDraftText(records);
+      }
+
+      function getCurrentSchoolLabel() {
+        return sanitizeFileName((el.schoolName.value || "").trim() || "학교명미입력");
+      }
+
+      function addDownloadLink(label, blob, filename, className = "btn-primary") {
+        const url = URL.createObjectURL(blob);
+        state.outputUrls.push(url);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.className = `download-link ${className}`;
+        a.textContent = label;
+        el.downloadArea.appendChild(a);
+      }
+
+      async function parsePdfFile(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let text = "";
+
+        for (let pageNum = 1; pageNum <= Math.min(pdf.numPages, 3); pageNum += 1) {
+          const page = await pdf.getPage(pageNum);
+          const content = await page.getTextContent();
+          const items = content.items.map((item) => item.str || "");
+          text += ` ${items.join(" ")}`;
+        }
+
+        const schoolMatch = text.match(/([가-힣A-Za-z0-9]+학교)/);
+        const yearMatch = text.match(/(20\d{2})학년도/);
+        const monthMatch = text.match(/우유\s*신청\s*현황\s*\(?\s*(\d{1,2})월\s*\)?/);
+        const applicantMatch = text.match(/신청인원\s*[:：]?\s*(\d+)\s*명/);
+        const daysMatch = text.match(/일수\s*[:：]?\s*(\d+)\s*일/);
+        const docNoMatch =
+          text.match(/시행\s*([가-힣A-Za-z0-9._]+\s*-\s*\d+)/) ||
+          text.match(/([가-힣A-Za-z0-9._]+\s*-\s*\d+)\s*\(\s*\)/);
+        const titleMatch = text.match(/제목\s*([^\n]+?)\s*1\./);
+        const dateMatches = [...text.matchAll(/20\d{2}\.\s*\d{1,2}\.\s*\d{1,2}\./g)].map((match) => match[0]);
+
+        return {
+          file,
+          rawText: text,
+          schoolName: schoolMatch ? schoolMatch[1].trim() : "",
+          year: yearMatch ? yearMatch[1] : "",
+          month: monthMatch ? monthMatch[1] : "",
+          applicantCount: applicantMatch ? Number(applicantMatch[1]) : 0,
+          days: daysMatch ? Number(daysMatch[1]) : 0,
+          docNo: docNoMatch ? String(docNoMatch[1]).replace(/\s*-\s*/g, "-").trim() : "",
+          docDate: dateMatches.length ? normalizeCompact(dateMatches[dateMatches.length - 1]) : "",
+          title: titleMatch ? normalizeCompact(titleMatch[1]) : "",
+        };
+      }
+
+      async function inspectWorkbookFile(file) {
+        const buffer = await file.arrayBuffer();
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(buffer);
+        const worksheet = workbook.worksheets[0];
+        const a1 = normalizeCompact(worksheet.getCell(1, 1).value);
+        const b1 = normalizeCompact(worksheet.getCell(1, 2).value);
+        const sheetName = worksheet.name || "";
+
+        const isTemplate =
+          file.name.includes("학교대상수납요구") ||
+          sheetName.includes("학교대상수납요구") ||
+          (a1.includes("선택") && b1.includes("주/야"));
+
+        if (isTemplate) {
+          return {
+            kind: "template",
+            file,
+            buffer,
+            workbook,
+            worksheet,
+          };
+        }
+
+        const rowCount = worksheet.rowCount;
+        const colCount = Math.max(worksheet.actualColumnCount || 0, worksheet.columnCount || 0, 7);
+        const rows = [];
+        for (let r = 1; r <= rowCount; r += 1) {
+          rows[r] = [];
+          for (let c = 1; c <= colCount; c += 1) {
+            rows[r][c] = worksheet.getCell(r, c).value;
+          }
+        }
+        const snapshot = { rowCount, colCount, rows, sheetName };
+
+        const headerRow = findHeaderRow(snapshot);
+        const columns = detectColumns(snapshot, headerRow);
+
+        return {
+          kind: "source",
+          file,
+          buffer,
+          snapshot,
+          meta: {
+            schoolName: guessSchoolName(snapshot),
+            year: guessYear(snapshot),
+            headerRow,
+            dataStartRow: headerRow + 1,
+            columns,
+          },
+        };
+      }
+
+      async function analyzeFiles() {
+        const token = ++state.analyzeToken;
+
+        clearOutputArea();
+        state.sourceInfo = null;
+        state.pdfInfo = null;
+        state.customTemplateInfo = null;
+        state.templateBuffer = base64ToArrayBuffer(BUILTIN_TEMPLATE_BASE64);
+
+        renderFilePills();
+        updateStatusCard(el.statusSource, "", "없음");
+        updateStatusCard(el.statusPdf, "", "없음");
+        updateStatusCard(el.statusTemplate, "ok", "내장 서식 사용");
+
+        if (!state.rawFiles.length) {
+          refreshPreview();
+          return;
+        }
+
+        clearLog();
+        log("파일 분석 시작");
+
+        for (const file of state.rawFiles) {
+          if (token !== state.analyzeToken) return;
+
+          const lower = file.name.toLowerCase();
+          try {
+            if (lower.endsWith(".pdf")) {
+              if (state.pdfInfo) {
+                log(`PDF는 첫 번째 파일만 사용: ${file.name}`, "warn");
+                continue;
+              }
+              log(`PDF 분석 중: ${file.name}`);
+              state.pdfInfo = await parsePdfFile(file);
+              log(`PDF 분석 완료: ${file.name}`);
+            } else if (lower.endsWith(".xlsx")) {
+              log(`엑셀 분석 중: ${file.name}`);
+              const inspected = await inspectWorkbookFile(file);
+              if (inspected.kind === "template") {
+                state.customTemplateInfo = inspected;
+                state.templateBuffer = inspected.buffer.slice(0);
+                log(`사용자 서식으로 지정: ${file.name}`);
+              } else {
+                if (state.sourceInfo) {
+                  log(`우유 신청 엑셀은 첫 번째 파일만 사용: ${file.name}`, "warn");
+                  continue;
+                }
+                state.sourceInfo = inspected;
+                log(`우유 신청 엑셀 인식 완료: ${file.name}`);
+              }
+            } else {
+              log(`지원하지 않는 파일 형식 무시: ${file.name}`, "warn");
+            }
+          } catch (error) {
+            console.error(error);
+            log(`파일 분석 실패: ${file.name} / ${error.message || error}`, "error");
+          }
+        }
+
+        renderFilePills();
+
+        if (state.sourceInfo) {
+          updateStatusCard(el.statusSource, "ok", state.sourceInfo.file.name);
+        } else {
+          updateStatusCard(el.statusSource, "error", "우유 신청 현황 엑셀이 필요합니다");
+        }
+
+        if (state.pdfInfo) {
+          updateStatusCard(el.statusPdf, "ok", state.pdfInfo.file.name);
+        } else {
+          updateStatusCard(el.statusPdf, "warn", "없음 (수동 입력 가능)");
+        }
+
+        if (state.customTemplateInfo) {
+          updateStatusCard(el.statusTemplate, "ok", `사용자 서식: ${state.customTemplateInfo.file.name}`);
+        } else {
+          updateStatusCard(el.statusTemplate, "ok", "내장 서식 사용");
+        }
+
+        applyDetectedDefaults();
+        refreshPreview();
+        log("파일 분석 완료");
+      }
+
+      function applyDetectedDefaults() {
+        if (!state.sourceInfo) return;
+
+        const snapshot = state.sourceInfo.snapshot;
+        const headerRow = state.sourceInfo.meta.headerRow;
+        const columns = state.sourceInfo.meta.columns;
+        const options = buildColumnOptions(snapshot, headerRow);
+
+        setFieldIfPristine(el.headerRowInput, String(headerRow));
+        setFieldIfPristine(el.dataStartRowInput, String(state.sourceInfo.meta.dataStartRow));
+
+        setSelectOptions(el.targetColumnSelect, options);
+        setSelectOptions(el.dayNightColumnSelect, options);
+        setSelectOptions(el.gradeColumnSelect, options);
+        setSelectOptions(el.classColumnSelect, options);
+        setSelectOptions(el.numberColumnSelect, options);
+        setSelectOptions(el.nameColumnSelect, options);
+
+        setSelectIfPristine(el.targetColumnSelect, columnNumberToLetter(columns.targetCol || 6));
+        setSelectIfPristine(el.dayNightColumnSelect, columnNumberToLetter(columns.dayNightCol || 1));
+        setSelectIfPristine(el.gradeColumnSelect, columnNumberToLetter(columns.gradeCol || 2));
+        setSelectIfPristine(el.classColumnSelect, columnNumberToLetter(columns.classCol || 3));
+        setSelectIfPristine(el.numberColumnSelect, columnNumberToLetter(columns.numberCol || 4));
+        setSelectIfPristine(el.nameColumnSelect, columnNumberToLetter(columns.nameCol || 5));
+
+        setFieldIfPristine(el.schoolName, state.sourceInfo.meta.schoolName);
+
+        if (state.pdfInfo) {
+          setFieldIfPristine(el.schoolName, state.pdfInfo.schoolName);
+          setFieldIfPristine(el.yearInput, state.pdfInfo.year);
+          setFieldIfPristine(el.monthInput, state.pdfInfo.month);
+          setFieldIfPristine(el.refDocNo, state.pdfInfo.docNo);
+          setFieldIfPristine(el.refDocDate, state.pdfInfo.docDate);
+          setFieldIfPristine(el.daysInput, String(state.pdfInfo.days || ""));
+        } else {
+          setFieldIfPristine(el.yearInput, state.sourceInfo.meta.year);
+        }
+
+        if (!el.targetValueInput.value.trim()) {
+          el.targetValueInput.value = "1";
+        }
+      }
+
+      function resetResultsOnly() {
+        clearOutputArea();
+        refreshPreview();
+        clearLog();
+        log("결과 영역 초기화 완료");
+      }
+
+      function resetAllFiles() {
+        state.rawFiles = [];
+        state.sourceInfo = null;
+        state.pdfInfo = null;
+        state.customTemplateInfo = null;
+        state.templateBuffer = base64ToArrayBuffer(BUILTIN_TEMPLATE_BASE64);
+
+        [
+          el.schoolName, el.yearInput, el.monthInput, el.refDocNo, el.refDocDate,
+          el.headerRowInput, el.dataStartRowInput, el.targetValueInput, el.daysInput,
+          el.unitPriceInput, el.perStudentAmountInput, el.draftTitleInput, el.draftAttachInput
+        ].forEach((node) => {
+          node.value = "";
+          delete node.dataset.dirty;
+        });
+
+        [el.targetColumnSelect, el.dayNightColumnSelect, el.gradeColumnSelect, el.classColumnSelect, el.numberColumnSelect, el.nameColumnSelect].forEach((node) => {
+          node.innerHTML = "";
+          delete node.dataset.dirty;
+        });
+
+        el.targetValueInput.value = "1";
+        el.headerRowInput.value = "3";
+        el.dataStartRowInput.value = "4";
+        el.daysInput.value = "0";
+        el.unitPriceInput.value = "0";
+        el.perStudentAmountInput.value = "0";
+        el.manualAmountToggle.checked = false;
+        refreshAmountFromInputs();
+
+        renderFilePills();
+        updateStatusCard(el.statusSource, "", "없음");
+        updateStatusCard(el.statusPdf, "", "없음");
+        updateStatusCard(el.statusTemplate, "ok", "내장 서식 사용");
+        clearOutputArea();
+        clearLog();
+        refreshPreview();
+        log("초기화 완료");
+      }
+
+      function buildSummaryContext(records) {
+        const perStudent = getPerStudentAmount();
+        const total = records.length * perStudent;
+        return {
+          schoolName: (el.schoolName.value || "").trim(),
+          year: toNumber(el.yearInput.value),
+          month: toNumber(el.monthInput.value),
+          refDocNo: (el.refDocNo.value || "").trim(),
+          refDocDate: (el.refDocDate.value || "").trim(),
+          days: Math.max(0, toNumber(el.daysInput.value)),
+          unitPrice: Math.max(0, toNumber(el.unitPriceInput.value)),
+          perStudent,
+          total,
+          count: records.length,
+          monthTag: getMonthTag(),
+        };
+      }
+
+      function ensureTemplateRows(sheet, neededRows) {
+        const templateRowIndex = 2;
+        const lastNeededRow = templateRowIndex + neededRows - 1;
+        if (lastNeededRow <= sheet.rowCount) return;
+
+        for (let row = sheet.rowCount + 1; row <= lastNeededRow; row += 1) {
+          const sourceRow = sheet.getRow(templateRowIndex);
+          const targetRow = sheet.getRow(row);
+          targetRow.height = sourceRow.height;
+          for (let c = 1; c <= 9; c += 1) {
+            const sourceCell = sourceRow.getCell(c);
+            const targetCell = targetRow.getCell(c);
+            deepCopyStyleCell(sourceCell, targetCell);
+            targetCell.value = null;
+          }
+          targetRow.commit();
+        }
+      }
+
+      async function buildTemplateWorkbook(records, summary) {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(state.templateBuffer.slice(0));
+        const sheet = workbook.worksheets[0];
+        const startRow = 2;
+        const clearTo = Math.max(sheet.rowCount, startRow + records.length + 30);
+
+        ensureTemplateRows(sheet, records.length + 10);
+
+        for (let r = startRow; r <= clearTo; r += 1) {
+          for (let c = 1; c <= 9; c += 1) {
+            if (c === 2 && r < startRow + records.length) continue;
+            sheet.getCell(r, c).value = null;
+          }
+        }
+
+        records.forEach((record, index) => {
+          const row = startRow + index;
+          sheet.getCell(row, 2).value = record.dayNight || "주간";
+          sheet.getCell(row, 5).value = record.grade;
+          sheet.getCell(row, 6).value = record.className;
+          sheet.getCell(row, 7).value = record.number;
+          sheet.getCell(row, 8).value = record.name;
+          sheet.getCell(row, 9).value = summary.perStudent;
+          sheet.getCell(row, 9).numFmt = "#,##0";
+        });
+
+        return workbook;
+      }
+
+      async function buildAttachmentWorkbook(records, groups, summary, draftText) {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = "ChatGPT";
+        workbook.lastModifiedBy = "ChatGPT";
+        workbook.created = new Date();
+        workbook.modified = new Date();
+
+        const summarySheet = workbook.addWorksheet("요약", { views: [{ state: "frozen", ySplit: 2 }] });
+        summarySheet.mergeCells("A1:F1");
+        summarySheet.getCell("A1").value = `${summary.schoolName || "학교"} ${summary.monthTag} 우유 징수 요약`;
+        summarySheet.getCell("A1").font = { size: 14, bold: true };
+        summarySheet.getCell("A1").alignment = { horizontal: "center", vertical: "middle" };
+
+        summarySheet.addRow(["항목", "값", "항목", "값", "항목", "값"]);
+        applyHeaderStyle(summarySheet.getRow(2));
+
+        const pdfCountText = state.pdfInfo?.applicantCount ? `${formatNumber(state.pdfInfo.applicantCount)}명` : "-";
+        const matchText = state.pdfInfo?.applicantCount
+          ? (state.pdfInfo.applicantCount === summary.count ? "일치" : "불일치")
+          : "비교불가";
+
+        const pairs = [
+          ["학교명", summary.schoolName || "-", "대상 월", summary.monthTag || "-", "선택 학생 수", `${formatNumber(summary.count)}명`],
+          ["PDF 신청인원", pdfCountText, "PDF 대비", matchText, "기준 열", el.targetColumnSelect.value || "-"],
+          ["기준 값", el.targetValueInput.value || "-", "일수", `${formatNumber(summary.days)}일`, "1일 단가", formatCurrency(summary.unitPrice)],
+          ["1인당 금액", formatCurrency(summary.perStudent), "총 징수예정액", formatCurrency(summary.total), "관련 문서번호", summary.refDocNo || "-"],
+          ["문서일자", summary.refDocDate || "-", "원본 엑셀", state.sourceInfo?.file?.name || "-", "본문 PDF", state.pdfInfo?.file?.name || "-"],
+        ];
+
+        pairs.forEach((row) => summarySheet.addRow(row));
+
+        summarySheet.columns = [
+          { width: 16 }, { width: 22 },
+          { width: 16 }, { width: 18 },
+          { width: 16 }, { width: 28 },
+        ];
+        applyBodyBorder(summarySheet, 2, summarySheet.rowCount, 1, 6);
+        for (let r = 3; r <= summarySheet.rowCount; r += 1) {
+          summarySheet.getCell(r, 1).font = { bold: true };
+          summarySheet.getCell(r, 3).font = { bold: true };
+          summarySheet.getCell(r, 5).font = { bold: true };
+        }
+
+        const countSheet = workbook.addWorksheet("학년반별집계", { views: [{ state: "frozen", ySplit: 1 }] });
+        countSheet.addRow(["학년", "반", "인원", "1인당 금액", "합계금액"]);
+        applyHeaderStyle(countSheet.getRow(1));
+
+        groups.forEach((group) => {
+          countSheet.addRow([
+            group.grade,
+            group.className,
+            group.count,
+            summary.perStudent,
+            group.count * summary.perStudent,
+          ]);
+        });
+
+        countSheet.addRow(["전체", "", summary.count, summary.perStudent, summary.total]);
+        countSheet.columns = [
+          { width: 12 }, { width: 12 }, { width: 12 }, { width: 14 }, { width: 16 },
+        ];
+        applyBodyBorder(countSheet, 1, countSheet.rowCount, 1, 5);
+        for (let r = 2; r <= countSheet.rowCount; r += 1) {
+          countSheet.getCell(r, 3).alignment = { horizontal: "right" };
+          countSheet.getCell(r, 4).alignment = { horizontal: "right" };
+          countSheet.getCell(r, 5).alignment = { horizontal: "right" };
+          countSheet.getCell(r, 4).numFmt = "#,##0";
+          countSheet.getCell(r, 5).numFmt = "#,##0";
+        }
+        countSheet.getRow(countSheet.rowCount).font = { bold: true };
+
+        const groupedSheet = workbook.addWorksheet("학년반별명단");
+        groupedSheet.mergeCells("A1:F1");
+        groupedSheet.getCell("A1").value = `${summary.schoolName || "학교"} ${summary.monthTag} 우유 징수 대상자 명단`;
+        groupedSheet.getCell("A1").font = { size: 13, bold: true };
+        groupedSheet.getCell("A1").alignment = { horizontal: "center", vertical: "middle" };
+        let rowPtr = 3;
+        groups.forEach((group) => {
+          groupedSheet.mergeCells(`A${rowPtr}:F${rowPtr}`);
+          groupedSheet.getCell(`A${rowPtr}`).value = `${group.grade} ${group.className}반 (${formatNumber(group.count)}명)`;
+          groupedSheet.getCell(`A${rowPtr}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+          groupedSheet.getCell(`A${rowPtr}`).fill = {
+            type: "pattern", pattern: "solid", fgColor: { argb: "FF1D4ED8" }
+          };
+          groupedSheet.getCell(`A${rowPtr}`).alignment = { horizontal: "left", vertical: "middle" };
+          rowPtr += 1;
+
+          groupedSheet.addRow(["학년", "반", "번호", "성명", "주/야", "징수금액"]);
+          applyHeaderStyle(groupedSheet.getRow(rowPtr), "FFE8F1FF");
+          rowPtr += 1;
+
+          group.records.forEach((record) => {
+            groupedSheet.addRow([
+              record.grade,
+              record.className,
+              record.number,
+              record.name,
+              record.dayNight || "주간",
+              summary.perStudent,
+            ]);
+            groupedSheet.getCell(rowPtr, 6).numFmt = "#,##0";
+            rowPtr += 1;
+          });
+
+          groupedSheet.addRow(["소계", "", "", "", group.count, group.count * summary.perStudent]);
+          groupedSheet.getCell(rowPtr, 1).font = { bold: true };
+          groupedSheet.getCell(rowPtr, 5).font = { bold: true };
+          groupedSheet.getCell(rowPtr, 6).font = { bold: true };
+          groupedSheet.getCell(rowPtr, 6).numFmt = "#,##0";
+          rowPtr += 2;
+        });
+
+        groupedSheet.columns = [
+          { width: 12 }, { width: 12 }, { width: 10 }, { width: 16 }, { width: 10 }, { width: 14 },
+        ];
+        applyBodyBorder(groupedSheet, 3, groupedSheet.rowCount, 1, 6);
+
+        const flatSheet = workbook.addWorksheet("전체명단", { views: [{ state: "frozen", ySplit: 1 }] });
+        flatSheet.addRow(["학년", "반", "번호", "성명", "주/야", "기준열", "기준값", "징수금액"]);
+        applyHeaderStyle(flatSheet.getRow(1));
+        records.forEach((record) => {
+          flatSheet.addRow([
+            record.grade,
+            record.className,
+            record.number,
+            record.name,
+            record.dayNight || "주간",
+            el.targetColumnSelect.value || "-",
+            record.targetDisplay || "-",
+            summary.perStudent,
+          ]);
+        });
+        flatSheet.columns = [
+          { width: 12 }, { width: 12 }, { width: 10 }, { width: 16 },
+          { width: 10 }, { width: 10 }, { width: 12 }, { width: 14 },
+        ];
+        applyBodyBorder(flatSheet, 1, flatSheet.rowCount, 1, 8);
+        for (let r = 2; r <= flatSheet.rowCount; r += 1) {
+          flatSheet.getCell(r, 8).numFmt = "#,##0";
+          flatSheet.getCell(r, 8).alignment = { horizontal: "right" };
+        }
+
+        const draftSheet = workbook.addWorksheet("징수결의문안");
+        draftSheet.getCell("A1").value = "복사용 징수결의 문안";
+        draftSheet.getCell("A1").font = { size: 13, bold: true };
+        draftSheet.getCell("A3").value = draftText;
+        draftSheet.getCell("A3").alignment = { wrapText: true, vertical: "top" };
+        draftSheet.columns = [{ width: 100 }];
+
+        return workbook;
+      }
+
+      async function buildTextBlob(text) {
+        return new Blob([text], { type: "text/plain;charset=utf-8" });
+      }
+
+      async function buildZip(files) {
+        const zip = new JSZip();
+        files.forEach((item) => {
+          zip.file(item.filename, item.blob);
+        });
+        return zip.generateAsync({ type: "blob" });
+      }
+
+      async function generateResults() {
+        clearOutputArea();
+        clearLog();
+
+        if (!state.sourceInfo) {
+          log("우유 신청 현황 엑셀을 먼저 올려 주세요.", "error");
+          return;
+        }
+
+        refreshPreview();
+        const records = [...state.selectedRecords];
+        const groups = [...state.groupRows];
+
+        if (!records.length) {
+          log("기준 조건에 맞는 학생이 없습니다.", "warn");
+          return;
+        }
+
+        const summary = buildSummaryContext(records);
+        const draftText = buildDraftText(records);
+
+        log(`선택 학생 ${records.length}명 확인`);
+        log("징수결의 첨부용 엑셀 생성 중");
+        const attachmentWorkbook = await buildAttachmentWorkbook(records, groups, summary, draftText);
+        const attachmentBlob = await blobFromWorkbook(attachmentWorkbook);
+
+        log("학교대상수납요구 엑셀 생성 중");
+        const templateWorkbook = await buildTemplateWorkbook(records, summary);
+        const templateBlob = await blobFromWorkbook(templateWorkbook);
+
+        log("문안 TXT 생성 중");
+        const textBlob = await buildTextBlob(draftText);
+
+        const schoolLabel = getCurrentSchoolLabel();
+        const monthLabel = getMonthTagForFile();
+        const attachmentName = sanitizeFileName(`${schoolLabel}_${monthLabel}_우유징수결의첨부.xlsx`);
+        const templateName = sanitizeFileName(`${schoolLabel}_${monthLabel}_학교대상수납요구.xlsx`);
+        const textName = sanitizeFileName(`${schoolLabel}_${monthLabel}_징수결의문안.txt`);
+
+        addDownloadLink("징수결의 첨부용 엑셀 다운로드", attachmentBlob, attachmentName, "btn-primary");
+        addDownloadLink("학교대상수납요구 다운로드", templateBlob, templateName, "btn-secondary");
+        addDownloadLink("징수결의 문안 TXT 다운로드", textBlob, textName, "btn-ghost");
+
+        const zipBlob = await buildZip([
+          { filename: attachmentName, blob: attachmentBlob },
+          { filename: templateName, blob: templateBlob },
+          { filename: textName, blob: textBlob },
+        ]);
+        const zipName = sanitizeFileName(`${schoolLabel}_${monthLabel}_우유징수결과_${formatStamp(new Date())}.zip`);
+        addDownloadLink("전체 ZIP 다운로드", zipBlob, zipName, "btn-primary");
+
+        el.draftTextArea.value = draftText;
+        log("결과 생성 완료");
+      }
+
+      el.btnPickFiles.addEventListener("click", () => el.fileInput.click());
+
+      el.fileInput.addEventListener("change", async (event) => {
+        const incoming = Array.from(event.target.files || []);
+        if (!incoming.length) return;
+        state.rawFiles = uniqueFiles(state.rawFiles, incoming);
+        event.target.value = "";
+        try {
+          await analyzeFiles();
+        } catch (error) {
+          console.error(error);
+          log(`파일 분석 오류: ${error.message || error}`, "error");
+        }
+      });
+
+      el.btnClearFiles.addEventListener("click", resetAllFiles);
+      el.btnGenerate.addEventListener("click", () => {
+        generateResults().catch((error) => {
+          console.error(error);
+          log(`결과 생성 실패: ${error.message || error}`, "error");
+        });
+      });
+      el.btnResetResults.addEventListener("click", resetResultsOnly);
+      el.btnRefreshPreview.addEventListener("click", refreshPreview);
+
+      el.manualAmountToggle.addEventListener("change", () => {
+        refreshAmountFromInputs();
+        refreshPreview();
+      });
+
+      [el.daysInput, el.unitPriceInput, el.perStudentAmountInput, el.targetValueInput, el.yearInput, el.monthInput, el.refDocNo, el.refDocDate, el.schoolName, el.draftTitleInput, el.draftAttachInput].forEach((node) => {
+        node.addEventListener("input", refreshPreview);
+        node.addEventListener("change", refreshPreview);
+      });
+
+      [el.targetColumnSelect, el.dayNightColumnSelect, el.gradeColumnSelect, el.classColumnSelect, el.numberColumnSelect, el.nameColumnSelect, el.headerRowInput, el.dataStartRowInput].forEach((node) => {
+        node.addEventListener("change", () => {
+          if (node === el.headerRowInput && state.sourceInfo) {
+            const headerRow = Math.max(1, toNumber(el.headerRowInput.value) || 1);
+            const options = buildColumnOptions(state.sourceInfo.snapshot, headerRow);
+            setSelectOptions(el.targetColumnSelect, options);
+            setSelectOptions(el.dayNightColumnSelect, options);
+            setSelectOptions(el.gradeColumnSelect, options);
+            setSelectOptions(el.classColumnSelect, options);
+            setSelectOptions(el.numberColumnSelect, options);
+            setSelectOptions(el.nameColumnSelect, options);
+          }
+          refreshPreview();
+        });
+      });
+
+      el.btnCopyDraft.addEventListener("click", async () => {
+        const text = el.draftTextArea.value || "";
+        if (!text.trim()) {
+          log("복사할 문안이 없습니다.", "warn");
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(text);
+          log("문안 복사 완료");
+        } catch (error) {
+          console.error(error);
+          log("브라우저가 클립보드 복사를 허용하지 않았습니다.", "warn");
+        }
+      });
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        el.dropZone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          el.dropZone.classList.add("dragover");
+        });
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        el.dropZone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          el.dropZone.classList.remove("dragover");
+        });
+      });
+
+      el.dropZone.addEventListener("drop", async (event) => {
+        const incoming = Array.from(event.dataTransfer.files || []);
+        if (!incoming.length) return;
+        state.rawFiles = uniqueFiles(state.rawFiles, incoming);
+        try {
+          await analyzeFiles();
+        } catch (error) {
+          console.error(error);
+          log(`파일 분석 오류: ${error.message || error}`, "error");
+        }
+      });
+
+      el.dropZone.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          el.fileInput.click();
+        }
+      });
+
+      function init() {
+        refreshAmountFromInputs();
+        renderFilePills();
+        clearOutputArea();
+        clearLog();
+        refreshPreview();
+        log("준비 완료");
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
