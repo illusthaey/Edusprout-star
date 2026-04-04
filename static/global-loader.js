@@ -10,6 +10,7 @@
     "eduworkhaey.co.kr",
     "savinghaey.co.kr",
     "archivinghaey.co.kr",
+    "tftesthaey.co.kr",
     "localhost",
     "127.0.0.1"
   ];
