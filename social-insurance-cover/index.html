@@ -157,7 +157,7 @@
       background: #fbfcfe;
     }
 
-    .sib-details summary {
+    .sib-details > summary {
       list-style: none;
       cursor: pointer;
       padding: 16px 18px;
@@ -168,11 +168,11 @@
       outline: none;
     }
 
-    .sib-details summary::-webkit-details-marker {
+    .sib-details > summary::-webkit-details-marker {
       display: none;
     }
 
-    .sib-details summary::after {
+    .sib-details > summary::after {
       content: "펼치기";
       position: absolute;
       right: 18px;
@@ -183,7 +183,7 @@
       font-size: 0.94rem;
     }
 
-    .sib-details[open] summary::after {
+    .sib-details[open] > summary::after {
       content: "접기";
     }
 
@@ -577,8 +577,8 @@
   </style>
 </head>
 <body class="alien-side-bg">
-  <main class="container">
-    <section class="section">
+  <main class="sib-app">
+    <section class="sib-hero">
       <h1>사회보험료 고지내역 집계기</h1>
       <p>국민연금 CSV, 건강보험 CSV, 고용/산재 XLSX, 공무직 인사기록 XLSX를 한 번에 올리면 4개 시트 엑셀로 정리합니다.</p>
     </section>
@@ -615,20 +615,29 @@
       </div>
     </section>
 
-    
-    <section class="section" id="insuranceSection">
+
+
+    <section class="sib-section" id="insuranceSection">
       <h2>엑셀 다운로드하는 곳</h2>
-    <details class="img-zoom">
-      <summary>
-        <img
-          src="/static/image/social-insurance-01.jpg"
-          alt="부과고지 보험료에서 엑셀 다운로드"
-          loading="lazy"
-          decoding="async"
-        />
-      </summary>
-    </details>
-  </section>
+      <details class="sib-details" id="downloadGuideDetails" open>
+        <summary>엑셀 다운로드 예시 이미지</summary>
+        <div class="sib-details-body">
+          <p>집계 전에는 안내 이미지를 바로 볼 수 있고, 집계하기를 누르면 자동으로 접힙니다.</p>
+          <details class="img-zoom">
+            <summary>
+              <img
+                class="sib-guide-image"
+                src="/static/image/social-insurance-01.jpg"
+                alt="부과고지 보험료에서 엑셀 다운로드"
+                loading="lazy"
+                decoding="async"
+              />
+            </summary>
+          </details>
+          <p class="sib-note">이미지를 클릭하면 크게 볼 수 있습니다.</p>
+        </div>
+      </details>
+    </section>
 
     <section class="sib-section">
       <h2>파일 업로드</h2>
@@ -706,7 +715,12 @@
 
     <section class="sib-section">
       <h2>상태 로그</h2>
-      <div class="sib-log" id="statusLog"></div>
+      <details class="sib-details" id="statusLogDetails">
+        <summary>상태 로그 보기</summary>
+        <div class="sib-details-body">
+          <div class="sib-log" id="statusLog"></div>
+        </div>
+      </details>
     </section>
 
     <pre class="sib-debug-output" id="autotestResult"></pre>
@@ -735,6 +749,7 @@
       const statusLog = $("#statusLog");
       const kpiGrid = $("#kpiGrid");
       const autotestResult = $("#autotestResult");
+      const downloadGuideDetails = $("#downloadGuideDetails");
 
       const FILE_KIND_LABELS = {
         pension: "국민연금 CSV",
@@ -2744,6 +2759,7 @@
         state.workbookName = "";
         state.summary = null;
         fileInput.value = "";
+        if (downloadGuideDetails) downloadGuideDetails.open = true;
         renderFileTable();
         renderKpis(null);
         refreshPreviewSheetOptions();
@@ -2758,6 +2774,7 @@
           return;
         }
 
+        if (downloadGuideDetails) downloadGuideDetails.open = false;
         processBtn.disabled = true;
         downloadBtn.disabled = true;
         previewSheetSelect.disabled = true;
