@@ -1,1 +1,900 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>국외여비 계산기</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --line:#d9deea;
+      --text:#1f2430;
+      --muted:#5b6477;
+      --primary:#2563eb;
+      --primary-soft:#eaf1ff;
+      --warn:#b45309;
+      --warn-soft:#fff7ed;
+      --good:#047857;
+      --good-soft:#ecfdf5;
+      --shadow:0 10px 30px rgba(20,28,45,.08);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+      background:linear-gradient(180deg,#f7f9fd 0,#eef3fb 100%);
+      color:var(--text);
+      line-height:1.55;
+    }
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:24px 16px 80px;
+    }
+    .hero{
+      margin:8px 0 20px;
+    }
+    .hero h1{
+      margin:0 0 10px;
+      font-size:clamp(1.8rem,3vw,2.5rem);
+      line-height:1.2;
+    }
+    .hero p{
+      margin:6px 0;
+      color:var(--muted);
+    }
+    .notice{
+      margin-top:12px;
+      padding:14px 16px;
+      border:1px solid #c7d7ff;
+      background:#f8fbff;
+      color:#234;
+      border-radius:14px;
+    }
+    .grid{
+      display:grid;
+      gap:16px;
+    }
+    .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+    @media (max-width:960px){
+      .grid.two,.grid.three,.grid.four{grid-template-columns:1fr}
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+      margin:0 0 16px;
+    }
+    .card h2{
+      margin:0 0 12px;
+      font-size:1.2rem;
+    }
+    .card h3{
+      margin:0 0 10px;
+      font-size:1rem;
+    }
+    .small{font-size:.92rem;color:var(--muted)}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{
+      font-weight:700;
+      font-size:.95rem;
+    }
+    .field input,
+    .field select{
+      width:100%;
+      border:1px solid #cfd7e6;
+      background:#fff;
+      border-radius:12px;
+      padding:11px 12px;
+      font:inherit;
+      color:inherit;
+    }
+    .field input:focus,
+    .field select:focus{
+      outline:3px solid rgba(37,99,235,.12);
+      border-color:#8eb4ff;
+    }
+    .checkbox-row{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      padding:12px 14px;
+      border:1px solid #e4e8f1;
+      border-radius:14px;
+      background:#fafcff;
+    }
+    .checkbox-row input{
+      width:18px;height:18px;flex:none;margin-top:2px;
+    }
+    .checkbox-row .title{
+      font-weight:700;
+      display:block;
+      margin-bottom:2px;
+    }
+    .btn-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+    button{
+      appearance:none;
+      border:1px solid #b8c6e6;
+      background:#fff;
+      color:inherit;
+      padding:11px 14px;
+      border-radius:12px;
+      font:inherit;
+      font-weight:700;
+      cursor:pointer;
+    }
+    button.primary{
+      background:var(--primary);
+      color:#fff;
+      border-color:var(--primary);
+    }
+    button.ghost{
+      background:#f8fbff;
+    }
+    button:hover{filter:brightness(.98)}
+    details{
+      border:1px solid #e4e8f1;
+      border-radius:14px;
+      padding:10px 14px;
+      background:#fbfcff;
+    }
+    details summary{
+      cursor:pointer;
+      font-weight:700;
+    }
+    details > div{
+      margin-top:10px;
+    }
+    .table-wrap{
+      overflow:auto;
+      border:1px solid #e2e8f0;
+      border-radius:14px;
+    }
+    table{
+      width:100%;
+      min-width:700px;
+      border-collapse:collapse;
+      background:#fff;
+    }
+    th,td{
+      border-bottom:1px solid #e9eef7;
+      padding:10px 12px;
+      text-align:right;
+      white-space:nowrap;
+      font-size:.95rem;
+    }
+    th{
+      background:#f7faff;
+      color:#334155;
+      font-weight:800;
+    }
+    th:first-child, td:first-child,
+    td.left{text-align:left}
+    tr:last-child td{border-bottom:none}
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(6,minmax(0,1fr));
+      gap:12px;
+    }
+    @media (max-width:1100px){
+      .summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
+    @media (max-width:700px){
+      .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    .metric{
+      border:1px solid #dbe5f7;
+      border-radius:16px;
+      padding:14px;
+      background:linear-gradient(180deg,#fff 0,#f9fbff 100%);
+    }
+    .metric .label{
+      font-size:.9rem;
+      color:var(--muted);
+      margin-bottom:4px;
+    }
+    .metric .value{
+      font-size:1.25rem;
+      font-weight:800;
+      line-height:1.2;
+    }
+    .metric.total{
+      border-color:#9ebcf8;
+      background:linear-gradient(180deg,#f8fbff 0,#eef4ff 100%);
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:.85rem;
+      font-weight:700;
+      background:var(--primary-soft);
+      color:#204ea8;
+      margin-right:6px;
+      margin-bottom:6px;
+    }
+    .warn{
+      border:1px solid #fed7aa;
+      background:var(--warn-soft);
+      color:#92400e;
+      border-radius:14px;
+      padding:13px 14px;
+    }
+    .good{
+      border:1px solid #a7f3d0;
+      background:var(--good-soft);
+      color:#065f46;
+      border-radius:14px;
+      padding:13px 14px;
+    }
+    .codebox{
+      background:#0f172a;
+      color:#e5eefc;
+      border-radius:14px;
+      padding:14px;
+      overflow:auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:.9rem;
+      white-space:pre-wrap;
+    }
+    .muted-list{
+      margin:0;
+      padding-left:18px;
+      color:var(--muted);
+    }
+    .muted-list li{margin:6px 0}
+    .footer{
+      text-align:center;
+      color:var(--muted);
+      font-size:.9rem;
+      margin-top:26px;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1>국외여비 계산기</h1>
+      <p>공무원 국외출장의 일비·식비·숙박비·운임·준비금을 한 번에 계산하는 참고용 도구입니다.</p>
+      <p>국가/도시의 <strong>가·나·다·라 등급</strong>은 공식 지급표를 확인한 뒤 직접 선택하도록 만들었습니다.</p>
+      <div class="notice">
+        <strong>주의</strong><br>
+        이 계산기는 업무 참고용입니다. 실제 지급액은 기관의 출장명령, 증빙서류, 카드사 청구환율·수수료,
+        상급자 동행 조정, 기관 내부 기준, e-사람 정산 결과에 따라 달라질 수 있습니다.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>반영한 핵심 규칙</h2>
+      <div style="margin-bottom:10px">
+        <span class="pill">숙박비 할인정액 = 실비상한액 × 85%</span>
+        <span class="pill">정산신청 = 여행 종료 다음 날부터 2주 이내</span>
+        <span class="pill">정액여비 원화환산 = 미화 현찰 매도율 기준</span>
+        <span class="pill">원화 금액 = 일의 자리 절사, 십원 단위</span>
+        <span class="pill">공적 항공마일리지 절감 시 일비 50% 추가</span>
+      </div>
+      <ul class="muted-list">
+        <li>운임과 실비숙박비는 원칙적으로 사후 정산이고, 일비·식비·할인정액 숙박비는 사전 정액 지급 대상입니다.</li>
+        <li>숙박비 실비정산은 현지통화 상한액을 먼저 잡고, 실제 숙박비와 비교해 상한 범위 내에서 정산합니다.</li>
+        <li>할인정액을 선택한 출장건은 실비정산과 혼용할 수 없고, 숙박비 상한 50% 추가정산도 적용하지 않습니다.</li>
+        <li>기내식·제공식이 있으면 식비를 감액할 수 있도록 총 제공식 수를 입력하도록 했습니다.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>국외여비 지급표 (USD)</h2>
+      <div class="table-wrap">
+        <table id="rateTable">
+          <thead>
+            <tr>
+              <th>여비등급</th>
+              <th>가등급 일비</th>
+              <th>가등급 숙박</th>
+              <th>가등급 식비</th>
+              <th>나등급 일비</th>
+              <th>나등급 숙박</th>
+              <th>나등급 식비</th>
+              <th>다등급 일비</th>
+              <th>다등급 숙박</th>
+              <th>다등급 식비</th>
+              <th>라등급 일비</th>
+              <th>라등급 숙박</th>
+              <th>라등급 식비</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="small">등급 매핑은 직접 확인 후 선택하세요. 이 파일에는 전체 국가·도시 등급표 자동매핑을 넣지 않았습니다.</p>
+    </section>
+
+    <section class="grid two">
+      <section class="card">
+        <h2>1) 기본 입력</h2>
+        <div class="grid two">
+          <div class="field">
+            <label for="travelerClass">여비등급</label>
+            <select id="travelerClass">
+              <option value="1ga">제1호 가목</option>
+              <option value="1na">제1호 나목</option>
+              <option value="1da">제1호 다목</option>
+              <option value="1ra">제1호 라목</option>
+              <option value="2" selected>제2호</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="regionGrade">지역등급</label>
+            <select id="regionGrade">
+              <option value="가">가</option>
+              <option value="나" selected>나</option>
+              <option value="다">다</option>
+              <option value="라">라</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="travelDays">출장 일수</label>
+            <input id="travelDays" type="number" min="1" step="1" value="2" />
+          </div>
+          <div class="field">
+            <label for="nights">숙박 일수(박)</label>
+            <input id="nights" type="number" min="0" step="1" value="1" />
+          </div>
+          <div class="field">
+            <label for="usdKrw">USD→KRW 환율</label>
+            <input id="usdKrw" type="number" min="0" step="0.01" value="1137" />
+          </div>
+          <div class="field">
+            <label for="usdLocal">1USD당 현지통화</label>
+            <input id="usdLocal" type="number" min="0" step="0.0001" value="82.5764" />
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="grid two">
+          <div class="field">
+            <label for="providedMeals">제공받은 식사 수(총계)</label>
+            <input id="providedMeals" type="number" min="0" step="1" value="0" />
+          </div>
+          <div class="field">
+            <label for="halfDailyDays">공용/기관지원 차량 사용일수</label>
+            <input id="halfDailyDays" type="number" min="0" step="1" value="0" />
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="checkbox-row">
+          <input id="foodExtra50" type="checkbox" />
+          <div>
+            <span class="title">식비 50% 추가(업무상 부득이)</span>
+            <div class="small">기관에서 식비 추가 지급을 인정하는 경우만 체크하세요.</div>
+          </div>
+        </div>
+
+        <div style="height:10px"></div>
+        <div class="checkbox-row">
+          <input id="mileageBonusEnabled" type="checkbox" />
+          <div>
+            <span class="title">공적 항공마일리지 사용 인센티브 적용</span>
+            <div class="small">절감 항공요금의 50% 한도 안에서, 출장기간 전체 일비의 50%를 추가 계산합니다.</div>
+          </div>
+        </div>
+
+        <div style="height:10px"></div>
+        <div class="field">
+          <label for="savedAirfareKrw">절감된 항공요금(KRW)</label>
+          <input id="savedAirfareKrw" type="number" min="0" step="1" value="0" />
+        </div>
+
+        <div class="btn-row">
+          <button class="primary" id="calcBtn" type="button">계산하기</button>
+          <button class="ghost" id="sampleBtn" type="button">공식 예시값 채우기</button>
+          <button id="resetBtn" type="button">초기화</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>2) 숙박·운임·준비금 입력</h2>
+
+        <div class="field">
+          <label>숙박비 방식</label>
+          <div class="btn-row" role="group" aria-label="숙박비 방식">
+            <label class="checkbox-row" style="flex:1">
+              <input type="radio" name="lodgingMode" value="actual" checked />
+              <div>
+                <span class="title">실비정산</span>
+                <div class="small">실제 결제액과 상한액을 비교</div>
+              </div>
+            </label>
+            <label class="checkbox-row" style="flex:1">
+              <input type="radio" name="lodgingMode" value="discount" />
+              <div>
+                <span class="title">할인정액</span>
+                <div class="small">상한액의 85% 정액 지급</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div style="height:10px"></div>
+        <div class="checkbox-row">
+          <input id="lodgingExtra50" type="checkbox" />
+          <div>
+            <span class="title">숙박비 상한 50% 추가</span>
+            <div class="small">업무상 부득이 사유가 인정되는 실비정산일 때만 사용하세요.</div>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+        <div class="grid two">
+          <div class="field">
+            <label for="actualHotelLocal">실제 숙박비 총액(현지통화)</label>
+            <input id="actualHotelLocal" type="number" min="0" step="0.01" value="0" />
+          </div>
+          <div class="field">
+            <label for="actualHotelCardKrw">카드 청구액(KRW, 선택)</label>
+            <input id="actualHotelCardKrw" type="number" min="0" step="1" value="0" />
+          </div>
+          <div class="field">
+            <label for="airfareKrw">항공운임 실비(KRW)</label>
+            <input id="airfareKrw" type="number" min="0" step="1" value="0" />
+          </div>
+          <div class="field">
+            <label for="otherTransportKrw">기타 운임 실비(KRW)</label>
+            <input id="otherTransportKrw" type="number" min="0" step="1" value="0" />
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+        <h3>준비금 실비</h3>
+        <div class="grid two">
+          <div class="field">
+            <label for="prepVisa">비자발급비</label>
+            <input id="prepVisa" type="number" min="0" step="1" value="0" />
+          </div>
+          <div class="field">
+            <label for="prepVaccine">예방접종비</label>
+            <input id="prepVaccine" type="number" min="0" step="1" value="0" />
+          </div>
+          <div class="field">
+            <label for="prepInsurance">여행자보험료</label>
+            <input id="prepInsurance" type="number" min="0" step="1" value="0" />
+          </div>
+          <div class="field">
+            <label for="prepMedicine">풍토병 예방약</label>
+            <input id="prepMedicine" type="number" min="0" step="1" value="0" />
+          </div>
+          <div class="field">
+            <label for="prepTest">법정감염병 검사비</label>
+            <input id="prepTest" type="number" min="0" step="1" value="0" />
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+        <details>
+          <summary>숙박비 실비정산 계산에 관한 간단 메모</summary>
+          <div class="small">
+            <ul class="muted-list">
+              <li>현지통화 상한액 = <strong>USD 상한액 × 국제환율(1USD당 현지통화)</strong>, 소수점 첫째자리에서 반올림해 정수로 계산합니다.</li>
+              <li>카드 청구액(KRW)을 입력하면, 숙박비 지급액은 <strong>카드 청구액과 원화환산 상한액 중 작은 금액</strong>으로 계산합니다.</li>
+              <li>카드 청구액을 비워두면 편의상 입력한 환율로 원화 환산한 추정값을 보여줍니다.</li>
+            </ul>
+          </div>
+        </details>
+      </section>
+    </section>
+
+    <section class="card">
+      <h2>3) 계산 결과</h2>
+      <div id="alertBox" class="warn" style="display:none"></div>
+
+      <div class="summary-grid" style="margin:12px 0 16px">
+        <div class="metric">
+          <div class="label">일비</div>
+          <div class="value" id="sumDaily">0원</div>
+        </div>
+        <div class="metric">
+          <div class="label">식비</div>
+          <div class="value" id="sumMeal">0원</div>
+        </div>
+        <div class="metric">
+          <div class="label">숙박비</div>
+          <div class="value" id="sumHotel">0원</div>
+        </div>
+        <div class="metric">
+          <div class="label">운임</div>
+          <div class="value" id="sumFare">0원</div>
+        </div>
+        <div class="metric">
+          <div class="label">준비금</div>
+          <div class="value" id="sumPrep">0원</div>
+        </div>
+        <div class="metric total">
+          <div class="label">총 예상 지급액</div>
+          <div class="value" id="sumTotal">0원</div>
+        </div>
+      </div>
+
+      <div id="mileageBox" class="good" style="display:none;margin-bottom:14px"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>계산식</th>
+              <th>USD/현지통화 기준</th>
+              <th>원화 환산</th>
+            </tr>
+          </thead>
+          <tbody id="detailBody"></tbody>
+        </table>
+      </div>
+
+      <div style="height:12px"></div>
+      <div class="codebox" id="logBox"></div>
+    </section>
+
+    <section class="card">
+      <h2>4) 사용 팁</h2>
+      <ul class="muted-list">
+        <li><strong>지역등급</strong>은 국가·도시별 공식 표를 보고 직접 고르세요.</li>
+        <li><strong>귀국 당일</strong>도 원칙적으로 국외출장 기간에 포함되어 국외 일비를 적용하는 방향으로 계산했습니다.</li>
+        <li><strong>호텔에 조식 포함</strong>이면 식비 총 제공식 수에 반영하거나, 실제 정산 때 조식 금액을 숙박비에서 제외하세요.</li>
+        <li><strong>여행사 이용</strong> 시에도 숙박비는 원칙적으로 제3자인 여행사 대신 직접 결제하는 흐름을 전제로 했습니다.</li>
+        <li><strong>정산신청</strong>은 여행 종료 다음 날부터 2주 이내가 원칙이고, 카드 매입정보가 늦으면 통보일부터 1주 이내 연장 가능합니다.</li>
+      </ul>
+    </section>
+
+    <div class="footer">
+      단일 HTML 파일 · 외부 라이브러리 없음 · 업무 참고용
+    </div>
+  </main>
+
+  <script>
+    const RATE_TABLE = {
+      "1ga": { label:"제1호 가목", 가:{daily:60, hotel:471, meal:186}, 나:{daily:60, hotel:422, meal:136}, 다:{daily:60, hotel:271, meal:102}, 라:{daily:60, hotel:216, meal:85} },
+      "1na": { label:"제1호 나목", 가:{daily:50, hotel:389, meal:160}, 나:{daily:50, hotel:289, meal:117}, 다:{daily:50, hotel:215, meal:87},  라:{daily:50, hotel:161, meal:73} },
+      "1da": { label:"제1호 다목", 가:{daily:40, hotel:282, meal:133}, 나:{daily:40, hotel:207, meal:99},  다:{daily:40, hotel:162, meal:72},  라:{daily:40, hotel:108, meal:61} },
+      "1ra": { label:"제1호 라목", 가:{daily:35, hotel:223, meal:107}, 나:{daily:35, hotel:160, meal:78},  다:{daily:35, hotel:130, meal:58},  라:{daily:35, hotel:85,  meal:49} },
+      "2":   { label:"제2호",     가:{daily:30, hotel:176, meal:81},  나:{daily:30, hotel:137, meal:59},  다:{daily:30, hotel:106, meal:44},  라:{daily:30, hotel:81,  meal:37} }
+    };
+
+    const els = {
+      travelerClass: document.getElementById('travelerClass'),
+      regionGrade: document.getElementById('regionGrade'),
+      travelDays: document.getElementById('travelDays'),
+      nights: document.getElementById('nights'),
+      usdKrw: document.getElementById('usdKrw'),
+      usdLocal: document.getElementById('usdLocal'),
+      providedMeals: document.getElementById('providedMeals'),
+      halfDailyDays: document.getElementById('halfDailyDays'),
+      foodExtra50: document.getElementById('foodExtra50'),
+      mileageBonusEnabled: document.getElementById('mileageBonusEnabled'),
+      savedAirfareKrw: document.getElementById('savedAirfareKrw'),
+      lodgingExtra50: document.getElementById('lodgingExtra50'),
+      actualHotelLocal: document.getElementById('actualHotelLocal'),
+      actualHotelCardKrw: document.getElementById('actualHotelCardKrw'),
+      airfareKrw: document.getElementById('airfareKrw'),
+      otherTransportKrw: document.getElementById('otherTransportKrw'),
+      prepVisa: document.getElementById('prepVisa'),
+      prepVaccine: document.getElementById('prepVaccine'),
+      prepInsurance: document.getElementById('prepInsurance'),
+      prepMedicine: document.getElementById('prepMedicine'),
+      prepTest: document.getElementById('prepTest'),
+      sumDaily: document.getElementById('sumDaily'),
+      sumMeal: document.getElementById('sumMeal'),
+      sumHotel: document.getElementById('sumHotel'),
+      sumFare: document.getElementById('sumFare'),
+      sumPrep: document.getElementById('sumPrep'),
+      sumTotal: document.getElementById('sumTotal'),
+      detailBody: document.getElementById('detailBody'),
+      logBox: document.getElementById('logBox'),
+      alertBox: document.getElementById('alertBox'),
+      mileageBox: document.getElementById('mileageBox'),
+      rateTableBody: document.querySelector('#rateTable tbody')
+    };
+
+    function num(v){ return Number(v) || 0; }
+    function clamp(v,min,max){ return Math.min(Math.max(v,min),max); }
+    function floor10(v){ return Math.floor((Number(v)||0)/10) * 10; }
+    function roundInt(v){ return Math.round(Number(v)||0); }
+    function round4(v){ return Math.round((Number(v)||0)*10000)/10000; }
+    function money(v){ return new Intl.NumberFormat('ko-KR').format(Math.round(v||0)) + '원'; }
+    function fmt(v){ return new Intl.NumberFormat('ko-KR').format(v||0); }
+    function usd(v){ return '$' + new Intl.NumberFormat('en-US', {maximumFractionDigits:2}).format(v||0); }
+    function local(v){ return new Intl.NumberFormat('ko-KR', {maximumFractionDigits:2}).format(v||0); }
+    function getLodgingMode(){
+      const checked = document.querySelector('input[name="lodgingMode"]:checked');
+      return checked ? checked.value : 'actual';
+    }
+    function setAlert(msg){
+      els.alertBox.style.display = msg ? 'block' : 'none';
+      els.alertBox.innerHTML = msg || '';
+    }
+
+    function buildRateTable(){
+      const order = ['1ga','1na','1da','1ra','2'];
+      els.rateTableBody.innerHTML = order.map(key => {
+        const r = RATE_TABLE[key];
+        return `
+          <tr>
+            <td class="left">${r.label}</td>
+            <td>${usd(r.가.daily)}</td><td>${usd(r.가.hotel)}</td><td>${usd(r.가.meal)}</td>
+            <td>${usd(r.나.daily)}</td><td>${usd(r.나.hotel)}</td><td>${usd(r.나.meal)}</td>
+            <td>${usd(r.다.daily)}</td><td>${usd(r.다.hotel)}</td><td>${usd(r.다.meal)}</td>
+            <td>${usd(r.라.daily)}</td><td>${usd(r.라.hotel)}</td><td>${usd(r.라.meal)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function row(name, formula, base, krw){
+      return `<tr>
+        <td class="left">${name}</td>
+        <td class="left">${formula}</td>
+        <td>${base}</td>
+        <td>${krw}</td>
+      </tr>`;
+    }
+
+    function calculate(){
+      const travelerClass = els.travelerClass.value;
+      const regionGrade = els.regionGrade.value;
+      const rates = RATE_TABLE[travelerClass][regionGrade];
+
+      const travelDays = Math.max(1, Math.floor(num(els.travelDays.value)));
+      const nights = Math.max(0, Math.floor(num(els.nights.value)));
+      const usdKrw = num(els.usdKrw.value);
+      const usdLocal = num(els.usdLocal.value);
+      const maxMeals = travelDays * 3;
+      const providedMeals = clamp(Math.floor(num(els.providedMeals.value)), 0, maxMeals);
+      const halfDailyDays = clamp(Math.floor(num(els.halfDailyDays.value)), 0, travelDays);
+      const foodExtra50 = els.foodExtra50.checked;
+      const mileageBonusEnabled = els.mileageBonusEnabled.checked;
+      const savedAirfareKrw = Math.max(0, num(els.savedAirfareKrw.value));
+      const lodgingMode = getLodgingMode();
+      const lodgingExtra50 = els.lodgingExtra50.checked && lodgingMode === 'actual';
+
+      const airfareKrw = Math.max(0, num(els.airfareKrw.value));
+      const otherTransportKrw = Math.max(0, num(els.otherTransportKrw.value));
+      const prepTotal = [
+        els.prepVisa, els.prepVaccine, els.prepInsurance, els.prepMedicine, els.prepTest
+      ].reduce((sum, el) => sum + Math.max(0, num(el.value)), 0);
+
+      const warnings = [];
+
+      if (usdKrw <= 0) warnings.push('USD→KRW 환율은 0보다 커야 합니다.');
+      if (usdLocal <= 0) warnings.push('1USD당 현지통화 환율은 0보다 커야 합니다.');
+      if (lodgingMode === 'discount' && els.lodgingExtra50.checked){
+        warnings.push('할인정액을 선택한 경우에는 숙박비 상한 50% 추가를 적용하지 않습니다.');
+      }
+      if (providedMeals === maxMeals && maxMeals > 0){
+        warnings.push('모든 식사를 제공식으로 입력했습니다. 실제 지급 기준과 맞는지 다시 확인하세요.');
+      }
+
+      const baseDailyUsd = rates.daily;
+      const baseMealUsd = rates.meal;
+      const baseHotelUsd = rates.hotel;
+
+      const dailyUsdAfter = baseDailyUsd * (travelDays - (halfDailyDays * 0.5));
+      const dailyKrw = floor10(dailyUsdAfter * usdKrw);
+
+      const mealDailyUsdAdjusted = baseMealUsd * (foodExtra50 ? 1.5 : 1);
+      const mealBeforeDeductUsd = mealDailyUsdAdjusted * travelDays;
+      const mealDeductUsd = (mealDailyUsdAdjusted / 3) * providedMeals;
+      const mealAfterDeductUsd = Math.max(0, mealBeforeDeductUsd - mealDeductUsd);
+      const mealKrw = floor10(mealAfterDeductUsd * usdKrw);
+
+      let hotelKrw = 0;
+      let hotelRows = '';
+      let hotelLog = '';
+      const hotelCapUsdAdjusted = baseHotelUsd * (lodgingExtra50 ? 1.5 : 1);
+      const hotelCapLocalNight = roundInt(hotelCapUsdAdjusted * usdLocal);
+      const hotelCapLocalTotal = hotelCapLocalNight * nights;
+      const hotelCapKrwEquivalent = floor10(hotelCapUsdAdjusted * nights * usdKrw);
+
+      if (lodgingMode === 'discount'){
+        const discountHotelUsd = Math.round(baseHotelUsd * nights * 0.85);
+        hotelKrw = floor10(discountHotelUsd * usdKrw);
+        hotelRows += row(
+          '숙박비(할인정액)',
+          `${usd(baseHotelUsd)} × ${nights}박 × 85%`,
+          usd(discountHotelUsd),
+          money(hotelKrw)
+        );
+        hotelLog = [
+          `- 숙박방식: 할인정액`,
+          `- 할인정액 USD = ${baseHotelUsd} × ${nights} × 0.85 = ${discountHotelUsd}`,
+          `- 원화 환산 = ${discountHotelUsd} × ${usdKrw} → ${hotelKrw}원(십원단위)`
+        ].join('\n');
+      } else {
+        const actualHotelLocal = Math.max(0, num(els.actualHotelLocal.value));
+        const actualHotelCardKrw = Math.max(0, num(els.actualHotelCardKrw.value));
+        const reimbursableLocal = Math.min(actualHotelLocal, hotelCapLocalTotal);
+
+        if (actualHotelLocal > hotelCapLocalTotal){
+          warnings.push(`실제 숙박비가 현지통화 상한(${fmt(hotelCapLocalTotal)})을 초과했습니다. 초과분은 개인부담으로 계산했습니다.`);
+        }
+        if (!actualHotelCardKrw && actualHotelLocal > 0){
+          warnings.push('카드 청구액(KRW)을 비워두어 입력 환율 기준의 단순 환산값으로 숙박비를 추정했습니다.');
+        }
+
+        if (actualHotelCardKrw > 0){
+          hotelKrw = Math.min(floor10(actualHotelCardKrw), hotelCapKrwEquivalent);
+        } else {
+          const simpleKrw = usdLocal > 0 ? floor10((reimbursableLocal / usdLocal) * usdKrw) : 0;
+          hotelKrw = Math.min(simpleKrw, hotelCapKrwEquivalent);
+        }
+
+        hotelRows += row(
+          '숙박비 상한(현지통화)',
+          `${usd(hotelCapUsdAdjusted)} × ${usdLocal} × ${nights}박`,
+          `${fmt(hotelCapLocalTotal)} (현지통화)`,
+          money(hotelCapKrwEquivalent)
+        );
+        hotelRows += row(
+          '숙박비 지급예상액',
+          actualHotelCardKrw > 0
+            ? `min(카드청구액, 원화환산 상한)`
+            : `min(실제숙박비, 현지통화 상한) 환산`,
+          actualHotelCardKrw > 0 ? `${fmt(actualHotelCardKrw)}원 청구` : `${local(reimbursableLocal)} (현지통화)`,
+          money(hotelKrw)
+        );
+
+        hotelLog = [
+          `- 숙박방식: 실비정산`,
+          `- 1박 상한 USD = ${baseHotelUsd}${lodgingExtra50 ? ' × 1.5' : ''} = ${hotelCapUsdAdjusted}`,
+          `- 1박 상한 현지통화 = ${hotelCapUsdAdjusted} × ${round4(usdLocal)} = ${hotelCapLocalNight}`,
+          `- 총 상한 현지통화 = ${hotelCapLocalNight} × ${nights} = ${hotelCapLocalTotal}`,
+          `- 총 상한 원화환산 = ${hotelCapUsdAdjusted} × ${nights} × ${usdKrw} → ${hotelCapKrwEquivalent}원(십원단위)`,
+          actualHotelCardKrw > 0
+            ? `- 카드 청구액 입력값 = ${floor10(actualHotelCardKrw)}원, 지급예상액 = min(청구액, 상한) = ${hotelKrw}원`
+            : `- 실제 숙박비(현지통화) 반영값 = min(${actualHotelLocal}, ${hotelCapLocalTotal}) = ${reimbursableLocal}, 단순환산 지급예상액 = ${hotelKrw}원`
+        ].join('\n');
+      }
+
+      let mileageBonusKrw = 0;
+      if (mileageBonusEnabled && savedAirfareKrw > 0){
+        const fullBonusByRuleKrw = floor10(baseDailyUsd * travelDays * 0.5 * usdKrw);
+        const bonusCapBySavedFare = floor10(savedAirfareKrw * 0.5);
+        mileageBonusKrw = Math.min(fullBonusByRuleKrw, bonusCapBySavedFare);
+      }
+
+      const fareKrw = airfareKrw + otherTransportKrw;
+      const total = dailyKrw + mealKrw + hotelKrw + fareKrw + prepTotal + mileageBonusKrw;
+
+      els.sumDaily.textContent = money(dailyKrw);
+      els.sumMeal.textContent = money(mealKrw);
+      els.sumHotel.textContent = money(hotelKrw);
+      els.sumFare.textContent = money(fareKrw);
+      els.sumPrep.textContent = money(prepTotal);
+      els.sumTotal.textContent = money(total);
+
+      els.detailBody.innerHTML = [
+        row('일비', `${usd(baseDailyUsd)} × (${travelDays}일 - ${halfDailyDays}일 × 1/2)`, usd(dailyUsdAfter), money(dailyKrw)),
+        row('식비', `${usd(baseMealUsd)} × ${foodExtra50 ? '1.5 × ' : ''}${travelDays}일 - 제공식 ${providedMeals}식`, usd(mealAfterDeductUsd), money(mealKrw)),
+        hotelRows,
+        row('운임', `항공운임 + 기타 운임`, `${fmt(airfareKrw + otherTransportKrw)}원`, money(fareKrw)),
+        row('준비금', `비자+접종+보험+예방약+검사`, `${fmt(prepTotal)}원`, money(prepTotal)),
+        mileageBonusKrw > 0 ? row('마일리지 인센티브', `min(출장기간 전체 일비의 50%, 절감 항공요금의 50%)`, `${fmt(mileageBonusKrw)}원`, money(mileageBonusKrw)) : '',
+        row('총합', `일비 + 식비 + 숙박비 + 운임 + 준비금 + 인센티브`, '', money(total))
+      ].join('');
+
+      if (mileageBonusKrw > 0){
+        els.mileageBox.style.display = 'block';
+        els.mileageBox.innerHTML =
+          `<strong>공적 항공마일리지 인센티브 반영</strong><br>` +
+          `절감 항공요금의 50% 한도 안에서, 출장기간 전체 일비의 50%를 추가하여 <strong>${money(mileageBonusKrw)}</strong>를 더했습니다.`;
+      } else {
+        els.mileageBox.style.display = 'none';
+        els.mileageBox.innerHTML = '';
+      }
+
+      const log = [
+        `[기준 선택] ${RATE_TABLE[travelerClass].label} / ${regionGrade}등급`,
+        `[기준 단가] 일비 ${usd(baseDailyUsd)}, 숙박 ${usd(baseHotelUsd)}, 식비 ${usd(baseMealUsd)}`,
+        `[환율] USD→KRW ${usdKrw}, 1USD당 현지통화 ${round4(usdLocal)}`,
+        '',
+        `[일비] ${baseDailyUsd} × (${travelDays} - ${halfDailyDays}×0.5) = ${dailyUsdAfter} USD → ${dailyKrw}원`,
+        `[식비] ${baseMealUsd}${foodExtra50 ? ' × 1.5' : ''} × ${travelDays} - (${providedMeals}식 × 1/3) = ${mealAfterDeductUsd.toFixed(2)} USD → ${mealKrw}원`,
+        hotelLog,
+        `[운임] ${fareKrw}원`,
+        `[준비금] ${prepTotal}원`,
+        mileageBonusKrw > 0 ? `[마일리지 인센티브] ${mileageBonusKrw}원` : `[마일리지 인센티브] 미적용`,
+        '',
+        `[총 예상 지급액] ${total}원`
+      ].join('\n');
+
+      els.logBox.textContent = log;
+
+      setAlert(warnings.length ? warnings.map(v => '• ' + v).join('<br>') : '');
+    }
+
+    function sampleFill(){
+      els.travelerClass.value = '2';
+      els.regionGrade.value = '나';
+      els.travelDays.value = 2;
+      els.nights.value = 1;
+      els.usdKrw.value = 1137;
+      els.usdLocal.value = 82.5764;
+      els.providedMeals.value = 0;
+      els.halfDailyDays.value = 0;
+      els.foodExtra50.checked = false;
+      els.mileageBonusEnabled.checked = false;
+      els.savedAirfareKrw.value = 0;
+      document.querySelector('input[name="lodgingMode"][value="discount"]').checked = true;
+      els.lodgingExtra50.checked = false;
+      els.actualHotelLocal.value = 0;
+      els.actualHotelCardKrw.value = 0;
+      els.airfareKrw.value = 0;
+      els.otherTransportKrw.value = 0;
+      els.prepVisa.value = 0;
+      els.prepVaccine.value = 0;
+      els.prepInsurance.value = 0;
+      els.prepMedicine.value = 0;
+      els.prepTest.value = 0;
+      calculate();
+    }
+
+    function resetAll(){
+      els.travelerClass.value = '2';
+      els.regionGrade.value = '나';
+      els.travelDays.value = 2;
+      els.nights.value = 1;
+      els.usdKrw.value = 1137;
+      els.usdLocal.value = 82.5764;
+      els.providedMeals.value = 0;
+      els.halfDailyDays.value = 0;
+      els.foodExtra50.checked = false;
+      els.mileageBonusEnabled.checked = false;
+      els.savedAirfareKrw.value = 0;
+      document.querySelector('input[name="lodgingMode"][value="actual"]').checked = true;
+      els.lodgingExtra50.checked = false;
+      els.actualHotelLocal.value = 0;
+      els.actualHotelCardKrw.value = 0;
+      els.airfareKrw.value = 0;
+      els.otherTransportKrw.value = 0;
+      els.prepVisa.value = 0;
+      els.prepVaccine.value = 0;
+      els.prepInsurance.value = 0;
+      els.prepMedicine.value = 0;
+      els.prepTest.value = 0;
+      calculate();
+    }
+
+    buildRateTable();
+    document.getElementById('calcBtn').addEventListener('click', calculate);
+    document.getElementById('sampleBtn').addEventListener('click', sampleFill);
+    document.getElementById('resetBtn').addEventListener('click', resetAll);
+
+    document.querySelectorAll('input,select').forEach(el => {
+      el.addEventListener('change', calculate);
+      el.addEventListener('input', () => {
+        if (el.type === 'number') calculate();
+      });
+    });
+
+    document.querySelectorAll('input[name="lodgingMode"]').forEach(el => {
+      el.addEventListener('change', calculate);
+    });
+
+    calculate();
+  </script>
+</body>
+</html>
 
