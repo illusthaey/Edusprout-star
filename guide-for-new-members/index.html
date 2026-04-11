@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <meta name="description" content="신규·저연차 실무자가 처음 맡는 업무의 흐름, 순서, 실수 포인트, 관련 도구를 한 번에 볼 수 있도록 정리한 업무 길잡이 허브입니다." />
+  <title>신규·저연차 실무 길잡이 | 업무 허브</title>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-BQLFX9NXE4"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-BQLFX9NXE4');
+  </script>
+
+  <link rel="icon" href="/static/favicon.ico" />
+  <link rel="stylesheet" href="/static/style.css" />
+
+  <style>
+    :root {
+      --soft: #fafafa;
+      --line: #e5e7eb;
+      --ink-soft: #4b5563;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: -999px;
+      top: 10px;
+      background: #111;
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      z-index: 9999;
+    }
+    .skip-link:focus {
+      left: 10px;
+    }
+
+    .hero {
+      margin-top: 8px;
+    }
+    .hero-copy {
+      max-width: 780px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .hero-copy .subtitle {
+      margin-bottom: 10px;
+    }
+
+    .hero-badges,
+    .tag-row,
+    .tool-tags,
+    .section-kicker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .hero-badges {
+      justify-content: center;
+      margin: 12px 0 0;
+    }
+
+    .hero-badge,
+    .status-pill,
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.28em 0.8em;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #111;
+      font-size: 0.94rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-pill.live {
+      background: #ecfdf5;
+      border-color: #bbf7d0;
+      color: #166534;
+    }
+
+    .status-pill.plan {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      color: #9a3412;
+    }
+
+    .status-pill.tools {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #1d4ed8;
+    }
+
+    .tag {
+      font-size: 0.9rem;
+      color: #374151;
+      background: #f9fafb;
+    }
+
+    .hero-stats {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      margin-top: 16px;
+    }
+
+    .stat-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 14px 16px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.95rem;
+      color: var(--ink-soft);
+    }
+
+    .stat-value {
+      margin-top: 4px;
+      font-size: 1.65rem;
+      line-height: 1.2;
+      font-weight: 800;
+      color: #111;
+    }
+
+    .intro-grid,
+    .route-grid,
+    .guide-grid,
+    .tool-grid,
+    .principle-grid,
+    .roadmap-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .intro-grid,
+    .guide-grid,
+    .tool-grid,
+    .roadmap-grid {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .route-grid,
+    .principle-grid {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .route-card,
+    .guide-card,
+    .tool-card,
+    .principle-card,
+    .roadmap-card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .route-card .btn,
+    .guide-card .btn,
+    .tool-card .btn {
+      width: 100%;
+      text-align: left;
+    }
+
+    .route-card .link-list,
+    .guide-card .link-list,
+    .tool-card .link-list {
+      margin-top: auto;
+    }
+
+    .callout p:last-child,
+    .card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .stack-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+
+    .stack-list li {
+      color: #333;
+    }
+
+    .journey {
+      list-style: none;
+      margin: 12px 0 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .journey li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .journey-step {
+      flex: 0 0 auto;
+      min-width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      border: 1px solid #111;
+      background: #111;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.92rem;
+    }
+
+    .journey-text {
+      flex: 1;
+    }
+
+    .journey-text strong {
+      display: block;
+      color: #111;
+      margin-bottom: 2px;
+    }
+
+    .note-box {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border: 1px dashed #d1d5db;
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .note-box .muted {
+      margin-top: 6px;
+    }
+
+    .compact-list {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+
+    .compact-list li {
+      margin: 5px 0;
+    }
+
+    .empty-state {
+      border: 1px dashed #d1d5db;
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #fff;
+    }
+
+    .hero .callout {
+      margin-top: 14px;
+      text-align: left;
+    }
+
+    .section-sub {
+      margin: 0;
+      color: #555;
+    }
+
+    .quick-nav.section {
+      margin-top: 18px;
+    }
+    .quick-nav .chip-row {
+      margin-top: 10px;
+    }
+
+    @media (max-width: 640px) {
+      .hero-copy {
+        text-align: left;
+      }
+      .hero-copy h1,
+      .hero-copy .subtitle {
+        text-align: left !important;
+      }
+      .hero-badges {
+        justify-content: flex-start;
+      }
+      .hero-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body class="page-index alien-side-bg">
+<div class="alien-page-frame">
+  <a class="skip-link" href="#content">본문 바로가기</a>
+
+  <header class="site-header">
+    <div class="shell">
+      <div class="row between">
+        <div class="row gap" aria-label="페이지 정보">
+          <span class="badge-rose">업무 길잡이 허브</span>
+          <span class="muted">신규·저연차 실무자용</span>
+        </div>
+        <div class="row gap" aria-label="빠른 링크">
+          <a class="btn pastel-blue" href="/guide-for-new-members/records/">공개된 길잡이 바로가기</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-main page-main--narrow page-index" id="content">
+    <section class="page-head hero">
+      <div class="hero-copy">
+        <h1>신규·저연차 실무 길잡이</h1>
+        <p class="subtitle">
+          처음 맡는 업무일수록 계산기보다 먼저 필요한 건 <span class="accent">업무 흐름</span>입니다.<br/>
+          이 허브는 <span class="accent">어디서부터 시작해야 하는지</span>, <span class="accent">무슨 순서로 처리해야 하는지</span>,
+          그리고 <span class="accent">어느 도구를 붙여 쓰면 되는지</span>를 한 번에 정리해두는 출발점입니다.
+        </p>
+
+        <div class="hero-badges" aria-label="핵심 특징">
+          <span class="hero-badge">처음 맡는 업무 기준</span>
+          <span class="hero-badge">업무 흐름 중심</span>
+          <span class="hero-badge">실수 포인트 정리</span>
+          <span class="hero-badge">관련 도구 바로 연결</span>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p>
+          선배들에게 받은 도움의 손길을 후배들에게 돌려드리고 싶은 마음으로, “막상 맡으면 어디서부터 손대야 할지 막막한 업무들”을 한 장씩 정리해두고 있습니다.
+          이 허브는 <span class="accent">설명만 긴 글</span>이 아니라, <span class="accent">지금 당장 처리해야 할 순서</span>와 <span class="accent">실제로 눌러볼 도구</span>를 함께 보여주는 실무용 안내판입니다.
+        </p>
+      </div>
+
+      <div class="hero-stats" aria-label="허브 현황">
+        <div class="stat-card">
+          <div class="stat-label">지금 공개된 길잡이</div>
+          <div class="stat-value" id="liveGuideCount">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">추가 예정 길잡이</div>
+          <div class="stat-value" id="plannedGuideCount">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">즉시 연결 가능한 도구 묶음</div>
+          <div class="stat-value">4개 분야</div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="section quick-nav" aria-label="빠른 이동">
+      <h2 class="local-h2">빠른 이동</h2>
+      <p class="muted">맡은 업무와 현재 상황에 맞는 구역부터 보십시오.</p>
+      <div class="chip-row">
+        <a class="chip" href="#start">처음 들어온 사람</a>
+        <a class="chip" href="#routes">상황별 시작점</a>
+        <a class="chip" href="#guides">길잡이 목록</a>
+        <a class="chip" href="#tools">관련 도구</a>
+        <a class="chip" href="#principles">업무 원칙</a>
+        <a class="chip" href="#roadmap">추가 예정</a>
+      </div>
+    </nav>
+
+    <section class="section" id="start">
+      <h2>처음 이 허브에 들어왔다면</h2>
+      <p class="section-sub">신규·저연차 실무자가 가장 덜 헤매는 순서로 정리했습니다.</p>
+
+      <div class="intro-grid">
+        <div class="card">
+          <h3 class="local-h3 local-tight">1. 먼저 맡은 업무를 고르기</h3>
+          <p class="muted">기록물, 세입, 사회보험, 복무, 인건비처럼 지금 손대야 하는 업무부터 고르십시오.</p>
+        </div>
+
+        <div class="card">
+          <h3 class="local-h3 local-tight">2. 흐름을 먼저 읽기</h3>
+          <p class="muted">상세 길잡이가 있는 경우, 계산 전에 전체 흐름과 마감 포인트를 먼저 확인하는 편이 실수를 줄입니다.</p>
+        </div>
+
+        <div class="card">
+          <h3 class="local-h3 local-tight">3. 바로 도구로 연결하기</h3>
+          <p class="muted">길잡이에서 이해한 흐름을 바탕으로 관련 도구를 붙여 쓰면 속도와 정확도를 함께 잡을 수 있습니다.</p>
+        </div>
+      </div>
+
+      <ol class="journey" aria-label="추천 이용 순서">
+        <li>
+          <span class="journey-step">1</span>
+          <div class="journey-text">
+            <strong>오늘 가장 급한 업무 하나만 정합니다.</strong>
+            여러 업무를 한 번에 잡기보다, 지금 결재·마감·회신과 직접 연결된 업무부터 보는 편이 좋습니다.
+          </div>
+        </li>
+        <li>
+          <span class="journey-step">2</span>
+          <div class="journey-text">
+            <strong>상세 길잡이가 있으면 먼저 읽고, 없으면 관련 도구 묶음부터 갑니다.</strong>
+            허브는 “길잡이 → 도구” 순서를 기본으로 하지만, 급한 경우에는 도구부터 접근할 수 있도록 묶어두었습니다.
+          </div>
+        </li>
+        <li>
+          <span class="journey-step">3</span>
+          <div class="journey-text">
+            <strong>업무 처리 후에는 흔적을 남깁니다.</strong>
+            기록, 근거, 제출본, 회신 일정, 체크리스트를 남겨두면 다음번부터 일이 훨씬 쉬워집니다.
+          </div>
+        </li>
+      </ol>
+
+      <div class="note-box">
+        <strong>중요</strong>
+        <p class="muted">
+          이 허브와 연결된 도구는 현장 실무 편의를 위한 참고용입니다. 실제 처리 시에는 반드시 관할 교육청 지침, 에듀파인 입력 기준, 내부 결재 문안, 회계·노무 관련 근거를 직접 확인하고 처리하십시오.
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="routes">
+      <h2>상황별 시작점</h2>
+      <p class="section-sub">“그래서 지금 뭘 먼저 보면 되는데?”라는 질문에 바로 답하도록 묶었습니다.</p>
+
+      <div class="route-grid">
+        <article class="card route-card">
+          <div class="section-kicker">
+            <span class="status-pill live">공개 중</span>
+            <span class="tag">가장 먼저 보기 좋은 길잡이</span>
+          </div>
+          <h3 class="local-h3">기록물 담당이 됐다</h3>
+          <p>기록물 업무는 등록, 정리, 생산현황 통보, 이관, 평가·폐기까지 한 해의 리듬을 이해하면 훨씬 덜 막막해집니다.</p>
+          <ul class="stack-list">
+            <li>전년도 기록물 정리: 다음 해 2월 말까지</li>
+            <li>생산현황 통보: 매년 5월 31일까지</li>
+            <li>학교 자체 폐기 금지, 기록관 절차로 처리</li>
+          </ul>
+          <div class="link-list">
+            <div class="link-item">
+              <a class="btn primary" href="/guide-for-new-members/records/">기록물 업무 흐름 길잡이 보기</a>
+              <div class="btn-desc">·등록 → 분류·편철 → 정리 → 이관까지 체크형으로 정리한 상세 가이드</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card route-card">
+          <div class="section-kicker">
+            <span class="status-pill tools">도구 먼저</span>
+            <span class="tag">상세 길잡이 준비 중</span>
+          </div>
+          <h3 class="local-h3">세입·수익자부담이 급하다</h3>
+          <p>수입일계, 미납 관리, 급식비·징수요구 정리처럼 매일 또는 매월 부딪히는 흐름을 도구 묶음으로 먼저 정리합니다.</p>
+          <ul class="stack-list">
+            <li>수입·지출일계 금액 계산</li>
+            <li>미납 안내·독촉 문구 및 파일 생성</li>
+            <li>급식비·수익자부담 집계 파일 정리</li>
+          </ul>
+          <div class="link-list">
+            <div class="link-item">
+              <a class="btn pastel-blue" href="#tools">세입 관련 도구 바로가기</a>
+              <div class="btn-desc">·허브 안에서 관련 도구만 모아서 바로 이동할 수 있습니다.</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card route-card">
+          <div class="section-kicker">
+            <span class="status-pill tools">도구 먼저</span>
+            <span class="tag">상세 길잡이 준비 중</span>
+          </div>
+          <h3 class="local-h3">사회보험 업무가 막막하다</h3>
+          <p>보험료 산출, 고지내역 집계, 연체료 확인 등은 반복되는 만큼 도구를 먼저 익히면 체감 난도가 많이 내려갑니다.</p>
+          <ul class="stack-list">
+            <li>근로자 보험료 계산</li>
+            <li>고지내역 월별·연간 집계</li>
+            <li>미납 연체금 확인</li>
+          </ul>
+          <div class="link-list">
+            <div class="link-item">
+              <a class="btn pastel-blue" href="#insurance-tools">사회보험 도구 바로가기</a>
+              <div class="btn-desc">·산출기, 집계기, 연체금 계산기까지 한 곳에서 연결</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card route-card">
+          <div class="section-kicker">
+            <span class="status-pill tools">도구 먼저</span>
+            <span class="tag">상세 길잡이 준비 중</span>
+          </div>
+          <h3 class="local-h3">복무·연차를 먼저 정리해야 한다</h3>
+          <p>연차 부여일수, 미사용수당, 직종전환 후 첫해 산정 같은 주제가 반복된다면 우선 계산기부터 손에 익히는 편이 빠릅니다.</p>
+          <ul class="stack-list">
+            <li>연차 부여일수 계산</li>
+            <li>연차 미사용수당 산정</li>
+            <li>특정 직종 전환 사례 검토</li>
+          </ul>
+          <div class="link-list">
+            <div class="link-item">
+              <a class="btn pastel-blue" href="#leave-tools">복무·연차 도구 바로가기</a>
+              <div class="btn-desc">·연차 계산 흐름에 맞춰 필요한 도구를 묶었습니다.</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card route-card">
+          <div class="section-kicker">
+            <span class="status-pill tools">도구 먼저</span>
+            <span class="tag">상세 길잡이 준비 중</span>
+          </div>
+          <h3 class="local-h3">교육공무직 인건비가 급하다</h3>
+          <p>통상임금, 임금대장, 초과근무, 직종별 방학 중 인건비처럼 계산 구조가 자주 섞이는 영역은 툴 체인을 먼저 익히면 좋습니다.</p>
+          <ul class="stack-list">
+            <li>통상임금 계산</li>
+            <li>임금대장 정리</li>
+            <li>직종별 수당·인건비 산정</li>
+          </ul>
+          <div class="link-list">
+            <div class="link-item">
+              <a class="btn pastel-blue" href="#payroll-tools">인건비 도구 바로가기</a>
+              <div class="btn-desc">·급여 정리 흐름에 맞춰 관련 기능을 모았습니다.</div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="guides">
+      <h2>길잡이 목록</h2>
+      <p class="section-sub">상세 페이지가 공개된 길잡이와, 다음 순서로 추가할 길잡이를 함께 정리해두었습니다.</p>
+
+      <div class="guide-grid">
+        <article class="card guide-card" data-guide-card="live">
+          <div class="section-kicker">
+            <span class="status-pill live">공개 중</span>
+            <span class="tag">업무 흐름</span>
+            <span class="tag">체크리스트</span>
+            <span class="tag">인쇄/PDF</span>
+          </div>
+          <h3 class="local-h3">기록물 업무 흐름</h3>
+          <p class="muted">신규 교행이 가장 먼저 흐름을 잡기 좋은 1호 길잡이입니다.</p>
+          <ul class="compact-list">
+            <li>등록 → 분류·편철 → 정리 → 생산현황 통보 → 이관 → 평가·폐기</li>
+            <li>연간 타임라인과 자주 하는 실수 정리</li>
+            <li>체크리스트 로컬 저장, 인쇄/PDF 지원</li>
+          </ul>
+          <div class="link-list">
+            <div class="link-item">
+              <a class="btn primary" href="/guide-for-new-members/records/">상세 페이지 열기</a>
+              <div class="btn-desc">·기록물 업무를 “오늘 무엇부터 해야 하는지” 단위로 쪼개서 정리한 가이드</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card guide-card" data-guide-card="planned">
+          <div class="section-kicker">
+            <span class="status-pill plan">준비 중</span>
+            <span class="tag">세입</span>
+            <span class="tag">수익자부담</span>
+          </div>
+          <h3 class="local-h3">세입 업무 길잡이</h3>
+          <p>수입일계, 징수, 미납 관리, 급식비·우유·늘봄 징수요구 정리 흐름을 “월별·상황별”로 묶을 예정입니다.</p>
+          <details class="shot-details">
+            <summary class="shot-summary">먼저 써볼 도구 보기</summary>
+            <div class="link-list">
+              <div class="link-item">
+                <a class="btn pastel-blue" href="/income-ledger/">수입·지출일계 금액 계산기</a>
+                <div class="btn-desc">·통장 기준 수입·지출일계 금액 정리에 사용</div>
+              </div>
+              <div class="link-item">
+                <a class="btn pastel-blue" href="/bad-parents/">미수납자 독촉 문자·안내장 생성기</a>
+                <div class="btn-desc">·미납 안내 문구와 파일 정리 업무 경감</div>
+              </div>
+              <div class="link-item">
+                <a class="btn pastel-blue" href="/school-staff-meal-fee/">교직원 급식비 집계 및 업로드 파일 생성기</a>
+                <div class="btn-desc">·교직원 급식비 정산 파일 정리</div>
+              </div>
+            </div>
+          </details>
+        </article>
+
+        <article class="card guide-card" data-guide-card="planned">
+          <div class="section-kicker">
+            <span class="status-pill plan">준비 중</span>
+            <span class="tag">사회보험</span>
+            <span class="tag">반복 업무</span>
+          </div>
+          <h3 class="local-h3">사회보험 업무 길잡이</h3>
+          <p>월 보수액 확인부터 보험료 산출, 고지내역 집계, 미납·연체 대응까지 이어지는 반복 흐름을 정리할 예정입니다.</p>
+          <details class="shot-details">
+            <summary class="shot-summary">먼저 써볼 도구 보기</summary>
+            <div class="link-list">
+              <div class="link-item">
+                <a class="btn pastel-blue" href="/social-insurance-calculator/">사회보험료 계산기</a>
+                <div class="btn-desc">·근로자 기준 보험료 산출</div>
+              </div>
+              <div class="link-item">
+                <a class="btn pastel-blue" href="/social-insurance-cover/">사회보험료 고지내역 집계기</a>
+                <div class="btn-desc">·월별 고지내역 파일 정리</div>
+              </div>
+              <div class="link-item">
+                <a class="btn pastel-blue" href="/social-insurance-cover-max/">사회보험료 1년치 대용량 집계기</a>
+                <div class="btn-desc">·연간 대용량 집계가 필요할 때 사용</div>
+              </div>
+            </div>
+          </details>
+        </article>
+
+        <article class="card guide-card" data-guide-card="planned">
+          <div class="section-kicker">
+            <span class="status-pill plan">준비 중</span>
+            <span class="tag">복무</span>
+            <span class="tag">연차</span>
+          </div>
+          <h3 class="local-h3">복무·연차 길잡이</h3>
+          <p>연차 부여 기준, 직종별 예외, 미사용수당 산정, 신규·전환 사례 확인 흐름을 한 장으로 정리할 예정입니다.</p>
+          <details class="shot-details">
+            <summary class="shot-summary">먼저 써볼 도구 보기</summary>
+            <div class="link-list">
+              <div class="link-item">
+                <a class="btn pastel-blue" href="/annualleave-give-2026-mini/">연차 유급휴가일수 미니 계산기</a>
+                <div class="btn-desc">·빠르게 부여일수만 확인할 때</div>
+              </div>
+              <div class="link-item">
+                <a class="btn pastel-blue" href="/annualleave-unused-mini/">연차 사용일수 및 수당 미니 계산기</a>
+                <div class="btn-desc">·미사용수당 간단 산정</div>
+              </div>
+              <div class="link-item">
+                <a class="btn pastel-blue" href="/annualleave-give-only-after-school-carer/">늘봄학교전담사 직종전환 첫해 연차 계산기</a>
+                <div class="btn-desc">·특정 전환 사례 검토용</div>
+              </div>
+            </div>
+          </details>
+        </article>
+
+        <article class="card guide-card" data-guide-card="planned">
+          <div class="section-kicker">
+            <span class="status-pill plan">준비 중</span>
+            <span class="tag">교육공무직</span>
+            <span class="tag">인건비</span>
+          </div>
+          <h3 class="local-h3">교육공무직 인건비 길잡이</h3>
+          <p>통상임금, 임금대장, 초과근무, 직종별 방학 중 인건비 정리 등 서로 엮이는 계산 흐름을 묶을 예정입니다.</p>
+          <details class="shot-details">
+            <summary class="shot-summary">먼저 써볼 도구 보기</summary>
+            <div class="link-list">
+              <div class="link-item">
+                <a class="btn pastel-blue" href="/ordinary-wage/">교육공무직 통상임금 계산기</a>
+                <div class="btn-desc">·수당·연차·각종 산정의 바탕이 되는 통상임금 계산</div>
+              </div>
+              <div class="link-item">
+                <a class="btn pastel-blue" href="/wage-ledger-2025/">학교장 임용권자 임금대장</a>
+                <div class="btn-desc">·임금대장 정리 및 관리</div>
+              </div>
+              <div class="link-item">
+                <a class="btn pastel-blue" href="/overtime-pay-employee/">교육공무직 초과근무수당 계산기</a>
+                <div class="btn-desc">·초과근무수당 산정 검토</div>
+              </div>
+            </div>
+          </details>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="tools">
+      <h2>관련 도구 빠른 연결</h2>
+      <p class="section-sub">상세 길잡이가 아직 없는 분야도, 실무에 바로 쓸 수 있는 도구는 먼저 연결해두었습니다.</p>
+
+      <div class="tool-grid">
+        <article class="card tool-card">
+          <div class="section-kicker" id="income-tools">
+            <span class="status-pill tools">세입</span>
+            <span class="tag">수익자부담</span>
+          </div>
+          <h3 class="local-h3">세입·징수 정리 도구</h3>
+          <div class="tool-tags">
+            <span class="tag">수입일계</span>
+            <span class="tag">미납 안내</span>
+            <span class="tag">급식비 집계</span>
+          </div>
+          <div class="link-list">
+            <div class="link-item">
+              <a class="btn pastel-blue" href="/income-ledger/">수입·지출일계 금액 계산기</a>
+              <div class="btn-desc">·농협 통장 기준 수입·지출일계 정리에 활용</div>
+            </div>
+            <div class="link-item">
+              <a class="btn pastel-blue" href="/bad-parents/">미수납자 독촉 문자·안내장 생성기</a>
+              <div class="btn-desc">·세입 미납 안내 업무를 빠르게 정리</div>
+            </div>
+            <div class="link-item">
+              <a class="btn pastel-blue" href="/school-staff-meal-fee/">교직원 급식비 집계 및 업로드 파일 생성기</a>
+              <div class="btn-desc">·교직원 급식비 집계·업로드 파일 생성</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card tool-card">
+          <div class="section-kicker" id="insurance-tools">
+            <span class="status-pill tools">사회보험</span>
+            <span class="tag">월별·연간 집계</span>
+          </div>
+          <h3 class="local-h3">사회보험 처리 도구</h3>
+          <div class="tool-tags">
+            <span class="tag">보험료 산출</span>
+            <span class="tag">고지 집계</span>
+            <span class="tag">연체금 확인</span>
+          </div>
+          <div class="link-list">
+            <div class="link-item">
+              <a class="btn pastel-blue" href="/social-insurance-calculator/">사회보험료 계산기</a>
+              <div class="btn-desc">·근로자 기준 보험료를 빠르게 계산</div>
+            </div>
+            <div class="link-item">
+              <a class="btn pastel-blue" href="/social-insurance-cover/">사회보험료 고지내역 집계기</a>
+              <div class="btn-desc">·고지내역 엑셀을 월 단위로 집계</div>
+            </div>
+            <div class="link-item">
+              <a class="btn pastel-blue" href="/social-insurance-cover-max/">사회보험료 1년치 대용량 집계기</a>
+              <div class="btn-desc">·연간 대용량 파일 정리에 적합</div>
+            </div>
+            <div class="link-item">
+              <a class="btn pastel-blue" href="/social-insurance-late-fee/">4대 사회보험료 연체금 계산기</a>
+              <div class="btn-desc">·미납 연체금 확인 및 대응용</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card tool-card">
+          <div class="section-kicker" id="leave-tools">
+            <span class="status-pill tools">복무·연차</span>
+            <span class="tag">부여·정산</span>
+          </div>
+          <h3 class="local-h3">복무·연차 계산 도구</h3>
+          <div class="tool-tags">
+            <span class="tag">부여일수</span>
+            <span class="tag">미사용수당</span>
+            <span class="tag">직종전환</span>
+          </div>
+          <div class="link-list">
+            <div class="link-item">
+              <a class="btn pastel-blue" href="/annualleave-give-2026-mini/">연차 유급휴가일수 미니 계산기</a>
+              <div class="btn-desc">·간단한 연차 부여일수 확인</div>
+            </div>
+            <div class="link-item">
+              <a class="btn pastel-blue" href="/annualleave-unused-mini/">연차 사용일수 및 수당 미니 계산기</a>
+              <div class="btn-desc">·미사용수당 및 사용일수 빠른 점검</div>
+            </div>
+            <div class="link-item">
+              <a class="btn pastel-blue" href="/annualleave-give-only-after-school-carer/">늘봄학교전담사 직종전환 첫해 연차 계산기</a>
+              <div class="btn-desc">·직종 전환 첫해 산정 특례 확인</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card tool-card">
+          <div class="section-kicker" id="payroll-tools">
+            <span class="status-pill tools">인건비</span>
+            <span class="tag">교육공무직</span>
+          </div>
+          <h3 class="local-h3">교육공무직 인건비 도구</h3>
+          <div class="tool-tags">
+            <span class="tag">통상임금</span>
+            <span class="tag">임금대장</span>
+            <span class="tag">초과근무</span>
+          </div>
+          <div class="link-list">
+            <div class="link-item">
+              <a class="btn pastel-blue" href="/ordinary-wage/">교육공무직 통상임금 계산기</a>
+              <div class="btn-desc">·각종 산정의 바탕이 되는 통상임금 확인</div>
+            </div>
+            <div class="link-item">
+              <a class="btn pastel-blue" href="/wage-ledger-2025/">학교장 임용권자 임금대장</a>
+              <div class="btn-desc">·임금대장 정리 및 관리용</div>
+            </div>
+            <div class="link-item">
+              <a class="btn pastel-blue" href="/overtime-pay-employee/">교육공무직 초과근무수당 계산기</a>
+              <div class="btn-desc">·초과근무수당 산정 검토</div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="principles">
+      <h2>이 허브가 지향하는 업무 원칙</h2>
+      <p class="section-sub">신규·저연차가 특히 자주 흔들리는 지점을 기준으로 정리했습니다.</p>
+
+      <div class="principle-grid">
+        <article class="card principle-card">
+          <h3 class="local-h3 local-tight">계산보다 흐름 먼저</h3>
+          <p class="muted">값을 맞추는 것보다, 어떤 순서와 근거로 처리하는지 이해하는 편이 재작업을 줄입니다.</p>
+        </article>
+
+        <article class="card principle-card">
+          <h3 class="local-h3 local-tight">감으로 처리하지 않기</h3>
+          <p class="muted">마감일, 제출처, 내부결재, 서식, 근거 문구처럼 나중에 확인 가능한 흔적을 남겨야 합니다.</p>
+        </article>
+
+        <article class="card principle-card">
+          <h3 class="local-h3 local-tight">도구는 업무를 대신하지 않음</h3>
+          <p class="muted">도구는 정리와 산출을 도와주는 보조수단이고, 최종 판단과 실제 업무 처리는 사용자 책임입니다.</p>
+        </article>
+
+        <article class="card principle-card">
+          <h3 class="local-h3 local-tight">후배가 다음에 덜 헤매게 만들기</h3>
+          <p class="muted">오늘 내가 정리한 흐름과 체크 흔적이, 다음 담당자에게는 가장 현실적인 매뉴얼이 됩니다.</p>
+        </article>
+      </div>
+
+      <div class="note-box">
+        <strong>추천 습관 4가지</strong>
+        <ul class="compact-list">
+          <li>업무별로 “이번 달/이번 학년도 핵심 마감”을 한 줄로 적어두기</li>
+          <li>처리 후에는 근거 공문·지침·제출본 경로를 같이 남기기</li>
+          <li>누가 이어받아도 이해할 수 있게 파일명·폴더 구조를 일정하게 유지하기</li>
+          <li>반복 계산은 도구로 처리하되, 결과를 한 번은 근거와 대조하기</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" id="roadmap">
+      <h2>추가 예정 길잡이</h2>
+      <p class="section-sub">처음 맡으면 특히 막히기 쉬운 분야부터 순차적으로 채워갈 계획입니다.</p>
+
+      <div class="roadmap-grid">
+        <article class="card roadmap-card">
+          <h3 class="local-h3 local-tight">세입 업무 길잡이</h3>
+          <p class="muted">수입일계, 징수결의, 미납 관리, 급식비·우유·늘봄 징수요구 흐름 중심</p>
+        </article>
+
+        <article class="card roadmap-card">
+          <h3 class="local-h3 local-tight">사회보험 업무 길잡이</h3>
+          <p class="muted">보험료 산정, 고지내역 집계, 월별 반복 루틴, 미납 대응 중심</p>
+        </article>
+
+        <article class="card roadmap-card">
+          <h3 class="local-h3 local-tight">복무·연차 길잡이</h3>
+          <p class="muted">연차 부여·사용·정산과 직종별 예외 사례 중심</p>
+        </article>
+
+        <article class="card roadmap-card">
+          <h3 class="local-h3 local-tight">교육공무직 인건비 길잡이</h3>
+          <p class="muted">통상임금, 임금대장, 초과근무, 직종별 방학 중 인건비 흐름 중심</p>
+        </article>
+      </div>
+
+      <div class="empty-state">
+        <strong>이 허브의 기준</strong>
+        <p class="muted">
+          설명을 많이 담는 것보다, <span class="accent">처음 맡은 사람이 지금 무엇부터 처리해야 하는지</span>가 바로 보이도록 만드는 데 집중합니다.
+          그래서 각 길잡이는 “업무 백과사전”이 아니라, <span class="accent">실무 출발점</span>이 되는 것을 목표로 합니다.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const live = document.querySelectorAll('[data-guide-card="live"]').length;
+      const planned = document.querySelectorAll('[data-guide-card="planned"]').length;
+
+      const liveEl = document.getElementById('liveGuideCount');
+      const plannedEl = document.getElementById('plannedGuideCount');
+
+      if (liveEl) liveEl.textContent = `${live}개`;
+      if (plannedEl) plannedEl.textContent = `${planned}개`;
+    })();
+  </script>
+
+  <script src="/static/footer.js"></script>
+  <script src="/static/global-loader.js?v=1"></script>
+</div>
+</body>
+</html>
