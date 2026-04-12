@@ -89,7 +89,7 @@
     </div>
 
     <div class="footer-link-grid" aria-label="상세 안내 링크">
-      <div class="footer-link-group">
+      <div class="footer-link-group footer-link-group--panel">
         <strong class="footer-link-group-title">상세 안내</strong>
         <div class="footer-links">
           <a href="/notice/">이용안내·공지</a>
@@ -99,7 +99,7 @@
         </div>
       </div>
 
-      <div class="footer-link-group">
+      <div class="footer-link-group footer-link-group--panel">
         <strong class="footer-link-group-title">운영 메모</strong>
         <p class="footer-meta">
           비공식 참고용 도구 · 강원 기준 중심 · 업로드한 파일은 브라우저에서만 처리되며 저장되지 않습니다.
