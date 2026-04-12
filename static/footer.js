@@ -1,5 +1,6 @@
 // /static/footer.js
-// 목적: 페이지에 기존 footer/home 버튼이 있어도 "강제 덮어쓰기"로 표준 UI를 통일
+// 2026.4.13.(월) 오전 5:57 홈화면 개편
+// - 페이지에 기존 footer/home 버튼이 있어도 "강제 덮어쓰기"로 표준 UI를 통일
 // - 기존 footer.site-footer 제거
 // - 기존 .home-link-wrap 제거
 // - (메인 페이지 제외) home 버튼을 footer 바로 위에 삽입
@@ -19,7 +20,7 @@
   // 0) 테마(레트로/깔끔) — 로컬 저장
   // -----------------------------
   const THEME_KEY = "edu_theme";
-  const DEFAULT_THEME = "classic"; // 기본값: 깔끔
+  const DEFAULT_THEME = "retro"; // 기본값: 레트로
 
   function normalizeTheme(t) {
     return t === "classic" || t === "retro" ? t : DEFAULT_THEME;
