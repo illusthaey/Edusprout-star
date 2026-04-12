@@ -70,35 +70,46 @@
                 <section aria-labelledby="homeSearchTitle" class="section home-search" id="home-search">
                     <div class="home-section-head">
                         <div>
-                            <p class="home-section-kicker">빠른 검색</p>
+                            <p class="home-section-kicker">검색</p>
                             <h2 id="homeSearchTitle">지금 필요한 도구를 바로 찾기</h2>
-</div>
-<p class="muted">기능명, 설명, 카테고리, 태그, 입력 형식, 출력 결과를 기준으로 여러 단어 AND 검색을 지원합니다. 검색어를 입력한 뒤 검색하기 버튼을 누르면 결과가 반영됩니다.</p>
-</div>
-<form class="home-search-box" id="homeSearchForm" role="search">
-<label class="sr-only" for="homeSearchInput">도구 검색</label>
-<input autocomplete="off" id="homeSearchInput" name="q" placeholder="예) 연차 나이스 / 사회보험 엑셀 / 원본대조필 pdf" type="search"/>
-<div class="home-search-actions">
-<button class="btn primary" id="homeSearchSubmit" type="submit">검색하기</button>
-<button class="btn ghost" hidden="" id="homeSearchReset" type="button">초기화</button>
-</div>
-</form>
-<p class="home-search-help">검색어를 입력하고 검색하기를 누르면 같은 섹션 안에서 관련 기능 카드가 바로 나타납니다.</p>
-<div aria-label="추천 검색어" class="chip-row home-search-chip-row">
-<button class="chip home-search-chip" data-query="연차" type="button">연차</button><button class="chip home-search-chip" data-query="초과근무" type="button">초과근무</button><button class="chip home-search-chip" data-query="통상임금" type="button">통상임금</button><button class="chip home-search-chip" data-query="사회보험" type="button">사회보험</button><button class="chip home-search-chip" data-query="방과후강사" type="button">방과후강사</button><button class="chip home-search-chip" data-query="수입일계" type="button">수입일계</button><button class="chip home-search-chip" data-query="미수납" type="button">미수납</button>
-</div>
-<p aria-live="polite" class="home-search-status" id="homeSearchStatus" role="status"></p>
-<div class="home-search-output" hidden="" id="homeSearchOutput">
-<section aria-labelledby="homeSearchResultsTitle" class="card home-search-results" hidden="" id="homeSearchResults">
-<div class="home-search-results-head">
-<div>
-<p class="home-section-kicker">검색 결과</p>
-<h3 class="home-card-title" id="homeSearchResultsTitle">해당하는 기능 카드</h3>
-</div>
-<p class="muted">검색한 기능 카드를 같은 검색 섹션 안에서 바로 확인할 수 있습니다.</p>
-</div>
-<div class="home-search-result-grid" id="homeSearchResultGrid"></div>
-</section>
+                        </div>
+                        <p class="muted">여러 단어 입력 시 모두 포함하는 검색 결과 지원. 입력 후에 "검색하기" 버튼을 눌러주세요.</p>
+                    </div>
+                    
+                    <form class="home-search-box" id="homeSearchForm" role="search">
+                        <label class="sr-only" for="homeSearchInput">도구 검색</label>
+                        <input autocomplete="off" id="homeSearchInput" name="q" placeholder="예) 공무직 연차 /사회보험료 집계 /원본대조필 날인 등" type="search"/>
+                        <div class="home-search-actions">
+                            
+                            <button class="btn primary" id="homeSearchSubmit" type="submit">검색하기</button>
+                            <button class="btn ghost" hidden="" id="homeSearchReset" type="button">초기화</button>
+                        </div>
+                    </form>
+                    
+                    <div aria-label="자주 검색하는 단어" class="chip-row home-search-chip-row">
+                        <button class="chip home-search-chip" data-query="연차" type="button">연차</button>
+                        <button class="chip home-search-chip" data-query="초과근무" type="button">초과근무</button>
+                        <button class="chip home-search-chip" data-query="통상임금" type="button">통상임금</button>
+                        <button class="chip home-search-chip" data-query="사회보험" type="button">사회보험</button>
+                        <button class="chip home-search-chip" data-query="방과후강사" type="button">방과후강사</button>
+                        <button class="chip home-search-chip" data-query="수입일계" type="button">수입일계</button>
+                        <button class="chip home-search-chip" data-query="미수납" type="button">미수납</button>
+                    </div>
+                    
+                    <p aria-live="polite" class="home-search-status" id="homeSearchStatus" role="status"></p>
+                    <div class="home-search-output" hidden="" id="homeSearchOutput">
+                        
+                        <section aria-labelledby="homeSearchResultsTitle" class="card home-search-results" hidden="" id="homeSearchResults">
+                            <div class="home-search-results-head">
+                                <div>
+                                    <p class="home-section-kicker">검색 결과</p>
+                                    <h3 class="home-card-title" id="homeSearchResultsTitle">검색 결과에 해당하는 기능</h3>
+                                </div>
+                                </div>
+                            <div class="home-search-result-grid" id="homeSearchResultGrid"></div>
+                        </section>
+
+                        
 <div class="card home-empty-state" hidden="" id="homeSearchEmpty">
 <h3 class="local-h3">검색 결과가 없습니다.</h3>
 <p>단어를 조금 줄이거나, 다른 조합으로 다시 검색해 보세요. 예: 연차 / 사회보험 엑셀 / 통상임금</p>
