@@ -89,6 +89,39 @@
     } catch (_) {}
   }
 
+
+  function shouldOpenLinkInNewTab(anchor) {
+    if (!anchor) return false;
+
+    const href = String(anchor.getAttribute("href") || "").trim();
+    if (!href || href === "#" || href.startsWith("#")) return false;
+    if (/^(javascript:|tel:|sms:)/i.test(href)) return false;
+    return true;
+  }
+
+  function decorateHomeLinks(root) {
+    const scope = root || document;
+    const links = Array.from(scope.querySelectorAll('a[href]'));
+
+    links.forEach((link) => {
+      if (!shouldOpenLinkInNewTab(link)) {
+        return;
+      }
+
+      link.setAttribute("target", "_blank");
+
+      const rel = new Set(
+        String(link.getAttribute("rel") || "")
+          .split(/\s+/)
+          .map((value) => value.trim())
+          .filter(Boolean)
+      );
+
+      rel.add("noopener");
+      link.setAttribute("rel", Array.from(rel).join(" "));
+    });
+  }
+
   function isInteractiveTarget(target) {
     return !!(
       target &&
@@ -119,11 +152,16 @@
         primaryLink
       ).textContent || "";
 
+      const opensNewTab = shouldOpenLinkInNewTab(primaryLink);
+
       card.classList.add("is-card-link");
       card.dataset.cardHref = href;
       card.setAttribute("role", "link");
       card.setAttribute("tabindex", "0");
-      card.setAttribute("aria-label", titleText.trim() + " 열기");
+      card.setAttribute(
+        "aria-label",
+        titleText.trim() + (opensNewTab ? " 새 탭에서 열기" : " 열기")
+      );
 
       if (card.__cardLinkBound === true) return;
       card.__cardLinkBound = true;
@@ -131,19 +169,13 @@
       card.addEventListener("click", (event) => {
         if (event.defaultPrevented) return;
         if (isInteractiveTarget(event.target)) return;
-
-        const targetHref = card.dataset.cardHref || href;
-        if (!targetHref) return;
-        window.location.href = targetHref;
+        primaryLink.click();
       });
 
       card.addEventListener("keydown", (event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
         event.preventDefault();
-
-        const targetHref = card.dataset.cardHref || href;
-        if (!targetHref) return;
-        window.location.href = targetHref;
+        primaryLink.click();
       });
     });
   }
@@ -443,6 +475,7 @@
       });
 
       resultGrid.appendChild(fragment);
+      decorateHomeLinks(resultGrid);
       makeIndexCardsClickable(resultGrid);
       resultPanel.hidden = false;
     }
@@ -604,6 +637,7 @@
   function init() {
     if (!document.body.classList.contains("home-page")) return;
     setDownloadLinks();
+    decorateHomeLinks(document);
     makeIndexCardsClickable(document);
     bindSearch();
     openSectionForHash();
