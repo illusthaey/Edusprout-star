@@ -1,4 +1,4 @@
-/* 2026.3.5.(목) 오전 7:40 버튼 색상 팔레트 추가*/
+/* 2026.4.13.(월) 오전 5:57 홈화면 개편 */
 
 * {
   box-sizing: border-box;
@@ -3378,4 +3378,156 @@ body.home-page.alien-side-bg{
 
 .home-page .home-index-open{
   display:none !important;
+}
+
+/* =========================================================
+   홈 패키지 단계 버튼 + 레트로 기본 화면 보강 (2026-04)
+   ========================================================= */
+
+.home-page .home-flow-list li{
+  padding:0;
+  border:0;
+  background:transparent;
+}
+
+.home-page .home-flow-list li::before{
+  content:none;
+}
+
+.home-page .home-flow-link{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid var(--home-ui-border);
+  background:#fffdf5;
+  color:var(--home-ui-text);
+  font-weight:800;
+  line-height:1.4;
+  box-shadow:0 6px 14px rgba(0, 0, 0, 0.04);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease,
+    background-color 0.22s ease,
+    color 0.22s ease;
+}
+
+.home-page .home-flow-link__num{
+  flex:0 0 28px;
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#f3db86;
+  color:var(--home-ui-text);
+  font-size:0.88rem;
+  font-weight:800;
+}
+
+.home-page .home-flow-link__text{
+  flex:1;
+  min-width:0;
+}
+
+@media (hover:hover) and (pointer:fine){
+  .home-page .home-flow-link:hover{
+    transform:translateY(-2px);
+    background:linear-gradient(180deg, var(--home-ui-card-bg-start) 0%, var(--home-ui-card-hover-end) 100%);
+    border-color:var(--home-ui-border-strong);
+    box-shadow:0 12px 22px var(--home-ui-shadow);
+  }
+}
+
+.home-page .home-flow-link:focus-visible{
+  outline:none;
+  border-color:var(--home-ui-border-strong);
+  box-shadow:0 0 0 4px rgba(217, 196, 122, 0.18), 0 12px 22px var(--home-ui-shadow);
+}
+
+html[data-theme="retro"] body.home-page.alien-side-bg{
+  --alien-panel-bg: rgba(255, 249, 232, 0.90);
+  --alien-panel-bg-solid: rgba(255, 249, 232, 0.95);
+  --alien-line: rgba(22, 22, 22, 0.20);
+  --alien-shadow-1: rgba(22, 22, 22, 0.16);
+  --alien-shadow-2: rgba(22, 22, 22, 0.08);
+  background:#fff5d8;
+}
+
+html[data-theme="retro"] .home-page{
+  --home-ui-page-bg:#fff5d8;
+  --home-ui-card-bg-start:#fffdf1;
+  --home-ui-card-bg-end:#fff8d6;
+  --home-ui-card-hover-end:#ffefb4;
+  --home-ui-border:#161616;
+  --home-ui-border-strong:#161616;
+  --home-ui-text:#121212;
+  --home-ui-muted:#48505c;
+  --home-ui-accent:#c03a72;
+  --home-ui-shadow:rgba(22, 22, 22, 0.24);
+  --home-ui-shadow-strong:rgba(22, 22, 22, 0.35);
+  --home-ui-hero-bg:#fffdf1;
+  --home-ui-header-bg:#fffdf1;
+  --home-ui-header-hover-bg:#fff7d7;
+  --home-ui-header-line:rgba(22, 22, 22, 0.16);
+}
+
+html[data-theme="retro"] .home-page .home-hero,
+html[data-theme="retro"] .home-page .home-notice-details,
+html[data-theme="retro"] .home-page .home-search-results,
+html[data-theme="retro"] .home-page .home-accordion,
+html[data-theme="retro"] .home-page .home-feature-card,
+html[data-theme="retro"] .home-page .home-package-card,
+html[data-theme="retro"] .home-page .home-guide-card,
+html[data-theme="retro"] .home-page .home-update-card,
+html[data-theme="retro"] .home-page .home-support-card,
+html[data-theme="retro"] .home-page .home-index-item,
+html[data-theme="retro"] .home-page .site-footer .footer-link-group,
+html[data-theme="retro"] .home-page .home-search-output .home-empty-state{
+  border-width:2px;
+  box-shadow:6px 6px 0 rgba(22, 22, 22, 0.45);
+}
+
+html[data-theme="retro"] .home-page .home-accordion > summary{
+  border-bottom:2px solid rgba(22, 22, 22, 0.16);
+}
+
+html[data-theme="retro"] .home-page .home-flow-link{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", "Apple SD Gothic Neo", "Noto Sans KR", "맑은 고딕", monospace;
+  background:var(--retro-surface-2);
+  border:2px solid var(--retro-border);
+  border-radius:10px;
+  box-shadow:4px 4px 0 rgba(22, 22, 22, 0.45);
+}
+
+html[data-theme="retro"] .home-page .home-flow-link__num{
+  background:#111;
+  color:#fff;
+  border:2px solid var(--retro-border);
+  box-shadow:2px 2px 0 rgba(22, 22, 22, 0.22);
+}
+
+@media (hover:hover) and (pointer:fine){
+  html[data-theme="retro"] .home-page .home-flow-link:hover{
+    transform:translate(-1px, -1px);
+    background:#fff7d4;
+    box-shadow:5px 5px 0 rgba(22, 22, 22, 0.50);
+  }
+
+  html[data-theme="retro"] .home-page .home-feature-card:hover,
+  html[data-theme="retro"] .home-page .home-package-card:hover,
+  html[data-theme="retro"] .home-page .home-index-item:hover,
+  html[data-theme="retro"] .home-page .home-search-result-grid > .card:hover{
+    transform:translate(-2px, -2px);
+    box-shadow:8px 8px 0 rgba(22, 22, 22, 0.50);
+  }
+}
+
+html[data-theme="retro"] .home-page .home-index-item.is-card-link:focus-visible{
+  box-shadow:0 0 0 4px rgba(255, 93, 143, 0.18), 8px 8px 0 rgba(22, 22, 22, 0.50);
 }
