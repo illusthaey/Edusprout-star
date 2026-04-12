@@ -90,13 +90,16 @@
   }
 
 
+  function shouldHrefOpenInNewTab(href) {
+    const value = String(href || "").trim();
+    if (!value || value === "#" || value.startsWith("#")) return false;
+    if (/^(javascript:|tel:|sms:)/i.test(value)) return false;
+    return true;
+  }
+
   function shouldOpenLinkInNewTab(anchor) {
     if (!anchor) return false;
-
-    const href = String(anchor.getAttribute("href") || "").trim();
-    if (!href || href === "#" || href.startsWith("#")) return false;
-    if (/^(javascript:|tel:|sms:)/i.test(href)) return false;
-    return true;
+    return shouldHrefOpenInNewTab(anchor.getAttribute("href") || "");
   }
 
   function decorateHomeLinks(root) {
@@ -128,6 +131,89 @@
       target.closest("a, button, input, select, textarea, summary, details, label")
     );
   }
+
+  function activateCardHref(href, openInNewTab) {
+    const targetHref = String(href || "").trim();
+    if (!targetHref) return;
+
+    if (openInNewTab) {
+      window.open(targetHref, "_blank", "noopener");
+      return;
+    }
+
+    window.location.href = targetHref;
+  }
+
+  function resolveCardPrimaryHref(card) {
+    if (!card) return "";
+
+    const explicitHref = String(card.dataset.cardHref || "").trim();
+    if (explicitHref) return explicitHref;
+
+    const primaryLink = card.querySelector(
+      ".home-card-cta[href], .home-flow-link[href], .home-inline-link[href], .home-index-item-title a[href], a[href]"
+    );
+
+    return primaryLink ? primaryLink.getAttribute("href") || "" : "";
+  }
+
+  function makeCardLinksClickable(root) {
+    const scope = root || document;
+    const cards = Array.from(
+      scope.querySelectorAll(
+        ".home-feature-card, .home-search-result-card:not(.home-index-item)"
+      )
+    );
+
+    cards.forEach((card) => {
+      const cta = card.querySelector(".home-card-cta[href]");
+      if (cta && !card.dataset.cardHref) {
+        card.dataset.cardHref = cta.getAttribute("href") || "";
+      }
+
+      const href = resolveCardPrimaryHref(card);
+      if (!href) return;
+
+      if (card.classList.contains("home-search-result-card")) {
+        card.querySelectorAll(".home-card-cta").forEach((buttonLike) => {
+          buttonLike.remove();
+        });
+      }
+
+      const titleText = (
+        card.querySelector(".home-card-title") ||
+        card.querySelector(".home-index-item-title") ||
+        card.querySelector("a[href]")
+      )?.textContent || "";
+
+      const openInNewTab = shouldHrefOpenInNewTab(href);
+
+      card.classList.add("is-card-link");
+      card.dataset.cardHref = href;
+      card.setAttribute("role", "link");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute(
+        "aria-label",
+        titleText.trim() + (openInNewTab ? " 새 탭에서 열기" : " 열기")
+      );
+
+      if (card.__genericCardLinkBound === true) return;
+      card.__genericCardLinkBound = true;
+
+      card.addEventListener("click", (event) => {
+        if (event.defaultPrevented) return;
+        if (isInteractiveTarget(event.target)) return;
+        activateCardHref(href, openInNewTab);
+      });
+
+      card.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        activateCardHref(href, openInNewTab);
+      });
+    });
+  }
+
 
   function makeIndexCardsClickable(root) {
     const scope = root || document;
@@ -282,8 +368,11 @@
     }
 
     function getPrimaryHref(item) {
+      const explicitHref = String(item.getAttribute("data-card-href") || "").trim();
+      if (explicitHref) return explicitHref;
+
       const link = item.querySelector(
-        ".home-card-cta[href], .home-index-open[href], .home-index-item-title a[href]"
+        ".home-card-cta[href], .home-flow-link[href], .home-inline-link[href], .home-index-open[href], .home-index-item-title a[href], a[href]"
       );
       return link ? link.getAttribute("href") || "" : "";
     }
@@ -476,6 +565,7 @@
 
       resultGrid.appendChild(fragment);
       decorateHomeLinks(resultGrid);
+      makeCardLinksClickable(resultGrid);
       makeIndexCardsClickable(resultGrid);
       resultPanel.hidden = false;
     }
@@ -638,6 +728,7 @@
     if (!document.body.classList.contains("home-page")) return;
     setDownloadLinks();
     decorateHomeLinks(document);
+    makeCardLinksClickable(document);
     makeIndexCardsClickable(document);
     bindSearch();
     openSectionForHash();
