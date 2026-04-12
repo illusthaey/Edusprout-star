@@ -82,12 +82,34 @@
   const FOOTER_HTML = `
 <footer class="site-footer">
   <div class="shell">
+    <div class="footer-brand">
+      <span class="footer-brand-mark">업천고와 함께 칼퇴를!</span>
+      <span class="footer-brand-sub">업무천재 고주무관이 만드는 교육행정 업무 완료형 허브</span>
+    </div>
+
+    <div class="footer-link-grid" aria-label="상세 안내 링크">
+      <div class="footer-link-group">
+        <strong class="footer-link-group-title">상세 안내</strong>
+        <div class="footer-links">
+          <a href="/notice/">이용안내·공지</a>
+          <a href="/faq/">자주 묻는 질문</a>
+          <a href="/contact/">문의 / 오류 제보</a>
+          <a href="/guide-for-new-members/">신규·저연차 가이드</a>
+        </div>
+      </div>
+
+      <div class="footer-link-group">
+        <strong class="footer-link-group-title">운영 메모</strong>
+        <p class="footer-meta">
+          비공식 참고용 도구 · 강원 기준 중심 · 업로드한 파일은 브라우저에서만 처리되며 저장되지 않습니다.
+          최종 확인과 제출 책임은 사용자 본인에게 있습니다.
+        </p>
+        <p class="footer-meta">연락: edusproutcomics@naver.com</p>
+      </div>
+    </div>
+
     <div class="footer-main">
-      © <span id="footer-year"></span>.
-      업무천재 고주무관. All rights reserved. · Contact: edusproutcomics@naver.com · 개인 제작·운영 페이지.<br/>
-      <br/>
-      ※본 사이트는 현장 업무 편의를 위해 개인적으로 제작한 참고용 도구이며, 공식 업무 지침이나 법적 해석을 대체하지 않습니다.
-      또한 서버와 데이터베이스 없이 운영하기 때문에 업로드한 파일 내용이 저장되지 않습니다. (기술적으로 저장이 불가능) <br/>
+      © <span id="footer-year"></span>. 업무천재 고주무관. All rights reserved.
     </div>
 
     <div class="footer-tools" aria-label="화면 설정">
