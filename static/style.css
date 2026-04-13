@@ -3583,3 +3583,35 @@ html[data-theme="retro"] .home-page .home-index-item.is-card-link:focus-visible{
 .home-page .home-notice-link.btn.black:hover{
   box-shadow:0 10px 20px rgba(17, 24, 39, 0.16);
 }
+
+/* =========================================================
+   홈 카드 전체 클릭 범위 확장 (2026-04-13)
+   ========================================================= */
+
+.home-page .home-feature-card.is-card-link,
+.home-page .home-package-card.is-card-link,
+.home-page .home-index-item.is-card-link,
+.home-page .home-guide-card.is-card-link,
+.home-page .home-search-result-card.is-card-link{
+  position:relative;
+  cursor:pointer;
+}
+
+.home-page .home-feature-card.is-card-link:focus-visible,
+.home-page .home-package-card.is-card-link:focus-visible,
+.home-page .home-index-item.is-card-link:focus-visible,
+.home-page .home-guide-card.is-card-link:focus-visible,
+.home-page .home-search-result-card.is-card-link:focus-visible{
+  outline:none;
+  border-color:var(--home-ui-border-strong);
+  box-shadow:0 0 0 4px rgba(217, 196, 122, 0.20), 0 18px 34px var(--home-ui-shadow-strong);
+}
+
+html[data-theme="retro"] .home-page .home-feature-card.is-card-link:focus-visible,
+html[data-theme="retro"] .home-page .home-package-card.is-card-link:focus-visible,
+html[data-theme="retro"] .home-page .home-index-item.is-card-link:focus-visible,
+html[data-theme="retro"] .home-page .home-guide-card.is-card-link:focus-visible,
+html[data-theme="retro"] .home-page .home-search-result-card.is-card-link:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 4px rgba(255, 93, 143, 0.18), 8px 8px 0 rgba(22, 22, 22, 0.50);
+}
