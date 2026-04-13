@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Excel 보호 해제기 (비밀번호 검증 방식)</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --line: #dbe2ea;
+      --text: #142033;
+      --muted: #5c6b82;
+      --accent: #1f6feb;
+      --ok: #0f9d58;
+      --warn: #d97706;
+      --err: #d93025;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(20, 32, 51, 0.05);
+    }
+    h1 {
+      font-size: 1.7rem;
+      margin: 0 0 8px;
+    }
+    .sub {
+      margin: 0 0 18px;
+      color: var(--muted);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+    .field label {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    input[type="file"],
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      font: inherit;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .btn {
+      appearance: none;
+      border: 1px solid #1e3a8a;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 12px;
+      padding: 11px 16px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn.secondary {
+      background: #fff;
+      color: var(--text);
+      border-color: var(--line);
+    }
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .note {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .status {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      min-height: 48px;
+      white-space: pre-wrap;
+    }
+    .status.ok { border-color: rgba(15,157,88,.35); background: rgba(15,157,88,.06); }
+    .status.warn { border-color: rgba(217,119,6,.35); background: rgba(217,119,6,.06); }
+    .status.err { border-color: rgba(217,48,37,.35); background: rgba(217,48,37,.06); }
+    .list {
+      margin: 16px 0 0;
+      padding-left: 18px;
+    }
+    .list li { margin: 6px 0; }
+    code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.93em;
+    }
+    .small {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 18px 0;
+    }
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Excel 보호 해제기</h1>
+      <p class="sub">사용자 소유 파일에 대해, 입력한 비밀번호가 실제 보호 해시와 일치할 때만 시트/통합문서 보호를 제거합니다.</p>
+
+      <div class="grid">
+        <div class="field">
+          <label for="fileInput">엑셀 파일</label>
+          <input id="fileInput" type="file" accept=".xlsx,.xlsm" />
+          <div class="small">지원 형식: <code>.xlsx</code>, <code>.xlsm</code></div>
+        </div>
+        <div class="field">
+          <label for="passwordInput">보호 해제 비밀번호</label>
+          <input id="passwordInput" type="password" placeholder="시트/통합문서 보호 비밀번호" />
+          <div class="small">비밀번호가 없는 보호는 바로 제거할 수 있습니다.</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row">
+        <button id="runBtn" class="btn">검증 후 보호 해제</button>
+        <button id="clearBtn" class="btn secondary" type="button">초기화</button>
+      </div>
+
+      <div class="note">
+        <strong>제한사항</strong><br>
+        1) <code>파일 열기 암호</code>로 암호화된 통합문서는 지원하지 않습니다.<br>
+        2) <code>.xls</code>, <code>VBA 프로젝트 암호</code>, IRM/권한 관리, 디지털 서명은 이 도구 범위 밖입니다.<br>
+        3) 이 도구는 수식/스타일/매크로를 건드리지 않고 보호 관련 XML만 수정합니다. 다만 파일이 서명되어 있었다면 서명은 무효화될 수 있습니다.
+      </div>
+
+      <div id="status" class="status">대기 중</div>
+      <ul id="detailList" class="list"></ul>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const runBtn = document.getElementById('runBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const statusBox = document.getElementById('status');
+    const detailList = document.getElementById('detailList');
+
+    function setStatus(text, type = '') {
+      statusBox.textContent = text;
+      statusBox.className = 'status' + (type ? ' ' + type : '');
+    }
+
+    function setDetails(items = []) {
+      detailList.innerHTML = '';
+      items.forEach((item) => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        detailList.appendChild(li);
+      });
+    }
+
+    function base64ToBytes(b64) {
+      const bin = atob((b64 || '').trim());
+      const out = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+      return out;
+    }
+
+    function bytesToBase64(bytes) {
+      let bin = '';
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        const part = bytes.subarray(i, i + chunk);
+        bin += String.fromCharCode.apply(null, part);
+      }
+      return btoa(bin);
+    }
+
+    function concatBytes(...parts) {
+      const total = parts.reduce((sum, p) => sum + p.length, 0);
+      const out = new Uint8Array(total);
+      let offset = 0;
+      for (const p of parts) {
+        out.set(p, offset);
+        offset += p.length;
+      }
+      return out;
+    }
+
+    function u32le(n) {
+      const out = new Uint8Array(4);
+      out[0] = n & 0xff;
+      out[1] = (n >>> 8) & 0xff;
+      out[2] = (n >>> 16) & 0xff;
+      out[3] = (n >>> 24) & 0xff;
+      return out;
+    }
+
+    function utf16leBytes(str) {
+      const start = str.charCodeAt(0) === 0xFEFF ? 1 : 0;
+      const out = new Uint8Array((str.length - start) * 2);
+      let j = 0;
+      for (let i = start; i < str.length; i++) {
+        const code = str.charCodeAt(i);
+        out[j++] = code & 0xff;
+        out[j++] = (code >>> 8) & 0xff;
+      }
+      return out;
+    }
+
+    function uint8ToWordArray(u8) {
+      const words = [];
+      for (let i = 0; i < u8.length; i++) {
+        words[i >>> 2] |= u8[i] << (24 - (i % 4) * 8);
+      }
+      return CryptoJS.lib.WordArray.create(words, u8.length);
+    }
+
+    function wordArrayToUint8Array(wordArray) {
+      const len = wordArray.sigBytes;
+      const words = wordArray.words;
+      const out = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        out[i] = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+      }
+      return out;
+    }
+
+    function normalizeAlgorithmName(name) {
+      const s = (name || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const map = {
+        MD5: 'MD5',
+        SHA1: 'SHA-1',
+        SHA224: 'SHA-224',
+        SHA256: 'SHA-256',
+        SHA384: 'SHA-384',
+        SHA512: 'SHA-512',
+        RIPEMD160: 'RIPEMD-160'
+      };
+      return map[s] || null;
+    }
+
+    function digestBytes(algorithmName, bytes) {
+      const alg = normalizeAlgorithmName(algorithmName);
+      if (!alg) throw new Error(`지원하지 않는 해시 알고리즘: ${algorithmName}`);
+      const wa = uint8ToWordArray(bytes);
+      let out;
+      switch (alg) {
+        case 'MD5': out = CryptoJS.MD5(wa); break;
+        case 'SHA-1': out = CryptoJS.SHA1(wa); break;
+        case 'SHA-224': out = CryptoJS.SHA224(wa); break;
+        case 'SHA-256': out = CryptoJS.SHA256(wa); break;
+        case 'SHA-384': out = CryptoJS.SHA384(wa); break;
+        case 'SHA-512': out = CryptoJS.SHA512(wa); break;
+        case 'RIPEMD-160': out = CryptoJS.RIPEMD160(wa); break;
+        default: throw new Error(`지원하지 않는 해시 알고리즘: ${algorithmName}`);
+      }
+      return wordArrayToUint8Array(out);
+    }
+
+    function verifyModernOoxmlPassword(password, algorithmName, saltB64, spinCount, expectedB64) {
+      const salt = base64ToBytes(saltB64);
+      const pwd = utf16leBytes(password);
+      let hash = digestBytes(algorithmName, concatBytes(salt, pwd));
+      const count = Number.isFinite(+spinCount) ? +spinCount : 0;
+      for (let i = 0; i < count; i++) {
+        hash = digestBytes(algorithmName, concatBytes(hash, u32le(i)));
+      }
+      return bytesToBase64(hash) === (expectedB64 || '').trim();
+    }
+
+    function legacyHashPassword(plaintextPassword = '') {
+      let password = 0x0000;
+      for (let idx = 0; idx < plaintextPassword.length; idx++) {
+        const shift = idx + 1;
+        let value = plaintextPassword.charCodeAt(idx) << shift;
+        const rotatedBits = value >> 15;
+        value &= 0x7fff;
+        password ^= (value | rotatedBits);
+      }
+      password ^= plaintextPassword.length;
+      password ^= 0xCE4B;
+      return password.toString(16).toUpperCase();
+    }
+
+    function normalizeLegacyHex(value) {
+      const v = String(value || '').replace(/^0x/i, '').replace(/^0+/, '').toUpperCase();
+      return v || '0';
+    }
+
+    function verifyLegacyPassword(password, storedHex) {
+      return normalizeLegacyHex(legacyHashPassword(password)) === normalizeLegacyHex(storedHex);
+    }
+
+    function serializeXml(doc, originalXml) {
+      const serializer = new XMLSerializer();
+      const xml = serializer.serializeToString(doc);
+      const declMatch = originalXml.match(/^\s*(<\?xml[^>]*\?>)/i);
+      return declMatch ? `${declMatch[1]}\n${xml}` : xml;
+    }
+
+    function parseXml(xmlText) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xmlText, 'application/xml');
+      if (doc.getElementsByTagName('parsererror').length) {
+        throw new Error('XML 파싱 실패');
+      }
+      return doc;
+    }
+
+    function evaluateSheetProtectionNode(node, password) {
+      const hasModern = node.hasAttribute('algorithmName') && node.hasAttribute('hashValue') && node.hasAttribute('saltValue');
+      const hasLegacy = node.hasAttribute('password');
+
+      if (hasModern) {
+        if (!password) return { removable: false, reason: '비밀번호 필요(현대 해시)' };
+        try {
+          const ok = verifyModernOoxmlPassword(
+            password,
+            node.getAttribute('algorithmName'),
+            node.getAttribute('saltValue'),
+            parseInt(node.getAttribute('spinCount') || '0', 10),
+            node.getAttribute('hashValue')
+          );
+          return ok ? { removable: true, reason: '비밀번호 일치' } : { removable: false, reason: '비밀번호 불일치' };
+        } catch (e) {
+          return { removable: false, reason: e.message || '알고리즘 처리 실패' };
+        }
+      }
+
+      if (hasLegacy) {
+        if (!password) return { removable: false, reason: '비밀번호 필요(레거시 해시)' };
+        const ok = verifyLegacyPassword(password, node.getAttribute('password'));
+        return ok ? { removable: true, reason: '비밀번호 일치' } : { removable: false, reason: '비밀번호 불일치' };
+      }
+
+      return { removable: true, reason: '비밀번호 없는 보호' };
+    }
+
+    function evaluateWorkbookSection(el, password, mode) {
+      const isStructure = mode === 'structure';
+      const legacyAttr = isStructure ? 'workbookPassword' : 'revisionsPassword';
+      const legacyCharsetAttr = isStructure ? 'workbookPasswordCharacterSet' : 'revisionsPasswordCharacterSet';
+      const algAttr = isStructure ? 'workbookAlgorithmName' : 'revisionsAlgorithmName';
+      const hashAttr = isStructure ? 'workbookHashValue' : 'revisionsHashValue';
+      const saltAttr = isStructure ? 'workbookSaltValue' : 'revisionsSaltValue';
+      const spinAttr = isStructure ? 'workbookSpinCount' : 'revisionsSpinCount';
+      const lockAttrs = isStructure ? ['lockStructure', 'lockWindows'] : ['lockRevision'];
+
+      const present = el.hasAttribute(legacyAttr) || el.hasAttribute(hashAttr) || lockAttrs.some(a => el.getAttribute(a) === '1' || el.getAttribute(a) === 'true');
+      if (!present) return { present: false, removable: false, reason: '' };
+
+      const hasModern = el.hasAttribute(algAttr) && el.hasAttribute(hashAttr) && el.hasAttribute(saltAttr);
+      const hasLegacy = el.hasAttribute(legacyAttr);
+
+      if (hasModern) {
+        if (!password) return { present: true, removable: false, reason: '비밀번호 필요(현대 해시)' };
+        try {
+          const ok = verifyModernOoxmlPassword(
+            password,
+            el.getAttribute(algAttr),
+            el.getAttribute(saltAttr),
+            parseInt(el.getAttribute(spinAttr) || '0', 10),
+            el.getAttribute(hashAttr)
+          );
+          return ok ? { present: true, removable: true, reason: '비밀번호 일치' } : { present: true, removable: false, reason: '비밀번호 불일치' };
+        } catch (e) {
+          return { present: true, removable: false, reason: e.message || '알고리즘 처리 실패' };
+        }
+      }
+
+      if (hasLegacy) {
+        if (!password) return { present: true, removable: false, reason: '비밀번호 필요(레거시 해시)' };
+        const ok = verifyLegacyPassword(password, el.getAttribute(legacyAttr));
+        return ok ? { present: true, removable: true, reason: '비밀번호 일치' } : { present: true, removable: false, reason: '비밀번호 불일치' };
+      }
+
+      return { present: true, removable: true, reason: '비밀번호 없는 보호' };
+    }
+
+    function removeWorkbookSection(el, mode) {
+      const isStructure = mode === 'structure';
+      const attrs = isStructure
+        ? ['workbookPassword', 'workbookPasswordCharacterSet', 'workbookAlgorithmName', 'workbookHashValue', 'workbookSaltValue', 'workbookSpinCount', 'lockStructure', 'lockWindows']
+        : ['revisionsPassword', 'revisionsPasswordCharacterSet', 'revisionsAlgorithmName', 'revisionsHashValue', 'revisionsSaltValue', 'revisionsSpinCount', 'lockRevision'];
+      attrs.forEach(a => el.removeAttribute(a));
+      if (el.attributes.length === 0 && el.childNodes.length === 0) {
+        el.parentNode.removeChild(el);
+      }
+    }
+
+    async function processSheetXml(zip, path, password, details) {
+      const entry = zip.file(path);
+      if (!entry) return false;
+      const xmlText = await entry.async('string');
+      const doc = parseXml(xmlText);
+      const nodes = Array.from(doc.getElementsByTagNameNS('*', 'sheetProtection'));
+      if (!nodes.length) return false;
+
+      let changed = false;
+      nodes.forEach((node, idx) => {
+        const verdict = evaluateSheetProtectionNode(node, password);
+        if (verdict.removable) {
+          node.parentNode.removeChild(node);
+          changed = true;
+          details.push(`${path} 보호 ${idx + 1}개 해제 (${verdict.reason})`);
+        } else {
+          details.push(`${path} 보호 ${idx + 1}개 유지 (${verdict.reason})`);
+        }
+      });
+
+      if (changed) zip.file(path, serializeXml(doc, xmlText));
+      return changed;
+    }
+
+    async function processWorkbookXml(zip, password, details) {
+      const path = 'xl/workbook.xml';
+      const entry = zip.file(path);
+      if (!entry) return false;
+      const xmlText = await entry.async('string');
+      const doc = parseXml(xmlText);
+      const node = doc.getElementsByTagNameNS('*', 'workbookProtection')[0];
+      if (!node) return false;
+
+      const structure = evaluateWorkbookSection(node, password, 'structure');
+      const revisions = evaluateWorkbookSection(node, password, 'revisions');
+      let changed = false;
+
+      if (structure.present) {
+        if (structure.removable) {
+          removeWorkbookSection(node, 'structure');
+          details.push(`xl/workbook.xml 구조 보호 해제 (${structure.reason})`);
+          changed = true;
+        } else {
+          details.push(`xl/workbook.xml 구조 보호 유지 (${structure.reason})`);
+        }
+      }
+
+      if (revisions.present && node.parentNode) {
+        if (revisions.removable) {
+          removeWorkbookSection(node, 'revisions');
+          details.push(`xl/workbook.xml 변경내용 보호 해제 (${revisions.reason})`);
+          changed = true;
+        } else {
+          details.push(`xl/workbook.xml 변경내용 보호 유지 (${revisions.reason})`);
+        }
+      }
+
+      if (changed) zip.file(path, serializeXml(doc, xmlText));
+      return changed;
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function buildOutputName(file) {
+      const name = file.name;
+      const dot = name.lastIndexOf('.');
+      if (dot < 0) return `${name}_unprotected.xlsx`;
+      const base = name.slice(0, dot);
+      const ext = name.slice(dot);
+      return `${base}_unprotected${ext}`;
+    }
+
+    async function run() {
+      const file = fileInput.files?.[0];
+      const password = passwordInput.value || '';
+
+      if (!file) {
+        setStatus('파일을 먼저 선택하세요.', 'warn');
+        setDetails([]);
+        return;
+      }
+
+      const ext = file.name.toLowerCase().split('.').pop();
+      if (!['xlsx', 'xlsm'].includes(ext)) {
+        setStatus('이 HTML은 .xlsx / .xlsm 만 지원합니다.', 'warn');
+        setDetails([]);
+        return;
+      }
+
+      runBtn.disabled = true;
+      setStatus('파일을 읽는 중...', '');
+      setDetails([]);
+
+      try {
+        const buffer = await file.arrayBuffer();
+        let zip;
+        try {
+          zip = await JSZip.loadAsync(buffer);
+        } catch (e) {
+          throw new Error('ZIP 기반 OOXML 파일을 열 수 없습니다. 파일 열기 암호로 암호화된 통합문서이거나 손상된 파일일 수 있습니다.');
+        }
+
+        const details = [];
+        let changed = false;
+
+        changed = (await processWorkbookXml(zip, password, details)) || changed;
+
+        const allPaths = Object.keys(zip.files);
+        const sheetPaths = allPaths.filter(p => /^xl\/worksheets\/[^/]+\.xml$/i.test(p));
+        const chartSheetPaths = allPaths.filter(p => /^xl\/chartsheets\/[^/]+\.xml$/i.test(p));
+
+        for (const path of [...sheetPaths, ...chartSheetPaths]) {
+          changed = (await processSheetXml(zip, path, password, details)) || changed;
+        }
+
+        if (!details.length) {
+          setStatus('시트/통합문서 보호 요소를 찾지 못했습니다.', 'warn');
+          setDetails([]);
+          return;
+        }
+
+        const removedCount = details.filter(x => x.includes('해제')).length;
+        const keptCount = details.filter(x => x.includes('유지')).length;
+
+        if (!changed) {
+          setStatus('보호 요소는 찾았지만 해제된 항목이 없습니다. 비밀번호가 다르거나 지원하지 않는 알고리즘일 수 있습니다.', 'warn');
+          setDetails(details);
+          return;
+        }
+
+        setStatus(`완료: ${removedCount}개 해제, ${keptCount}개 유지. 수정본을 다운로드합니다.`, 'ok');
+        setDetails(details);
+
+        const outBlob = await zip.generateAsync({
+          type: 'blob',
+          compression: 'DEFLATE',
+          compressionOptions: { level: 6 }
+        });
+
+        downloadBlob(outBlob, buildOutputName(file));
+      } catch (e) {
+        setStatus(`오류: ${e.message || e}`, 'err');
+        setDetails([]);
+      } finally {
+        runBtn.disabled = false;
+      }
+    }
+
+    runBtn.addEventListener('click', run);
+    clearBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      passwordInput.value = '';
+      setStatus('대기 중', '');
+      setDetails([]);
+    });
+  </script>
+</body>
+</html>
