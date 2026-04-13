@@ -40,221 +40,6 @@
     if (expense) expense.href = EXPENSE_URL;
   }
 
-  function readQueryFromUrl() {
-    try {
-      const url = new URL(window.location.href);
-      return url.searchParams.get("q") || "";
-    } catch (_) {
-      return "";
-    }
-  }
-
-  function writeQueryToUrl(query) {
-    try {
-      const url = new URL(window.location.href);
-      const normalized = String(query || "").trim();
-
-      if (normalized) {
-        url.searchParams.set("q", normalized);
-      } else {
-        url.searchParams.delete("q");
-      }
-
-      history.replaceState(null, "", url.pathname + url.search + url.hash);
-    } catch (_) {}
-  }
-
-  function shouldOpenLinkInNewTab(anchor) {
-    if (!anchor) return false;
-
-    const href = String(anchor.getAttribute("href") || "").trim();
-    if (!href || href === "#" || href.startsWith("#")) return false;
-    if (/^(javascript:|mailto:|tel:|sms:)/i.test(href)) return false;
-    return true;
-  }
-
-  function decorateHomeLinks(root) {
-    const scope = root || document;
-    const links = Array.from(scope.querySelectorAll('a[href]'));
-
-    links.forEach((link) => {
-      if (!shouldOpenLinkInNewTab(link)) return;
-
-      link.setAttribute("target", "_blank");
-
-      const rel = new Set(
-        String(link.getAttribute("rel") || "")
-          .split(/\s+/)
-          .map((value) => value.trim())
-          .filter(Boolean)
-      );
-
-      rel.add("noopener");
-      link.setAttribute("rel", Array.from(rel).join(" "));
-    });
-  }
-
-  function navigateToHref(href, newTab) {
-    const safeHref = String(href || "").trim();
-    if (!safeHref || safeHref === "#") return;
-
-    if (safeHref.startsWith("#")) {
-      window.location.hash = safeHref.slice(1);
-      return;
-    }
-
-    if (newTab) {
-      window.open(safeHref, "_blank", "noopener");
-      return;
-    }
-
-    window.location.href = safeHref;
-  }
-
-  function navigateFromLink(anchor) {
-    if (!anchor) return;
-    navigateToHref(anchor.getAttribute("href") || "", shouldOpenLinkInNewTab(anchor));
-  }
-
-  function isInteractiveTarget(target) {
-    return !!(
-      target &&
-      target.closest("a, button, input, select, textarea, summary, details, label")
-    );
-  }
-
-  function enhanceNoticeSection() {
-    const noticeDetails = document.querySelector(".home-notice-details");
-    if (noticeDetails && !noticeDetails.hasAttribute("open")) {
-      noticeDetails.open = true;
-    }
-
-    const noticeLink = document.querySelector(".home-notice-details a[href='/notice/']");
-    if (noticeLink) {
-      noticeLink.classList.add("btn", "black", "home-notice-link");
-      noticeLink.classList.remove("pastel-yellow", "pastel-blue", "ghost", "primary");
-    }
-  }
-
-  function upgradePackageFlowLinks(root) {
-    const scope = root || document;
-    const packageCards = Array.from(scope.querySelectorAll(".home-package-card"));
-
-    packageCards.forEach((card) => {
-      const flowItems = Array.from(card.querySelectorAll(".home-flow-list > li"));
-      const relatedLinks = Array.from(card.querySelectorAll(".home-inline-links a[href]"));
-
-      if (!flowItems.length || !relatedLinks.length) return;
-
-      flowItems.forEach((item, index) => {
-        if (item.querySelector("a")) return;
-        const relatedLink = relatedLinks[index];
-        if (!relatedLink) return;
-
-        const text = (item.textContent || "").trim();
-        if (!text) return;
-
-        const href = relatedLink.getAttribute("href") || "";
-        const anchor = document.createElement("a");
-        anchor.className = "home-flow-link";
-        anchor.href = href;
-        anchor.setAttribute("aria-label", text + " 도구 열기");
-        anchor.innerHTML =
-          '<span class="home-flow-link__num">' +
-          String(index + 1) +
-          '</span>' +
-          '<span class="home-flow-link__text">' +
-          escapeHtml(text) +
-          "</span>";
-
-        item.textContent = "";
-        item.appendChild(anchor);
-      });
-    });
-  }
-
-  function bindCardLink(card, href, labelText, newTab) {
-    const safeHref = String(href || "").trim();
-    if (!safeHref) return;
-
-    card.classList.add("is-card-link");
-    card.dataset.cardHref = safeHref;
-    card.setAttribute("role", "link");
-    card.setAttribute("tabindex", "0");
-    if (labelText) {
-      card.setAttribute(
-        "aria-label",
-        labelText.trim() + (newTab ? " 새 탭에서 열기" : " 열기")
-      );
-    }
-
-    if (card.__cardLinkBound) return;
-    card.__cardLinkBound = true;
-
-    card.addEventListener("click", (event) => {
-      if (event.defaultPrevented) return;
-      if (isInteractiveTarget(event.target)) return;
-      navigateToHref(safeHref, newTab);
-    });
-
-    card.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      navigateToHref(safeHref, newTab);
-    });
-  }
-
-  function makeFeatureCardsClickable(root) {
-    const scope = root || document;
-    const cards = Array.from(scope.querySelectorAll(".home-feature-card"));
-
-    cards.forEach((card) => {
-      let href = String(card.getAttribute("data-card-href") || "").trim();
-      const cta = card.querySelector(".home-card-cta[href]");
-      const title = card.querySelector(".home-card-title");
-
-      if (!href && cta) {
-        href = cta.getAttribute("href") || "";
-        if (href) card.dataset.cardHref = href;
-      }
-
-      if (!href) return;
-
-      if (cta) {
-        cta.remove();
-      }
-
-      const tempAnchor = document.createElement("a");
-      tempAnchor.href = href;
-      bindCardLink(card, href, title ? title.textContent : href, shouldOpenLinkInNewTab(tempAnchor));
-    });
-  }
-
-  function makeIndexCardsClickable(root) {
-    const scope = root || document;
-    const cards = Array.from(scope.querySelectorAll(".home-index-item"));
-
-    cards.forEach((card) => {
-      const primaryLink = card.querySelector(
-        ".home-index-item-title a[href], .home-index-open[href], a[href]"
-      );
-      const openButtons = Array.from(card.querySelectorAll(".home-index-open"));
-
-      openButtons.forEach((button) => button.remove());
-
-      if (!primaryLink) return;
-
-      const href = primaryLink.getAttribute("href") || "";
-      const title = card.querySelector(".home-index-item-title");
-      bindCardLink(
-        card,
-        href,
-        title ? title.textContent : href,
-        shouldOpenLinkInNewTab(primaryLink)
-      );
-    });
-  }
-
   function openSectionForHash() {
     const raw = (window.location.hash || "").replace(/^#/, "");
     if (!raw) return;
@@ -280,32 +65,195 @@
     }
   }
 
+  function readQueryFromUrl() {
+    try {
+      const url = new URL(window.location.href);
+      return url.searchParams.get("q") || "";
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function writeQueryToUrl(query) {
+    try {
+      const url = new URL(window.location.href);
+      const normalized = String(query || "").trim();
+
+      if (normalized) {
+        url.searchParams.set("q", normalized);
+      } else {
+        url.searchParams.delete("q");
+      }
+
+      history.replaceState(null, "", url.pathname + url.search + url.hash);
+    } catch (_) {}
+  }
+
+  function getHrefFromAnchor(anchor) {
+    return String((anchor && anchor.getAttribute("href")) || "").trim();
+  }
+
+  function shouldOpenHrefInNewTab(href) {
+    const normalizedHref = String(href || "").trim();
+    if (
+      !normalizedHref ||
+      normalizedHref === "#" ||
+      normalizedHref.startsWith("#")
+    ) {
+      return false;
+    }
+    if (/^(javascript:|tel:|sms:)/i.test(normalizedHref)) {
+      return false;
+    }
+    return true;
+  }
+
+  function shouldOpenLinkInNewTab(anchor) {
+    return shouldOpenHrefInNewTab(getHrefFromAnchor(anchor));
+  }
+
+  function decorateHomeLinks(root) {
+    const scope = root || document;
+    const links = Array.from(scope.querySelectorAll("a[href]"));
+
+    links.forEach((link) => {
+      if (!shouldOpenLinkInNewTab(link)) {
+        return;
+      }
+
+      link.setAttribute("target", "_blank");
+
+      const rel = new Set(
+        String(link.getAttribute("rel") || "")
+          .split(/\s+/)
+          .map((value) => value.trim())
+          .filter(Boolean)
+      );
+
+      rel.add("noopener");
+      link.setAttribute("rel", Array.from(rel).join(" "));
+    });
+  }
+
+  function navigateToHref(href) {
+    const normalizedHref = String(href || "").trim();
+    if (!normalizedHref || normalizedHref === "#") return;
+
+    if (normalizedHref.startsWith("#")) {
+      window.location.hash = normalizedHref.slice(1);
+      return;
+    }
+
+    if (shouldOpenHrefInNewTab(normalizedHref)) {
+      window.open(normalizedHref, "_blank", "noopener");
+      return;
+    }
+
+    window.location.href = normalizedHref;
+  }
+
+  function navigateFromLink(anchor) {
+    navigateToHref(getHrefFromAnchor(anchor));
+  }
+
+  function isInteractiveTarget(target) {
+    return !!(
+      target &&
+      target.closest(
+        "a, button, input, select, textarea, summary, details, label"
+      )
+    );
+  }
+
+  function getPrimaryCardHref(card) {
+    const explicitHref = String(card.getAttribute("data-card-href") || "").trim();
+    if (explicitHref && explicitHref !== "#") {
+      return explicitHref;
+    }
+
+    const primaryLink = card.querySelector(
+      [
+        ".home-index-item-title a[href]",
+        ".home-card-cta[href]",
+        ".home-flow-link[href]",
+        ".home-index-open[href]",
+        "a[href]",
+      ].join(", ")
+    );
+
+    return getHrefFromAnchor(primaryLink);
+  }
+
+  function makeCardsClickable(root) {
+    const scope = root || document;
+    const cards = Array.from(
+      scope.querySelectorAll(
+        [
+          ".home-feature-card",
+          ".home-package-card",
+          ".home-index-item",
+          ".home-guide-card",
+          ".home-search-result-card[data-card-href]",
+        ].join(", ")
+      )
+    );
+
+    cards.forEach((card) => {
+      const href = getPrimaryCardHref(card);
+      const redundantButtons = Array.from(card.querySelectorAll(".home-index-open"));
+
+      redundantButtons.forEach((button) => button.remove());
+
+      if (!href) return;
+
+      const titleText = (
+        card.querySelector(".home-index-item-title") ||
+        card.querySelector(".home-card-title") ||
+        card.querySelector("a[href]")
+      ).textContent || "";
+
+      const opensNewTab = shouldOpenHrefInNewTab(href);
+
+      card.classList.add("is-card-link");
+      card.dataset.cardHref = href;
+      card.setAttribute("role", "link");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute(
+        "aria-label",
+        titleText.trim() + (opensNewTab ? " 새 탭에서 열기" : " 열기")
+      );
+
+      if (card.__cardLinkBound === true) return;
+      card.__cardLinkBound = true;
+
+      card.addEventListener("click", (event) => {
+        if (event.defaultPrevented) return;
+        if (isInteractiveTarget(event.target)) return;
+        navigateToHref(href);
+      });
+
+      card.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        navigateToHref(href);
+      });
+    });
+  }
+
   function bindSearch() {
     const searchSection = document.getElementById("home-search");
-    const searchBox = document.querySelector("#homeSearchForm, .home-search-box");
+    const form = document.getElementById("homeSearchForm");
+    const submitBtn = document.getElementById("homeSearchSubmit");
     const input = document.getElementById("homeSearchInput");
     const resetBtn = document.getElementById("homeSearchReset");
     const status = document.getElementById("homeSearchStatus");
 
-    if (!searchSection || !searchBox || !input || !resetBtn || !status) return;
-
-    let submitBtn = document.getElementById("homeSearchSubmit");
-    if (!submitBtn) {
-      submitBtn = document.createElement("button");
-      submitBtn.type = "button";
-      submitBtn.id = "homeSearchSubmit";
-      submitBtn.className = "btn primary";
-      submitBtn.textContent = "검색하기";
-
-      let actions = searchBox.querySelector(".home-search-actions");
-      if (!actions) {
-        actions = document.createElement("div");
-        actions.className = "home-search-actions";
-        searchBox.appendChild(actions);
-      }
-
-      actions.insertBefore(submitBtn, actions.firstChild || null);
+    if (!searchSection || !input || !resetBtn || !status) {
+      return;
     }
+
+    const hasExplicitSubmit = !!(form || submitBtn);
+    let liveSearchTimer = null;
 
     let outputWrap = document.getElementById("homeSearchOutput");
     if (!outputWrap) {
@@ -313,7 +261,6 @@
       outputWrap.id = "homeSearchOutput";
       outputWrap.className = "home-search-output";
       outputWrap.hidden = true;
-      status.insertAdjacentElement("afterend", outputWrap);
     }
 
     let resultPanel = document.getElementById("homeSearchResults");
@@ -327,7 +274,7 @@
       resultPanel.setAttribute("aria-labelledby", "homeSearchResultsTitle");
       resultPanel.innerHTML =
         '<div class="home-search-results-head">' +
-        '  <div>' +
+        "  <div>" +
         '    <p class="home-section-kicker">검색 결과</p>' +
         '    <h3 class="home-card-title" id="homeSearchResultsTitle">해당하는 기능 카드</h3>' +
         "  </div>" +
@@ -335,9 +282,7 @@
         "</div>" +
         '<div class="home-search-result-grid" id="homeSearchResultGrid"></div>';
       resultGrid = resultPanel.querySelector("#homeSearchResultGrid");
-    }
-
-    if (!resultGrid) {
+    } else if (!resultGrid) {
       resultGrid = document.createElement("div");
       resultGrid.id = "homeSearchResultGrid";
       resultGrid.className = "home-search-result-grid";
@@ -352,7 +297,11 @@
       empty.hidden = true;
       empty.innerHTML =
         '<h3 class="local-h3">검색 결과가 없습니다.</h3>' +
-        '<p>단어를 조금 줄이거나, 다른 조합으로 다시 검색해 보세요. 예: 연차 / 사회보험 엑셀 / 통상임금</p>';
+        "<p>단어를 조금 줄이거나, 다른 조합으로 다시 검색해 보세요. 예: 연차 / 사회보험 엑셀 / 통상임금</p>";
+    }
+
+    if (status.nextElementSibling !== outputWrap) {
+      status.insertAdjacentElement("afterend", outputWrap);
     }
 
     if (!outputWrap.contains(resultPanel)) {
@@ -363,10 +312,14 @@
       outputWrap.appendChild(empty);
     }
 
-    const chips = Array.from(document.querySelectorAll(".home-search-chip"));
     const allItems = Array.from(document.querySelectorAll(".js-search-item"));
-    const searchableSections = Array.from(document.querySelectorAll(".home-search-scope"));
-    const categorySections = Array.from(document.querySelectorAll(".home-category-section"));
+    const searchableSections = Array.from(
+      document.querySelectorAll(".home-search-scope")
+    );
+    const categorySections = Array.from(
+      document.querySelectorAll(".home-category-section")
+    );
+    const chips = Array.from(document.querySelectorAll(".home-search-chip"));
     const sectionLabels = {
       "home-features": "대표 기능",
       "home-packages": "업무 패키지",
@@ -381,8 +334,6 @@
           ".js-search-item .home-index-item-title a",
           ".js-search-item .home-meta-list dd",
           ".js-search-item .home-compact-meta dd",
-          ".js-search-item .home-flow-link__text",
-          ".js-search-item .home-inline-link",
         ].join(",")
       )
     );
@@ -396,10 +347,12 @@
 
     function getPrimaryHref(item) {
       const explicitHref = String(item.getAttribute("data-card-href") || "").trim();
-      if (explicitHref) return explicitHref;
+      if (explicitHref && !item.classList.contains("home-package-card")) {
+        return explicitHref;
+      }
 
       const link = item.querySelector(
-        ".home-card-cta[href], .home-index-item-title a[href], .home-index-open[href], .home-inline-links a[href], a[href]"
+        ".home-card-cta[href], .home-index-open[href], .home-index-item-title a[href], a[href]"
       );
       return link ? link.getAttribute("href") || "" : "";
     }
@@ -422,7 +375,7 @@
       const details = section.querySelector(".home-accordion");
       const meta = section.querySelector(".home-accordion-meta");
 
-      if (details && !details.dataset.defaultOpen) {
+      if (details) {
         details.dataset.defaultOpen = details.open ? "true" : "false";
       }
 
@@ -449,7 +402,9 @@
       }
 
       const rawMatches = itemRecords
-        .filter((record) => tokens.every((token) => record.haystack.includes(token)))
+        .filter((record) =>
+          tokens.every((token) => record.haystack.includes(token))
+        )
         .sort((a, b) => a.priority - b.priority || a.index - b.index);
 
       const seen = new Set();
@@ -504,6 +459,7 @@
 
     function setChipState(query) {
       const normalizedQuery = normalize(query);
+
       chips.forEach((chip) => {
         const chipQuery = normalize(chip.getAttribute("data-query"));
         const active = chipQuery === normalizedQuery && normalizedQuery !== "";
@@ -591,9 +547,7 @@
 
       resultGrid.appendChild(fragment);
       decorateHomeLinks(resultGrid);
-      upgradePackageFlowLinks(resultGrid);
-      makeFeatureCardsClickable(resultGrid);
-      makeIndexCardsClickable(resultGrid);
+      makeCardsClickable(resultGrid);
       resultPanel.hidden = false;
     }
 
@@ -605,6 +559,7 @@
 
     function resetSearch(options) {
       const opts = options || {};
+
       input.value = "";
       appliedQuery = "";
 
@@ -621,8 +576,8 @@
       });
 
       outputWrap.hidden = true;
-      resultPanel.hidden = true;
       empty.hidden = true;
+      resultPanel.hidden = true;
       resultGrid.innerHTML = "";
 
       restoreHighlights();
@@ -659,7 +614,9 @@
         categorySections.forEach((section) => {
           const details = section.querySelector(".home-accordion");
           const matchCount = countMatchesInSection(section, state.matches);
-          if (details) details.open = matchCount > 0;
+          if (details) {
+            details.open = matchCount > 0;
+          }
         });
       } else {
         searchableSections.forEach((section) => {
@@ -686,23 +643,40 @@
       }
     }
 
-    const form = searchBox.matches("form") ? searchBox : null;
+    function queueLiveSearch() {
+      if (hasExplicitSubmit) return;
+
+      if (liveSearchTimer) {
+        window.clearTimeout(liveSearchTimer);
+      }
+
+      const value = input.value;
+
+      liveSearchTimer = window.setTimeout(() => {
+        if (!String(value || "").trim()) {
+          resetSearch({ skipFocus: true });
+          return;
+        }
+        applySearch(value, { scroll: false });
+      }, 180);
+    }
 
     if (form) {
       form.addEventListener("submit", (event) => {
         event.preventDefault();
         applySearch(input.value);
       });
+    } else if (submitBtn) {
+      submitBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        applySearch(input.value);
+      });
     }
-
-    submitBtn.addEventListener("click", (event) => {
-      event.preventDefault();
-      applySearch(input.value);
-    });
 
     input.addEventListener("input", () => {
       setChipState(input.value);
       refreshResetVisibility();
+      queueLiveSearch();
     });
 
     input.addEventListener("keydown", (event) => {
@@ -728,6 +702,13 @@
         input.value = chip.getAttribute("data-query") || "";
         setChipState(input.value);
         refreshResetVisibility();
+
+        if (hasExplicitSubmit) {
+          input.focus();
+          return;
+        }
+
+        applySearch(input.value, { scroll: false });
         input.focus();
       });
     });
@@ -735,7 +716,7 @@
     const initialQuery = readQueryFromUrl();
     if (initialQuery) {
       input.value = initialQuery;
-      applySearch(initialQuery, { syncUrl: false });
+      applySearch(initialQuery, { syncUrl: false, scroll: false });
       return;
     }
 
@@ -744,13 +725,9 @@
 
   function init() {
     if (!document.body.classList.contains("home-page")) return;
-
     setDownloadLinks();
     decorateHomeLinks(document);
-    enhanceNoticeSection();
-    upgradePackageFlowLinks(document);
-    makeFeatureCardsClickable(document);
-    makeIndexCardsClickable(document);
+    makeCardsClickable(document);
     bindSearch();
     openSectionForHash();
     window.addEventListener("hashchange", openSectionForHash);
