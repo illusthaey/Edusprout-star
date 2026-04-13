@@ -90,16 +90,13 @@
   }
 
 
-  function shouldHrefOpenInNewTab(href) {
-    const value = String(href || "").trim();
-    if (!value || value === "#" || value.startsWith("#")) return false;
-    if (/^(javascript:|tel:|sms:)/i.test(value)) return false;
-    return true;
-  }
-
   function shouldOpenLinkInNewTab(anchor) {
     if (!anchor) return false;
-    return shouldHrefOpenInNewTab(anchor.getAttribute("href") || "");
+
+    const href = String(anchor.getAttribute("href") || "").trim();
+    if (!href || href === "#" || href.startsWith("#")) return false;
+    if (/^(javascript:|tel:|sms:)/i.test(href)) return false;
+    return true;
   }
 
   function decorateHomeLinks(root) {
@@ -125,610 +122,561 @@
     });
   }
 
-  function isInteractiveTarget(target) {
-    return !!(
-      target &&
-      target.closest("a, button, input, select, textarea, summary, details, label")
-    );
+  function navigateFromLink(anchor) {
+  if (!anchor) return;
+
+  const href = String(anchor.getAttribute("href") || "").trim();
+  if (!href || href === "#") return;
+
+  if (href.startsWith("#")) {
+    window.location.hash = href.slice(1);
+    return;
   }
 
-  function activateCardHref(href, openInNewTab) {
-    const targetHref = String(href || "").trim();
-    if (!targetHref) return;
-
-    if (openInNewTab) {
-      window.open(targetHref, "_blank", "noopener");
-      return;
-    }
-
-    window.location.href = targetHref;
+  if (shouldOpenLinkInNewTab(anchor)) {
+    window.open(href, "_blank", "noopener");
+    return;
   }
 
-  function resolveCardPrimaryHref(card) {
-    if (!card) return "";
+  window.location.href = href;
+}
 
-    const explicitHref = String(card.dataset.cardHref || "").trim();
-    if (explicitHref) return explicitHref;
+function isInteractiveTarget(target) {
+  return !!(
+    target &&
+    target.closest("a, button, input, select, textarea, summary, details, label")
+  );
+}
 
+function makeIndexCardsClickable(root) {
+  const scope = root || document;
+  const cards = Array.from(scope.querySelectorAll(".home-index-item"));
+
+  cards.forEach((card) => {
     const primaryLink = card.querySelector(
-      ".home-card-cta[href], .home-flow-link[href], .home-inline-link[href], .home-index-item-title a[href], a[href]"
+      ".home-index-item-title a[href], .home-card-cta[href], a[href]"
+    );
+    const redundantButtons = Array.from(card.querySelectorAll(".home-index-open"));
+
+    redundantButtons.forEach((button) => button.remove());
+
+    if (!primaryLink) return;
+
+    const href = primaryLink.getAttribute("href") || "";
+    const titleText = (
+      card.querySelector(".home-index-item-title") ||
+      card.querySelector(".home-card-title") ||
+      primaryLink
+    ).textContent || "";
+
+    const opensNewTab = shouldOpenLinkInNewTab(primaryLink);
+
+    card.classList.add("is-card-link");
+    card.dataset.cardHref = href;
+    card.setAttribute("role", "link");
+    card.setAttribute("tabindex", "0");
+    card.setAttribute(
+      "aria-label",
+      titleText.trim() + (opensNewTab ? " 새 탭에서 열기" : " 열기")
     );
 
-    return primaryLink ? primaryLink.getAttribute("href") || "" : "";
-  }
+    if (card.__cardLinkBound === true) return;
+    card.__cardLinkBound = true;
 
-  function makeCardLinksClickable(root) {
-    const scope = root || document;
-    const cards = Array.from(
-      scope.querySelectorAll(
-        ".home-feature-card, .home-search-result-card:not(.home-index-item)"
-      )
-    );
-
-    cards.forEach((card) => {
-      const cta = card.querySelector(".home-card-cta[href]");
-      if (cta && !card.dataset.cardHref) {
-        card.dataset.cardHref = cta.getAttribute("href") || "";
-      }
-
-      const href = resolveCardPrimaryHref(card);
-      if (!href) return;
-
-      if (card.classList.contains("home-search-result-card")) {
-        card.querySelectorAll(".home-card-cta").forEach((buttonLike) => {
-          buttonLike.remove();
-        });
-      }
-
-      const titleText = (
-        card.querySelector(".home-card-title") ||
-        card.querySelector(".home-index-item-title") ||
-        card.querySelector("a[href]")
-      )?.textContent || "";
-
-      const openInNewTab = shouldHrefOpenInNewTab(href);
-
-      card.classList.add("is-card-link");
-      card.dataset.cardHref = href;
-      card.setAttribute("role", "link");
-      card.setAttribute("tabindex", "0");
-      card.setAttribute(
-        "aria-label",
-        titleText.trim() + (openInNewTab ? " 새 탭에서 열기" : " 열기")
-      );
-
-      if (card.__genericCardLinkBound === true) return;
-      card.__genericCardLinkBound = true;
-
-      card.addEventListener("click", (event) => {
-        if (event.defaultPrevented) return;
-        if (isInteractiveTarget(event.target)) return;
-        activateCardHref(href, openInNewTab);
-      });
-
-      card.addEventListener("keydown", (event) => {
-        if (event.key !== "Enter" && event.key !== " ") return;
-        event.preventDefault();
-        activateCardHref(href, openInNewTab);
-      });
+    card.addEventListener("click", (event) => {
+      if (event.defaultPrevented) return;
+      if (isInteractiveTarget(event.target)) return;
+      navigateFromLink(primaryLink);
     });
-  }
 
-
-  function makeIndexCardsClickable(root) {
-    const scope = root || document;
-    const cards = Array.from(scope.querySelectorAll(".home-index-item"));
-
-    cards.forEach((card) => {
-      const primaryLink = card.querySelector(
-        ".home-index-item-title a[href], .home-card-cta[href], a[href]"
-      );
-      const redundantButton = card.querySelector(".home-index-open");
-
-      if (redundantButton) {
-        redundantButton.remove();
-      }
-
-      if (!primaryLink) return;
-
-      const href = primaryLink.getAttribute("href") || "";
-      const titleText = (
-        card.querySelector(".home-index-item-title") ||
-        card.querySelector(".home-card-title") ||
-        primaryLink
-      ).textContent || "";
-
-      const opensNewTab = shouldOpenLinkInNewTab(primaryLink);
-
-      card.classList.add("is-card-link");
-      card.dataset.cardHref = href;
-      card.setAttribute("role", "link");
-      card.setAttribute("tabindex", "0");
-      card.setAttribute(
-        "aria-label",
-        titleText.trim() + (opensNewTab ? " 새 탭에서 열기" : " 열기")
-      );
-
-      if (card.__cardLinkBound === true) return;
-      card.__cardLinkBound = true;
-
-      card.addEventListener("click", (event) => {
-        if (event.defaultPrevented) return;
-        if (isInteractiveTarget(event.target)) return;
-        primaryLink.click();
-      });
-
-      card.addEventListener("keydown", (event) => {
-        if (event.key !== "Enter" && event.key !== " ") return;
-        event.preventDefault();
-        primaryLink.click();
-      });
+    card.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      navigateFromLink(primaryLink);
     });
-  }
+  });
+}
 
   function bindSearch() {
-    const searchSection = document.getElementById("home-search");
-    const form = document.getElementById("homeSearchForm");
-    const input = document.getElementById("homeSearchInput");
-    const resetBtn = document.getElementById("homeSearchReset");
-    const status = document.getElementById("homeSearchStatus");
+  const searchSection = document.getElementById("home-search");
+  const form = document.getElementById("homeSearchForm");
+  const submitBtn = document.getElementById("homeSearchSubmit");
+  const input = document.getElementById("homeSearchInput");
+  const resetBtn = document.getElementById("homeSearchReset");
+  const status = document.getElementById("homeSearchStatus");
 
-    if (!searchSection || !form || !input || !resetBtn || !status) {
-      return;
-    }
+  if (!searchSection || !input || !resetBtn || !status) {
+    return;
+  }
 
-    let outputWrap = document.getElementById("homeSearchOutput");
-    if (!outputWrap) {
-      outputWrap = document.createElement("div");
-      outputWrap.id = "homeSearchOutput";
-      outputWrap.className = "home-search-output";
-      outputWrap.hidden = true;
-    }
+  const hasExplicitSubmit = !!(form || submitBtn);
+  let liveSearchTimer = null;
 
-    let resultPanel = document.getElementById("homeSearchResults");
-    let resultGrid = document.getElementById("homeSearchResultGrid");
+  let outputWrap = document.getElementById("homeSearchOutput");
+  if (!outputWrap) {
+    outputWrap = document.createElement("div");
+    outputWrap.id = "homeSearchOutput";
+    outputWrap.className = "home-search-output";
+    outputWrap.hidden = true;
+  }
 
-    if (!resultPanel) {
-      resultPanel = document.createElement("section");
-      resultPanel.id = "homeSearchResults";
-      resultPanel.className = "card home-search-results";
-      resultPanel.hidden = true;
-      resultPanel.setAttribute("aria-labelledby", "homeSearchResultsTitle");
-      resultPanel.innerHTML =
-        '<div class="home-search-results-head">' +
-        '  <div>' +
-        '    <p class="home-section-kicker">검색 결과</p>' +
-        '    <h3 class="home-card-title" id="homeSearchResultsTitle">해당하는 기능 카드</h3>' +
-        '  </div>' +
-        '  <p class="muted">검색한 기능 카드를 같은 검색 섹션 안에서 바로 확인할 수 있습니다.</p>' +
-        '</div>' +
-        '<div class="home-search-result-grid" id="homeSearchResultGrid"></div>';
-      resultGrid = resultPanel.querySelector("#homeSearchResultGrid");
-    } else if (!resultGrid) {
-      resultGrid = document.createElement("div");
-      resultGrid.id = "homeSearchResultGrid";
-      resultGrid.className = "home-search-result-grid";
-      resultPanel.appendChild(resultGrid);
-    }
+  let resultPanel = document.getElementById("homeSearchResults");
+  let resultGrid = document.getElementById("homeSearchResultGrid");
 
-    let empty = document.getElementById("homeSearchEmpty");
-    if (!empty) {
-      empty = document.createElement("div");
-      empty.id = "homeSearchEmpty";
-      empty.className = "card home-empty-state";
-      empty.hidden = true;
-      empty.innerHTML =
-        '<h3 class="local-h3">검색 결과가 없습니다.</h3>' +
-        '<p>단어를 조금 줄이거나, 다른 조합으로 다시 검색해 보세요. 예: 연차 / 사회보험 엑셀 / 통상임금</p>';
-    }
+  if (!resultPanel) {
+    resultPanel = document.createElement("section");
+    resultPanel.id = "homeSearchResults";
+    resultPanel.className = "card home-search-results";
+    resultPanel.hidden = true;
+    resultPanel.setAttribute("aria-labelledby", "homeSearchResultsTitle");
+    resultPanel.innerHTML =
+      '<div class="home-search-results-head">' +
+      '  <div>' +
+      '    <p class="home-section-kicker">검색 결과</p>' +
+      '    <h3 class="home-card-title" id="homeSearchResultsTitle">해당하는 기능 카드</h3>' +
+      '  </div>' +
+      '  <p class="muted">대표 기능과 전체 업무 목록에서 일치하는 기능 카드를 우선 보여줍니다.</p>' +
+      '</div>' +
+      '<div class="home-search-result-grid" id="homeSearchResultGrid"></div>';
+    resultGrid = resultPanel.querySelector("#homeSearchResultGrid");
+  } else if (!resultGrid) {
+    resultGrid = document.createElement("div");
+    resultGrid.id = "homeSearchResultGrid";
+    resultGrid.className = "home-search-result-grid";
+    resultPanel.appendChild(resultGrid);
+  }
 
-    if (status.nextElementSibling !== outputWrap) {
-      status.insertAdjacentElement("afterend", outputWrap);
-    }
+  let empty = document.getElementById("homeSearchEmpty");
+  if (!empty) {
+    empty = document.createElement("div");
+    empty.id = "homeSearchEmpty";
+    empty.className = "card home-empty-state";
+    empty.hidden = true;
+    empty.innerHTML =
+      '<h3 class="local-h3">검색 결과가 없습니다.</h3>' +
+      '<p>단어를 조금 줄이거나, 다른 조합으로 다시 검색해 보세요. 예: 연차 / 사회보험 엑셀 / 통상임금</p>';
+  }
 
-    if (!outputWrap.contains(resultPanel)) {
-      outputWrap.appendChild(resultPanel);
-    }
+  if (status.nextElementSibling !== outputWrap) {
+    status.insertAdjacentElement("afterend", outputWrap);
+  }
 
-    if (!outputWrap.contains(empty)) {
-      outputWrap.appendChild(empty);
-    }
+  if (!outputWrap.contains(resultPanel)) {
+    outputWrap.appendChild(resultPanel);
+  }
 
-    const allItems = Array.from(document.querySelectorAll(".js-search-item"));
-    const searchableSections = Array.from(
-      document.querySelectorAll(".home-search-scope")
+  if (!outputWrap.contains(empty)) {
+    outputWrap.appendChild(empty);
+  }
+
+  const allItems = Array.from(document.querySelectorAll(".js-search-item"));
+  const searchableSections = Array.from(
+    document.querySelectorAll(".home-search-scope")
+  );
+  const categorySections = Array.from(
+    document.querySelectorAll(".home-category-section")
+  );
+  const chips = Array.from(document.querySelectorAll(".home-search-chip"));
+  const sectionLabels = {
+    "home-features": "대표 기능",
+    "home-packages": "업무 패키지",
+    "home-all-tools": "전체 업무 목록",
+  };
+
+  const highlightTargets = Array.from(
+    document.querySelectorAll(
+      [
+        ".js-search-item .home-card-title",
+        ".js-search-item .home-card-desc",
+        ".js-search-item .home-index-item-title a",
+        ".js-search-item .home-meta-list dd",
+        ".js-search-item .home-compact-meta dd",
+      ].join(",")
+    )
+  );
+
+  function getItemPriority(item) {
+    if (item.classList.contains("home-feature-card")) return 0;
+    if (item.classList.contains("home-index-item")) return 1;
+    if (item.classList.contains("home-package-card")) return 2;
+    return 3;
+  }
+
+  function getPrimaryHref(item) {
+    const link = item.querySelector(
+      ".home-card-cta[href], .home-index-open[href], .home-index-item-title a[href], a[href]"
     );
-    const categorySections = Array.from(
-      document.querySelectorAll(".home-category-section")
-    );
-    const chips = Array.from(document.querySelectorAll(".home-search-chip"));
-    const sectionLabels = {
-      "home-features": "대표 기능",
-      "home-packages": "업무 패키지",
-      "home-all-tools": "전체 업무 목록",
-    };
+    return link ? link.getAttribute("href") || "" : "";
+  }
 
-    const highlightTargets = Array.from(
-      document.querySelectorAll(
-        [
-          ".js-search-item .home-card-title",
-          ".js-search-item .home-card-desc",
-          ".js-search-item .home-index-item-title a",
-          ".js-search-item .home-meta-list dd",
-          ".js-search-item .home-compact-meta dd",
-        ].join(",")
-      )
-    );
+  const itemRecords = allItems.map((item, index) => ({
+    item,
+    index,
+    priority: getItemPriority(item),
+    href: getPrimaryHref(item),
+    haystack: normalize(item.getAttribute("data-search")),
+  }));
 
-    function getItemPriority(item) {
-      if (item.classList.contains("home-feature-card")) return 0;
-      if (item.classList.contains("home-index-item")) return 1;
-      if (item.classList.contains("home-package-card")) return 2;
-      return 3;
+  highlightTargets.forEach((element) => {
+    if (!element.dataset.searchOriginalText) {
+      element.dataset.searchOriginalText = element.textContent || "";
+    }
+  });
+
+  categorySections.forEach((section) => {
+    const details = section.querySelector(".home-accordion");
+    const meta = section.querySelector(".home-accordion-meta");
+
+    if (details) {
+      details.dataset.defaultOpen = details.open ? "true" : "false";
     }
 
-    function getPrimaryHref(item) {
-      const explicitHref = String(item.getAttribute("data-card-href") || "").trim();
-      if (explicitHref) return explicitHref;
-
-      const link = item.querySelector(
-        ".home-card-cta[href], .home-flow-link[href], .home-inline-link[href], .home-index-open[href], .home-index-item-title a[href], a[href]"
-      );
-      return link ? link.getAttribute("href") || "" : "";
+    if (meta && !meta.dataset.defaultText) {
+      meta.dataset.defaultText = meta.textContent.trim();
     }
+  });
 
-    const itemRecords = allItems.map((item, index) => ({
-      item,
-      index,
-      priority: getItemPriority(item),
-      href: getPrimaryHref(item),
-      haystack: normalize(item.getAttribute("data-search")),
-    }));
+  let appliedQuery = "";
 
-    highlightTargets.forEach((element) => {
-      if (!element.dataset.searchOriginalText) {
-        element.dataset.searchOriginalText = element.textContent || "";
-      }
-    });
+  function buildStateFromQuery(query) {
+    const normalizedQuery = String(query || "").trim();
+    const tokens = tokenize(normalizedQuery);
+    const active = tokens.length > 0;
 
-    categorySections.forEach((section) => {
-      const details = section.querySelector(".home-accordion");
-      const meta = section.querySelector(".home-accordion-meta");
-
-      if (details) {
-        details.dataset.defaultOpen = details.open ? "true" : "false";
-      }
-
-      if (meta && !meta.dataset.defaultText) {
-        meta.dataset.defaultText = meta.textContent.trim();
-      }
-    });
-
-    let appliedQuery = "";
-
-    function buildStateFromQuery(query) {
-      const normalizedQuery = String(query || "").trim();
-      const tokens = tokenize(normalizedQuery);
-      const active = tokens.length > 0;
-
-      if (!active) {
-        return {
-          query: normalizedQuery,
-          active: false,
-          tokens,
-          matches: [],
-          matchSet: new Set(),
-        };
-      }
-
-      const rawMatches = itemRecords
-        .filter((record) => tokens.every((token) => record.haystack.includes(token)))
-        .sort((a, b) => a.priority - b.priority || a.index - b.index);
-
-      const seen = new Set();
-      const matches = [];
-
-      rawMatches.forEach((record) => {
-        const key = record.href || "item-" + record.index;
-        if (seen.has(key)) return;
-        seen.add(key);
-        matches.push(record.item);
-      });
-
+    if (!active) {
       return {
         query: normalizedQuery,
-        active: true,
+        active: false,
         tokens,
-        matches,
-        matchSet: new Set(matches),
+        matches: [],
+        matchSet: new Set(),
       };
     }
 
-    function countMatchesInSection(section, matches) {
-      return matches.filter((item) => section.contains(item)).length;
+    const rawMatches = itemRecords
+      .filter((record) => tokens.every((token) => record.haystack.includes(token)))
+      .sort((a, b) => a.priority - b.priority || a.index - b.index);
+
+    const seen = new Set();
+    const matches = [];
+
+    rawMatches.forEach((record) => {
+      const key = record.href || "item-" + record.index;
+      if (seen.has(key)) return;
+      seen.add(key);
+      matches.push(record.item);
+    });
+
+    return {
+      query: normalizedQuery,
+      active: true,
+      tokens,
+      matches,
+      matchSet: new Set(matches),
+    };
+  }
+
+  function countMatchesInSection(section, matches) {
+    return matches.filter((item) => section.contains(item)).length;
+  }
+
+  function updateStatus(state) {
+    if (!state.active) {
+      status.textContent =
+        "대표 기능, 업무 패키지, 전체 업무 목록에서 총 " +
+        allItems.length +
+        "개 항목을 찾을 수 있습니다.";
+      return;
     }
 
-    function updateStatus(state) {
-      if (!state.active) {
-        status.textContent =
-          "대표 기능, 업무 패키지, 전체 업무 목록에서 총 " +
-          allItems.length +
-          "개 항목을 찾을 수 있습니다.";
-        return;
-      }
+    const parts = searchableSections.map((section) => {
+      const label = sectionLabels[section.id] || "항목";
+      const count = countMatchesInSection(section, state.matches);
+      return label + " " + count + "개";
+    });
 
-      const parts = searchableSections.map((section) => {
-        const label = sectionLabels[section.id] || "항목";
-        const count = countMatchesInSection(section, state.matches);
-        return label + " " + count + "개";
+    status.textContent =
+      "검색 결과 " + state.matches.length + "개 · " + parts.join(" / ");
+  }
+
+  function restoreDefaultAccordionState() {
+    categorySections.forEach((section) => {
+      const details = section.querySelector(".home-accordion");
+      if (!details) return;
+      details.open = details.dataset.defaultOpen === "true";
+    });
+  }
+
+  function setChipState(query) {
+    const normalizedQuery = normalize(query);
+
+    chips.forEach((chip) => {
+      const chipQuery = normalize(chip.getAttribute("data-query"));
+      const active = chipQuery === normalizedQuery && normalizedQuery !== "";
+      chip.classList.toggle("is-active", active);
+      chip.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  function restoreHighlights() {
+    highlightTargets.forEach((element) => {
+      if (!element.dataset.searchOriginalText) return;
+      element.textContent = element.dataset.searchOriginalText;
+    });
+  }
+
+  function applyHighlights(tokens) {
+    if (!tokens.length) {
+      restoreHighlights();
+      return;
+    }
+
+    const uniqueTokens = Array.from(new Set(tokens))
+      .filter(Boolean)
+      .sort((a, b) => b.length - a.length);
+
+    if (!uniqueTokens.length) {
+      restoreHighlights();
+      return;
+    }
+
+    const sourcePattern =
+      "(" + uniqueTokens.map((token) => escapeRegExp(token)).join("|") + ")";
+    const splitPattern = new RegExp(sourcePattern, "gi");
+    const matchPattern = new RegExp("^" + sourcePattern + "$", "i");
+
+    highlightTargets.forEach((element) => {
+      const originalText = element.dataset.searchOriginalText || "";
+      if (!originalText) return;
+
+      const parts = originalText.split(splitPattern);
+      element.innerHTML = parts
+        .map((part) => {
+          if (!part) return "";
+          const safe = escapeHtml(part);
+          return matchPattern.test(part)
+            ? '<mark class="home-search-mark">' + safe + "</mark>"
+            : safe;
+        })
+        .join("");
+    });
+  }
+
+  function updateCategoryMeta(active, matches) {
+    categorySections.forEach((section) => {
+      const meta = section.querySelector(".home-accordion-meta");
+      if (!meta) return;
+
+      if (active) {
+        meta.textContent = countMatchesInSection(section, matches) + "개 일치";
+      } else {
+        meta.textContent = meta.dataset.defaultText || meta.textContent;
+      }
+    });
+  }
+
+  function renderResults(state) {
+    resultGrid.innerHTML = "";
+
+    if (!state.active || !state.matches.length) {
+      resultPanel.hidden = true;
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    state.matches.forEach((item) => {
+      const clone = item.cloneNode(true);
+      clone.hidden = false;
+      clone.removeAttribute("hidden");
+      clone.classList.remove("js-search-item");
+      clone.classList.add("home-search-result-card");
+      clone.removeAttribute("data-search");
+      fragment.appendChild(clone);
+    });
+
+    resultGrid.appendChild(fragment);
+    decorateHomeLinks(resultGrid);
+    makeIndexCardsClickable(resultGrid);
+    resultPanel.hidden = false;
+  }
+
+  function refreshResetVisibility() {
+    const hasInput = String(input.value || "").trim() !== "";
+    const hasApplied = String(appliedQuery || "").trim() !== "";
+    resetBtn.hidden = !(hasInput || hasApplied);
+  }
+
+  function resetSearch(options) {
+    const opts = options || {};
+
+    input.value = "";
+    appliedQuery = "";
+
+    allItems.forEach((item) => {
+      item.hidden = false;
+    });
+
+    searchableSections.forEach((section) => {
+      section.hidden = false;
+    });
+
+    categorySections.forEach((section) => {
+      section.hidden = false;
+    });
+
+    outputWrap.hidden = true;
+    empty.hidden = true;
+    resultPanel.hidden = true;
+    resultGrid.innerHTML = "";
+
+    restoreHighlights();
+    updateCategoryMeta(false, []);
+    restoreDefaultAccordionState();
+    updateStatus({ active: false, matches: [] });
+    setChipState("");
+    refreshResetVisibility();
+
+    if (opts.syncUrl !== false) {
+      writeQueryToUrl("");
+    }
+
+    if (!opts.skipFocus) {
+      input.focus();
+    }
+  }
+
+  function applySearch(query, options) {
+    const opts = options || {};
+    const state = buildStateFromQuery(query);
+    appliedQuery = state.query;
+    input.value = state.query;
+
+    allItems.forEach((item) => {
+      item.hidden = state.active ? !state.matchSet.has(item) : false;
+    });
+
+    if (state.active) {
+      searchableSections.forEach((section) => {
+        section.hidden = true;
       });
 
-      status.textContent =
-        "검색 결과 " + state.matches.length + "개 · " + parts.join(" / ");
-    }
-
-    function restoreDefaultAccordionState() {
       categorySections.forEach((section) => {
         const details = section.querySelector(".home-accordion");
-        if (!details) return;
-        details.open = details.dataset.defaultOpen === "true";
-      });
-    }
-
-    function setChipState(query) {
-      const normalizedQuery = normalize(query);
-
-      chips.forEach((chip) => {
-        const chipQuery = normalize(chip.getAttribute("data-query"));
-        const active = chipQuery === normalizedQuery && normalizedQuery !== "";
-        chip.classList.toggle("is-active", active);
-        chip.setAttribute("aria-pressed", String(active));
-      });
-    }
-
-    function restoreHighlights() {
-      highlightTargets.forEach((element) => {
-        if (!element.dataset.searchOriginalText) return;
-        element.textContent = element.dataset.searchOriginalText;
-      });
-    }
-
-    function applyHighlights(tokens) {
-      if (!tokens.length) {
-        restoreHighlights();
-        return;
-      }
-
-      const uniqueTokens = Array.from(new Set(tokens))
-        .filter(Boolean)
-        .sort((a, b) => b.length - a.length);
-
-      if (!uniqueTokens.length) {
-        restoreHighlights();
-        return;
-      }
-
-      const sourcePattern =
-        "(" + uniqueTokens.map((token) => escapeRegExp(token)).join("|") + ")";
-      const splitPattern = new RegExp(sourcePattern, "gi");
-      const matchPattern = new RegExp("^" + sourcePattern + "$", "i");
-
-      highlightTargets.forEach((element) => {
-        const originalText = element.dataset.searchOriginalText || "";
-        if (!originalText) return;
-
-        const parts = originalText.split(splitPattern);
-        element.innerHTML = parts
-          .map((part) => {
-            if (!part) return "";
-            const safe = escapeHtml(part);
-            return matchPattern.test(part)
-              ? '<mark class="home-search-mark">' + safe + "</mark>"
-              : safe;
-          })
-          .join("");
-      });
-    }
-
-    function updateCategoryMeta(active, matches) {
-      categorySections.forEach((section) => {
-        const meta = section.querySelector(".home-accordion-meta");
-        if (!meta) return;
-
-        if (active) {
-          meta.textContent = countMatchesInSection(section, matches) + "개 일치";
-        } else {
-          meta.textContent = meta.dataset.defaultText || meta.textContent;
+        const matchCount = countMatchesInSection(section, state.matches);
+        if (details) {
+          details.open = matchCount > 0;
         }
       });
-    }
-
-    function renderResults(state) {
-      resultGrid.innerHTML = "";
-
-      if (!state.active || !state.matches.length) {
-        resultPanel.hidden = true;
-        return;
-      }
-
-      const fragment = document.createDocumentFragment();
-
-      state.matches.forEach((item) => {
-        const clone = item.cloneNode(true);
-        clone.hidden = false;
-        clone.removeAttribute("hidden");
-        clone.classList.remove("js-search-item");
-        clone.classList.add("home-search-result-card");
-        clone.removeAttribute("data-search");
-        fragment.appendChild(clone);
-      });
-
-      resultGrid.appendChild(fragment);
-      decorateHomeLinks(resultGrid);
-      makeCardLinksClickable(resultGrid);
-      makeIndexCardsClickable(resultGrid);
-      resultPanel.hidden = false;
-    }
-
-    function refreshResetVisibility() {
-      const hasInput = String(input.value || "").trim() !== "";
-      const hasApplied = String(appliedQuery || "").trim() !== "";
-      resetBtn.hidden = !(hasInput || hasApplied);
-    }
-
-    function scrollToResults() {
-      if (outputWrap.hidden) return;
-
-      const reduceMotion =
-        window.matchMedia &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-      try {
-        outputWrap.scrollIntoView({
-          behavior: reduceMotion ? "auto" : "smooth",
-          block: "nearest",
-        });
-      } catch (_) {
-        outputWrap.scrollIntoView();
-      }
-    }
-
-    function resetSearch(options) {
-      const opts = options || {};
-
-      input.value = "";
-      appliedQuery = "";
-
-      allItems.forEach((item) => {
-        item.hidden = false;
-      });
-
+    } else {
       searchableSections.forEach((section) => {
         section.hidden = false;
       });
-
       categorySections.forEach((section) => {
         section.hidden = false;
       });
-
-      outputWrap.hidden = true;
-      empty.hidden = true;
-      resultPanel.hidden = true;
-      resultGrid.innerHTML = "";
-
-      restoreHighlights();
-      updateCategoryMeta(false, []);
       restoreDefaultAccordionState();
-      updateStatus({ active: false, matches: [] });
-      setChipState("");
-      refreshResetVisibility();
-
-      if (opts.syncUrl !== false) {
-        writeQueryToUrl("");
-      }
-
-      if (!opts.skipFocus) {
-        input.focus();
-      }
     }
 
-    function applySearch(query, options) {
-      const opts = options || {};
-      const state = buildStateFromQuery(query);
-      appliedQuery = state.query;
-      input.value = state.query;
+    outputWrap.hidden = !state.active;
+    empty.hidden = !(state.active && state.matches.length === 0);
+    updateStatus(state);
+    updateCategoryMeta(state.active, state.matches);
+    restoreHighlights();
+    applyHighlights(state.tokens);
+    renderResults(state);
+    setChipState(state.query);
+    refreshResetVisibility();
 
-      allItems.forEach((item) => {
-        item.hidden = state.active ? !state.matchSet.has(item) : false;
-      });
+    if (opts.syncUrl !== false) {
+      writeQueryToUrl(state.query);
+    }
+  }
 
-      if (state.active) {
-        searchableSections.forEach((section) => {
-          section.hidden = true;
-        });
+  function queueLiveSearch() {
+    if (hasExplicitSubmit) return;
 
-        categorySections.forEach((section) => {
-          const details = section.querySelector(".home-accordion");
-          const matchCount = countMatchesInSection(section, state.matches);
-          if (details) {
-            details.open = matchCount > 0;
-          }
-        });
-      } else {
-        searchableSections.forEach((section) => {
-          section.hidden = false;
-        });
-        categorySections.forEach((section) => {
-          section.hidden = false;
-        });
-        restoreDefaultAccordionState();
-      }
-
-      outputWrap.hidden = !state.active;
-      empty.hidden = !(state.active && state.matches.length === 0);
-      updateStatus(state);
-      updateCategoryMeta(state.active, state.matches);
-      restoreHighlights();
-      applyHighlights(state.tokens);
-      renderResults(state);
-      setChipState(state.query);
-      refreshResetVisibility();
-
-      if (opts.syncUrl !== false) {
-        writeQueryToUrl(state.query);
-      }
-
-      if (state.active && opts.scroll === true) {
-        scrollToResults();
-      }
+    if (liveSearchTimer) {
+      window.clearTimeout(liveSearchTimer);
     }
 
+    const value = input.value;
+
+    liveSearchTimer = window.setTimeout(() => {
+      if (!String(value || "").trim()) {
+        resetSearch({ skipFocus: true });
+        return;
+      }
+      applySearch(value, { scroll: false });
+    }, 180);
+  }
+
+  if (form) {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       applySearch(input.value);
     });
-
-    input.addEventListener("input", () => {
-      setChipState(input.value);
-      refreshResetVisibility();
+  } else if (submitBtn) {
+    submitBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      applySearch(input.value);
     });
+  }
 
-    input.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        resetSearch();
-      }
-    });
+  input.addEventListener("input", () => {
+    setChipState(input.value);
+    refreshResetVisibility();
+    queueLiveSearch();
+  });
 
-    resetBtn.addEventListener("click", () => {
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
       resetSearch();
-    });
-
-    chips.forEach((chip) => {
-      chip.setAttribute("aria-pressed", "false");
-      chip.addEventListener("click", () => {
-        input.value = chip.getAttribute("data-query") || "";
-        setChipState(input.value);
-        refreshResetVisibility();
-        input.focus();
-      });
-    });
-
-    const initialQuery = readQueryFromUrl();
-    if (initialQuery) {
-      input.value = initialQuery;
-      applySearch(initialQuery, { syncUrl: false, scroll: false });
       return;
     }
 
-    resetSearch({ syncUrl: false, skipFocus: true });
+    if (event.key === "Enter" && !form) {
+      event.preventDefault();
+      applySearch(input.value);
+    }
+  });
+
+  resetBtn.addEventListener("click", () => {
+    resetSearch();
+  });
+
+  chips.forEach((chip) => {
+    chip.setAttribute("aria-pressed", "false");
+    chip.addEventListener("click", () => {
+      input.value = chip.getAttribute("data-query") || "";
+      setChipState(input.value);
+      refreshResetVisibility();
+
+      if (hasExplicitSubmit) {
+        input.focus();
+        return;
+      }
+
+      applySearch(input.value, { scroll: false });
+      input.focus();
+    });
+  });
+
+  const initialQuery = readQueryFromUrl();
+  if (initialQuery) {
+    input.value = initialQuery;
+    applySearch(initialQuery, { syncUrl: false, scroll: false });
+    return;
   }
+
+  resetSearch({ syncUrl: false, skipFocus: true });
+}
 
   function init() {
     if (!document.body.classList.contains("home-page")) return;
     setDownloadLinks();
     decorateHomeLinks(document);
-    makeCardLinksClickable(document);
     makeIndexCardsClickable(document);
     bindSearch();
     openSectionForHash();
