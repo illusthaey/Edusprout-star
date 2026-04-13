@@ -102,11 +102,11 @@
       <div class="footer-link-group footer-link-group--panel">
         <strong class="footer-link-group-title">운영 메모</strong>
         <p class="footer-meta">
-          비공식 참고용 도구 · 강원 기준 중심 · 업로드한 파일은 브라우저에서만 처리되며 저장되지 않습니다.
+          비공식 참고용 도구 · 강원특별자치도 기준 · 업로드한 파일은 브라우저에서만 처리되며 저장되지 않습니다. · 
           최종 확인과 제출 책임은 사용자 본인에게 있습니다.
         </p>
         <p class="footer-meta">연락: edusproutcomics@naver.com</p>
-        <a class="btn primary" href="https://naver.me/GEdAnG29" target="_blank" rel="noopener" referrerpolicy="origin">고주무관에게 사용자 의견 보내기</a>
+        <a class="btn primary" href="https://naver.me/GEdAnG29" target="_blank" rel="noopener" referrerpolicy="origin">고주무관에게 사용자 의견 보내기 (네이버폼 설문)</a>
       </div>
     </div>
 
