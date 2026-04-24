@@ -1,0 +1,1102 @@
+# -*- coding: utf-8 -*-
+"""
+방과후강사 월보수액 계산기 (Windows EXE 배포용)
+- HTML/JS 로직 기반 계산식 이식
+- 행 추가/삭제, 합계, 원단위(10원) 절삭
+- 표 복사(탭 구분), CSV 저장, Excel(xlsx) 저장
+
+[업그레이드 반영]
+- 필요경비율: 기본은 '고정' (체크 시 수기 변경 가능)
+- 표의 필요경비율(%) 칸: 기준 설정 값과 연동(읽기전용 표시)
+- 방향키/Enter로 셀 이동(엑셀처럼), 마지막 행에서 Enter(아래) 시 자동 행 추가
+- 일괄 업로드 서식 다운로드(xlsx/csv)
+- 엑셀/CSV 업로드: (1)초기화 후 반영(교체) (2)추가 반영(append)
+- 업로드 서식: 강사명 / 강사료 지급액 / 비고(메모) 지원 + 헤더 자동 인식
+"""
+
+from __future__ import annotations
+
+import re
+import os
+import csv
+import datetime
+import webbrowser
+import tkinter as tk
+from tkinter import ttk, filedialog, messagebox
+
+try:
+    from openpyxl import Workbook, load_workbook
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+except Exception:
+    Workbook = None
+    load_workbook = None
+
+
+# =========================
+# 계산 유틸 (JS와 동일 개념)
+# =========================
+
+EI_PERSONAL_RATE = 0.8 / 100.0  # 고용보험(개인) 0.8%
+MIN_ROWS_AFTER_UPLOAD = 10
+TEMPLATE_ROWS = 50
+
+
+def to_int(val) -> int:
+    if val is None:
+        return 0
+    s = str(val)
+    s = re.sub(r"[^\d\-\.]", "", s)
+    try:
+        n = float(s) if s else 0.0
+    except Exception:
+        return 0
+    if n != n:  # NaN
+        return 0
+    return int(n)
+
+
+def cut_won10(n) -> int:
+    n = int(to_int(n))
+    if n <= 0:
+        return 0
+    return (n // 10) * 10
+
+
+def fmt(n: int) -> str:
+    try:
+        return f"{int(n):,}"
+    except Exception:
+        return "0"
+
+
+def clamp_rate(r) -> float:
+    try:
+        x = float(r)
+    except Exception:
+        return 0.0
+    if x < 0:
+        return 0.0
+    if x > 100:
+        return 100.0
+    return x
+
+
+def today_ymd() -> str:
+    d = datetime.date.today()
+    return d.strftime("%Y-%m-%d")
+
+
+def normalize_header_cell(v) -> str:
+    return str(v or "").replace(" ", "").replace("\t", "").replace("\n", "").lower()
+
+
+def detect_upload_columns(header_row: list) -> tuple[int, int, int | None]:
+    headers = [normalize_header_cell(x) for x in (header_row or [])]
+
+    # name 후보: 강사명, 이름
+    name_idx = next((i for i, h in enumerate(headers) if ("강사명" in h) or ("이름" in h)), -1)
+
+    # amount 후보: 강사료, 품의금액, 지급액, 금액(단 필요경비/보험 제외)
+    def is_amount_header(h: str) -> bool:
+        return (
+            ("강사료" in h)
+            or ("품의금액" in h)
+            or ("지급액" in h)
+            or (("금액" in h) and ("필요경비" not in h) and ("보험" not in h))
+        )
+
+    amt_idx = next((i for i, h in enumerate(headers) if is_amount_header(h)), -1)
+
+    # memo 후보: 비고, 메모, memo
+    memo_idx = next((i for i, h in enumerate(headers) if ("비고" in h) or ("메모" in h) or ("memo" in h)), -1)
+    if memo_idx == -1:
+        memo_idx = None
+
+    # 못 찾으면 기본: A=이름, B=금액
+    if name_idx == -1:
+        name_idx = 0
+    if amt_idx == -1:
+        amt_idx = 1
+
+    # 혹시 같은 열로 잡히면 B(1)로 보정
+    if amt_idx == name_idx:
+        amt_idx = 1 if name_idx != 1 else 0
+
+    return name_idx, amt_idx, memo_idx
+
+
+# =========================
+# UI Row (1행)
+# =========================
+
+class CalcRow:
+    """
+    표 1행
+    - 필요경비율(%) 칸은 기준설정 var_base_rate에 연동(읽기전용)
+    - navigation을 위해 entry 참조를 유지
+    """
+    def __init__(self, parent, idx: int, on_change, on_delete, base_rate_var: tk.StringVar, bg="#DCEFFF"):
+        self.parent = parent
+        self.idx = idx
+        self.on_change = on_change
+        self.on_delete = on_delete
+
+        self.frame = tk.Frame(parent, bg=bg)
+
+        # 입력 변수
+        self.var_teacher = tk.StringVar()
+        self.var_amount = tk.StringVar()
+        self.var_memo = tk.StringVar()
+
+        # 필요경비율(표 칸): 기준설정과 연동(공유 var)
+        self.var_rate = base_rate_var
+
+        # 출력 라벨 값(문자열)
+        self.var_expense = tk.StringVar(value="0")
+        self.var_monthly = tk.StringVar(value="0")
+        self.var_wcfee = tk.StringVar(value="0")
+        self.var_eifee = tk.StringVar(value="0")
+
+        # 위젯
+        self.lbl_idx = tk.Label(self.frame, text=str(idx), width=4, anchor="center", bg=bg)
+
+        self.ent_teacher = tk.Entry(self.frame, textvariable=self.var_teacher, width=16)
+        self.ent_amount = tk.Entry(self.frame, textvariable=self.var_amount, width=14, justify="right")
+        self.ent_rate = tk.Entry(self.frame, textvariable=self.var_rate, width=8, justify="right", state="readonly")
+
+        self.lbl_expense = tk.Label(self.frame, textvariable=self.var_expense, width=12, anchor="e", bg=bg)
+        self.lbl_monthly = tk.Label(self.frame, textvariable=self.var_monthly, width=12, anchor="e", bg=bg)
+        self.lbl_wcfee = tk.Label(self.frame, textvariable=self.var_wcfee, width=12, anchor="e", bg=bg)
+        self.lbl_eifee = tk.Label(self.frame, textvariable=self.var_eifee, width=12, anchor="e", bg=bg)
+
+        self.ent_memo = tk.Entry(self.frame, textvariable=self.var_memo, width=22)
+        self.btn_del = tk.Button(self.frame, text="삭제", width=6, command=self._delete_click)
+
+        # 배치
+        self.lbl_idx.grid(row=0, column=0, padx=2, pady=1, sticky="nsew")
+        self.ent_teacher.grid(row=0, column=1, padx=2, pady=1, sticky="nsew")
+        self.ent_amount.grid(row=0, column=2, padx=2, pady=1, sticky="nsew")
+        self.ent_rate.grid(row=0, column=3, padx=2, pady=1, sticky="nsew")
+
+        self.lbl_expense.grid(row=0, column=4, padx=2, pady=1, sticky="nsew")
+        self.lbl_monthly.grid(row=0, column=5, padx=2, pady=1, sticky="nsew")
+        self.lbl_wcfee.grid(row=0, column=6, padx=2, pady=1, sticky="nsew")
+        self.lbl_eifee.grid(row=0, column=7, padx=2, pady=1, sticky="nsew")
+
+        self.ent_memo.grid(row=0, column=8, padx=2, pady=1, sticky="nsew")
+        self.btn_del.grid(row=0, column=9, padx=2, pady=1, sticky="nsew")
+
+        # 이벤트: 입력 변경시 재계산
+        for v in (self.var_teacher, self.var_amount, self.var_memo):
+            v.trace_add("write", lambda *_: self.on_change())
+
+        # 금액 포맷팅(포커스 아웃에서 정리)
+        self.ent_amount.bind("<FocusOut>", self._format_amount_on_blur)
+        self.ent_amount.bind("<Return>", self._format_amount_on_blur)
+
+    def _format_amount_on_blur(self, _evt=None):
+        raw = self.var_amount.get()
+        n = to_int(raw)
+        self.var_amount.set(fmt(n) if n > 0 else "")
+        self.on_change()
+
+    def _delete_click(self):
+        self.on_delete(self)
+
+    def set_index(self, idx: int):
+        self.idx = idx
+        self.lbl_idx.config(text=str(idx))
+
+    def get_amount(self) -> int:
+        return to_int(self.var_amount.get())
+
+    def get_teacher(self) -> str:
+        return self.var_teacher.get().strip()
+
+    def get_memo(self) -> str:
+        return self.var_memo.get().strip()
+
+    def is_empty(self) -> bool:
+        return (not self.get_teacher()) and (self.get_amount() == 0) and (not self.get_memo())
+
+    def set_data(self, teacher: str = "", amount: int = 0, memo: str = ""):
+        self.var_teacher.set(teacher or "")
+        self.var_amount.set(fmt(amount) if int(amount or 0) > 0 else "")
+        self.var_memo.set(memo or "")
+
+    def set_outputs(self, expense: int, monthly: int, wcfee: int, eifee: int):
+        self.var_expense.set(fmt(expense))
+        self.var_monthly.set(fmt(monthly))
+        self.var_wcfee.set(fmt(wcfee))
+        self.var_eifee.set(fmt(eifee))
+
+    def entry_by_col(self, col: int) -> tk.Entry:
+        # 0: teacher, 1: amount, 2: rate(readonly), 3: memo
+        if col == 0:
+            return self.ent_teacher
+        if col == 1:
+            return self.ent_amount
+        if col == 2:
+            return self.ent_rate
+        return self.ent_memo
+
+
+# =========================
+# App
+# =========================
+
+class App(tk.Tk):
+    HOME_URL = "https://edusprouthaey.co.kr/"
+
+    def __init__(self):
+        super().__init__()
+
+        # UI 기본
+        self.title("업무천재 고주무관 (https://edusprouthaey.co.kr)")
+        self.geometry("1180x690")
+        self.minsize(1040, 600)
+
+        # 컬러(스크린샷 계열: 연한 하늘색)
+        self.BG = "#DCEFFF"
+        self.BORDER = "#A8C3E6"
+        self.PANEL = "#EAF4FF"
+
+        self.configure(bg=self.BG)
+
+        # 벌크 업데이트(업로드/대량 채움 시 성능 개선)
+        self._bulk_updating = False
+
+        # =========================
+        # 상단 헤더
+        # =========================
+        header = tk.Frame(self, bg=self.BG)
+        header.pack(fill="x", padx=12, pady=(10, 6))
+
+        titlebar = tk.Frame(header, bg=self.BG)
+        titlebar.pack(fill="x")
+
+        # 도메인 버튼: 하얀색 + 글씨 2pt 키움
+        link_btn_style = dict(
+            bg="#FFFFFF",
+            activebackground="#F3F3F3",
+            relief="solid",
+            bd=1,
+            highlightthickness=0,
+            font=("맑은 고딕", 11)  # 기본보다 약 2pt 업
+        )
+
+        tk.Label(
+            titlebar,
+            text="방과후강사 월보수액 계산기 (ver.260201_01)",
+            font=("맑은 고딕", 20, "bold"),
+            bg=self.BG,
+            anchor="w"
+        ).pack(side="left", fill="x", expand=True)
+
+        tk.Button(
+            titlebar,
+            text="업무효율화 웹페이지",
+            command=self.open_homepage,
+            **link_btn_style
+        ).pack(side="right")
+
+        tk.Label(
+            header,
+            text="·강사료 지급액 입력하면 월보수액 및 산재보험료 산출 (엑셀 저장)\n"
+                 "·원단위 절삭, 필요경비율은 기본값(14.9%) 고정이며 수기 변경 체크 시 변경 가능합니다.\n"
+                 "·고용보험료는 부과금액 예측용으로만 참고하십시오.",
+            font=("맑은 고딕", 10),
+            bg=self.BG,
+            justify="left",
+            anchor="w"
+        ).pack(fill="x", pady=(4, 0))
+
+        # =========================
+        # 기준 설정
+        # =========================
+        cond = tk.LabelFrame(self, text="기본 설정 값 (변경 가능)", bg=self.BG, fg="#1a1a1a", font=("맑은 고딕", 10, "bold"))
+        cond.pack(fill="x", padx=12, pady=(6, 8))
+
+        self.var_base_rate = tk.StringVar(value="14.9")      # 필요경비율(%)
+        self.var_wc_rate = tk.StringVar(value="0.33")        # 산재보험료율(개인, %)
+        self.var_floor = tk.StringVar(value="1330000")       # 기준보수 하한
+        self.var_status = tk.StringVar(value="대기")
+        self.var_edit_base_rate = tk.BooleanVar(value=False) # 수기변경 체크
+
+        # 입력칸 배치
+        row = tk.Frame(cond, bg=self.BG)
+        row.pack(fill="x", padx=10, pady=8)
+
+        # (1) 필요경비율 + 수기변경 체크 (기본 잠금)
+        box0 = tk.Frame(row, bg=self.BG)
+        box0.grid(row=0, column=0, padx=12, sticky="w")
+        tk.Label(box0, text="필요경비율(%)", bg=self.BG, font=("맑은 고딕", 9)).pack(anchor="w")
+
+        inline = tk.Frame(box0, bg=self.BG)
+        inline.pack(anchor="w")
+
+        self.ent_base_rate = tk.Entry(inline, textvariable=self.var_base_rate, width=10, justify="right", state="disabled")
+        self.ent_base_rate.pack(side="left")
+
+        tk.Checkbutton(
+            inline,
+            text="수기 변경",
+            variable=self.var_edit_base_rate,
+            bg=self.BG,
+            command=self._apply_base_rate_edit_state
+        ).pack(side="left", padx=(10, 0))
+
+        # (2) 산재보험료율
+        self._make_labeled_entry(row, "산재보험료율(개인, %)", self.var_wc_rate, width=10, col=1)
+
+        # (3) 기준보수 하한값
+        self._make_labeled_entry(row, "기준보수 하한값", self.var_floor, width=14, col=2)
+
+        # 기준값 변경 시 재계산
+        for v in (self.var_base_rate, self.var_wc_rate, self.var_floor):
+            v.trace_add("write", lambda *_: self.recalc_all())
+
+        tk.Label(
+            cond,
+            text="※ 고용보험료(개인): 월보수액이 80만원 이상~133만원 미만인 경우, 월보수액을 133만원으로 간주하여 고용보험료 산정",
+            font=("맑은 고딕", 9),
+            bg=self.BG,
+            fg="#333333",
+            anchor="w",
+            justify="left"
+        ).pack(fill="x", padx=10, pady=(0, 8))
+
+        # =========================
+        # 본문(표 + 버튼)
+        # =========================
+        body = tk.Frame(self, bg=self.BG)
+        body.pack(fill="both", expand=True, padx=12, pady=(0, 10))
+
+        # ✅ 업로드/서식 버튼(표 위)
+        upload_actions = tk.Frame(body, bg=self.BG)
+        upload_actions.pack(fill="x", pady=(0, 6))
+
+        btn_style = dict(bg="#EEF6FF", activebackground="#E2F0FF", relief="solid", bd=1, highlightthickness=0)
+
+        tk.Button(upload_actions, text="일괄 업로드용 서식 다운로드", command=self.download_template, **btn_style).pack(side="left", padx=(0, 6))
+        tk.Button(upload_actions, text="엑셀 서식 업로드 (초기화 후 반영)", command=lambda: self.upload_apply("replace"), **btn_style).pack(side="left", padx=(0, 6))
+        tk.Button(upload_actions, text="엑셀 서식 업로드 (추가 반영)", command=lambda: self.upload_apply("append"), **btn_style).pack(side="left", padx=(0, 6))
+
+        # 표 헤더
+        table_header = tk.Frame(body, bg=self.PANEL, highlightbackground=self.BORDER, highlightthickness=1)
+        table_header.pack(fill="x")
+
+        headers = ["순번", "강사명", "강사료 지급액", "필요경비율(%)", "필요경비", "월보수액", "산재보험료(개인)", "고용보험료(개인, 예상값)", "비고", "행"]
+        widths  = [4,      16,     14,           10,            12,       12,        16,               18,                     22,    6]
+
+        for i, (h, w) in enumerate(zip(headers, widths)):
+            tk.Label(
+                table_header, text=h, width=w, bg=self.PANEL, font=("맑은 고딕", 9, "bold"),
+                anchor="center"
+            ).grid(row=0, column=i, padx=2, pady=4, sticky="nsew")
+
+        # 스크롤 영역(행)
+        table_area = tk.Frame(body, bg=self.BG)
+        table_area.pack(fill="both", expand=True)
+
+        self.canvas = tk.Canvas(table_area, bg=self.BG, highlightthickness=0)
+        self.scroll_y = ttk.Scrollbar(table_area, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.scroll_y.set)
+
+        self.scroll_y.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+
+        self.rows_frame = tk.Frame(self.canvas, bg=self.BG)
+        self.canvas_window = self.canvas.create_window((0, 0), window=self.rows_frame, anchor="nw")
+
+        self.rows_frame.bind("<Configure>", self._on_frame_configure)
+        self.canvas.bind("<Configure>", self._on_canvas_configure)
+
+        # 합계줄
+        sumbar = tk.Frame(body, bg=self.PANEL, highlightbackground=self.BORDER, highlightthickness=1)
+        sumbar.pack(fill="x", pady=(6, 6))
+
+        tk.Label(sumbar, text="합계", width=4, bg=self.PANEL, font=("맑은 고딕", 9, "bold")).grid(row=0, column=0, padx=2, pady=6)
+        tk.Label(sumbar, text="", width=16, bg=self.PANEL).grid(row=0, column=1, padx=2, pady=6)
+
+        self.lbl_sum_amount = tk.Label(sumbar, text="0", width=14, anchor="e", bg=self.PANEL, font=("맑은 고딕", 9, "bold"))
+        self.lbl_sum_expense = tk.Label(sumbar, text="0", width=12, anchor="e", bg=self.PANEL, font=("맑은 고딕", 9, "bold"))
+        self.lbl_sum_monthly = tk.Label(sumbar, text="0", width=12, anchor="e", bg=self.PANEL, font=("맑은 고딕", 9, "bold"))
+        self.lbl_sum_wc = tk.Label(sumbar, text="0", width=16, anchor="e", bg=self.PANEL, font=("맑은 고딕", 9, "bold"))
+        self.lbl_sum_ei = tk.Label(sumbar, text="0", width=18, anchor="e", bg=self.PANEL, font=("맑은 고딕", 9, "bold"))
+
+        self.lbl_sum_amount.grid(row=0, column=2, padx=2, pady=6, sticky="nsew")
+        tk.Label(sumbar, text="-", width=10, anchor="e", bg=self.PANEL).grid(row=0, column=3, padx=2, pady=6)
+        self.lbl_sum_expense.grid(row=0, column=4, padx=2, pady=6, sticky="nsew")
+        self.lbl_sum_monthly.grid(row=0, column=5, padx=2, pady=6, sticky="nsew")
+        self.lbl_sum_wc.grid(row=0, column=6, padx=2, pady=6, sticky="nsew")
+        self.lbl_sum_ei.grid(row=0, column=7, padx=2, pady=6, sticky="nsew")
+        tk.Label(sumbar, text="", width=22, bg=self.PANEL).grid(row=0, column=8, padx=2, pady=6)
+        tk.Label(sumbar, text="", width=6, bg=self.PANEL).grid(row=0, column=9, padx=2, pady=6)
+
+        # 하단 버튼 영역
+        actions = tk.Frame(body, bg=self.BG)
+        actions.pack(fill="x")
+
+        tk.Button(actions, text="행 추가하기", command=self.add_row, **btn_style).pack(side="right", padx=(6, 0))
+        tk.Button(actions, text="초기화", command=self.reset_all, **btn_style).pack(side="right", padx=(6, 0))
+        tk.Button(actions, text="표 복사하기", command=self.copy_table, **btn_style).pack(side="right", padx=(6, 0))
+        tk.Button(actions, text="계산결과 (CSV) 저장", command=self.save_csv, **btn_style).pack(side="right", padx=(6, 0))
+        tk.Button(actions, text="계산결과 (엑셀) 저장(xlsx)", command=self.save_xlsx, **btn_style).pack(side="right", padx=(6, 0))
+
+        # 상태바
+        status = tk.Frame(self, bg=self.BG)
+        status.pack(fill="x", padx=12, pady=(0, 10))
+        tk.Label(status, textvariable=self.var_status, bg=self.BG, anchor="w").pack(fill="x")
+
+        # 행 목록
+        self.rows: list[CalcRow] = []
+        self.init_rows(10)
+        self._apply_base_rate_edit_state()
+
+    # =========================
+    # 공통 UI
+    # =========================
+
+    def open_homepage(self):
+        try:
+            webbrowser.open_new_tab(self.HOME_URL)
+        except Exception as e:
+            messagebox.showerror("오류", f"웹페이지를 열 수 없습니다.\n{e}")
+
+    def _make_labeled_entry(self, parent, label, var, width, col):
+        box = tk.Frame(parent, bg=self.BG)
+        box.grid(row=0, column=col, padx=12, sticky="w")
+        tk.Label(box, text=label, bg=self.BG, font=("맑은 고딕", 9)).pack(anchor="w")
+        tk.Entry(box, textvariable=var, width=width, justify="right").pack(anchor="w")
+
+    def _apply_base_rate_edit_state(self):
+        allow = bool(self.var_edit_base_rate.get())
+        self.ent_base_rate.config(state="normal" if allow else "disabled")
+        if allow:
+            # 체크 시 바로 입력 가능하게
+            self.after(50, lambda: (self.ent_base_rate.focus_set(), self.ent_base_rate.selection_range(0, tk.END)))
+
+    def _on_frame_configure(self, _evt=None):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+    def _on_canvas_configure(self, _evt=None):
+        canvas_width = self.canvas.winfo_width()
+        self.canvas.itemconfig(self.canvas_window, width=canvas_width)
+
+    # =========================
+    # 행/표 관리
+    # =========================
+
+    def init_rows(self, n: int):
+        for r in self.rows:
+            r.frame.destroy()
+        self.rows.clear()
+
+        for _ in range(n):
+            self.add_row(recalc=False)
+
+        self.renumber()
+        self.recalc_all()
+        self.var_status.set("초기화 완료")
+
+    def ensure_min_rows(self, min_rows: int):
+        while len(self.rows) < min_rows:
+            self.add_row(recalc=False)
+
+    def add_row(self, recalc: bool = True):
+        idx = len(self.rows) + 1
+        row = CalcRow(
+            self.rows_frame,
+            idx=idx,
+            on_change=self.recalc_all,
+            on_delete=self.delete_row,
+            base_rate_var=self.var_base_rate,
+            bg=self.BG
+        )
+        row.frame.pack(fill="x", pady=1)
+        self.rows.append(row)
+
+        # ✅ 엑셀 같은 이동 바인딩(방향키/Enter)
+        self._bind_nav(row)
+
+        if recalc:
+            self.renumber()
+            self.recalc_all()
+
+    def delete_row(self, row: CalcRow):
+        if row in self.rows:
+            row.frame.destroy()
+            self.rows.remove(row)
+            self.renumber()
+            self.recalc_all()
+
+    def renumber(self):
+        for i, r in enumerate(self.rows, start=1):
+            r.set_index(i)
+
+    # =========================
+    # ✅ 키보드 이동(엑셀 느낌)
+    # =========================
+
+    def _focus_select(self, ent: tk.Entry):
+        try:
+            ent.focus_set()
+            ent.selection_range(0, tk.END)
+            ent.icursor(tk.END)
+        except Exception:
+            pass
+
+    def _caret_at_start(self, ent: tk.Entry) -> bool:
+        try:
+            return int(ent.index(tk.INSERT)) == 0
+        except Exception:
+            return True
+
+    def _caret_at_end(self, ent: tk.Entry) -> bool:
+        try:
+            return int(ent.index(tk.INSERT)) == len(ent.get())
+        except Exception:
+            return True
+
+    def _move_to(self, row_idx: int, col_idx: int):
+        if row_idx < 0 or col_idx < 0:
+            return
+        if row_idx >= len(self.rows):
+            return
+        target = self.rows[row_idx].entry_by_col(col_idx)
+        self._focus_select(target)
+
+    def _on_enter(self, _evt, row_obj: CalcRow, col_idx: int, down: bool):
+        try:
+            row_idx = self.rows.index(row_obj)
+        except ValueError:
+            return "break"
+
+        next_row = row_idx + (1 if down else -1)
+
+        # 마지막 행에서 Enter(아래)면 자동 행 추가
+        if down and next_row >= len(self.rows):
+            self.add_row(recalc=True)
+            next_row = len(self.rows) - 1
+
+        if 0 <= next_row < len(self.rows):
+            self._move_to(next_row, col_idx)
+
+        return "break"
+
+    def _on_up_down(self, _evt, row_obj: CalcRow, col_idx: int, delta_row: int):
+        try:
+            row_idx = self.rows.index(row_obj)
+        except ValueError:
+            return "break"
+        next_row = row_idx + delta_row
+        if 0 <= next_row < len(self.rows):
+            self._move_to(next_row, col_idx)
+        return "break"
+
+    def _on_left(self, evt, row_obj: CalcRow, col_idx: int):
+        ent = evt.widget
+        if isinstance(ent, tk.Entry) and not self._caret_at_start(ent):
+            return  # 기본 동작
+        if col_idx - 1 >= 0:
+            try:
+                row_idx = self.rows.index(row_obj)
+                self._move_to(row_idx, col_idx - 1)
+                return "break"
+            except ValueError:
+                return "break"
+        return
+
+    def _on_right(self, evt, row_obj: CalcRow, col_idx: int):
+        ent = evt.widget
+        if isinstance(ent, tk.Entry) and not self._caret_at_end(ent):
+            return  # 기본 동작
+        if col_idx + 1 <= 3:
+            try:
+                row_idx = self.rows.index(row_obj)
+                self._move_to(row_idx, col_idx + 1)
+                return "break"
+            except ValueError:
+                return "break"
+        return
+
+    def _bind_nav(self, row: CalcRow):
+        entries = [row.ent_teacher, row.ent_amount, row.ent_rate, row.ent_memo]
+
+        for col_idx, ent in enumerate(entries):
+            # Enter / Shift+Enter
+            ent.bind("<Return>", lambda e, r=row, c=col_idx: self._on_enter(e, r, c, down=True))
+            ent.bind("<Shift-Return>", lambda e, r=row, c=col_idx: self._on_enter(e, r, c, down=False))
+
+            # Up/Down
+            ent.bind("<Up>", lambda e, r=row, c=col_idx: self._on_up_down(e, r, c, -1))
+            ent.bind("<Down>", lambda e, r=row, c=col_idx: self._on_up_down(e, r, c, +1))
+
+            # Left/Right (커서가 끝/처음일 때만 이동)
+            ent.bind("<Left>", lambda e, r=row, c=col_idx: self._on_left(e, r, c))
+            ent.bind("<Right>", lambda e, r=row, c=col_idx: self._on_right(e, r, c))
+
+    # =========================
+    # 계산
+    # =========================
+
+    def _get_base_params(self):
+        base_rate = clamp_rate(self.var_base_rate.get())  # %
+        wc_rate = clamp_rate(self.var_wc_rate.get()) / 100.0  # % -> ratio
+        floor = cut_won10(self.var_floor.get())
+        return base_rate, wc_rate, floor
+
+    def recalc_all(self):
+        if self._bulk_updating:
+            return
+
+        base_rate, wc_rate, floor = self._get_base_params()
+
+        sum_amount = 0
+        sum_expense = 0
+        sum_monthly = 0
+        sum_wc = 0
+        sum_ei = 0
+
+        for r in self.rows:
+            amount = r.get_amount()
+            rate = base_rate  # ✅ 표의 필요경비율은 기준설정값 고정(연동)
+
+            expense = cut_won10(amount * (rate / 100.0))
+            monthly = cut_won10(max(amount - expense, 0))
+
+            wc_fee = cut_won10(int(monthly * wc_rate))
+
+            ei_base = floor if (monthly >= 800000 and monthly < floor) else monthly
+            ei_fee = cut_won10(int(ei_base * EI_PERSONAL_RATE))
+
+            r.set_outputs(expense, monthly, wc_fee, ei_fee)
+
+            sum_amount += amount
+            sum_expense += expense
+            sum_monthly += monthly
+            sum_wc += wc_fee
+            sum_ei += ei_fee
+
+        self.lbl_sum_amount.config(text=fmt(cut_won10(sum_amount)))
+        self.lbl_sum_expense.config(text=fmt(cut_won10(sum_expense)))
+        self.lbl_sum_monthly.config(text=fmt(cut_won10(sum_monthly)))
+        self.lbl_sum_wc.config(text=fmt(cut_won10(sum_wc)))
+        self.lbl_sum_ei.config(text=fmt(cut_won10(sum_ei)))
+
+        self.var_status.set("계산 완료")
+
+    def reset_all(self):
+        self.var_edit_base_rate.set(False)
+        self.var_base_rate.set("14.9")
+        self.var_wc_rate.set("0.33")
+        self.var_floor.set("1330000")
+        self._apply_base_rate_edit_state()
+        self.init_rows(10)
+
+    # =========================
+    # Export / Copy
+    # =========================
+
+    def _collect_rows(self):
+        base_rate, _, _ = self._get_base_params()
+        out = []
+        for r in self.rows:
+            teacher = r.get_teacher()
+            amount = r.get_amount()
+            memo = r.get_memo()
+            if (not teacher) and amount == 0 and (not memo):
+                continue
+
+            out.append({
+                "idx": r.idx,
+                "teacher": teacher,
+                "amount": amount,
+                "rate": base_rate,
+                "expense": to_int(r.var_expense.get()),
+                "monthly": to_int(r.var_monthly.get()),
+                "wc": to_int(r.var_wcfee.get()),
+                "ei": to_int(r.var_eifee.get()),
+                "memo": memo
+            })
+        return out
+
+    def copy_table(self):
+        header = ["순번","강사명","강사료 지급액","필요경비율(%)","필요경비","월보수액","산재보험료(개인)","고용보험료(개인, 예상값)","비고"]
+        lines = ["\t".join(header)]
+        for x in self._collect_rows():
+            lines.append("\t".join([
+                str(x["idx"]),
+                x["teacher"],
+                str(x["amount"]),
+                str(x["rate"]),
+                str(x["expense"]),
+                str(x["monthly"]),
+                str(x["wc"]),
+                str(x["ei"]),
+                x["memo"]
+            ]))
+        text = "\n".join(lines)
+
+        self.clipboard_clear()
+        self.clipboard_append(text)
+        self.update()
+        messagebox.showinfo("완료", "복사 완료(엑셀에 붙여넣기 가능).")
+
+    def save_csv(self):
+        rows = self._collect_rows()
+        if not rows:
+            messagebox.showwarning("안내", "저장할 데이터가 없습니다.")
+            return
+
+        default = f"방과후강사_월보수액_{today_ymd()}.csv"
+        path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            initialfile=default,
+            filetypes=[("CSV 파일", "*.csv")]
+        )
+        if not path:
+            return
+
+        header = ["순번","강사명","강사료 지급액","필요경비율(%)","필요경비","월보수액","산재보험료(개인)","고용보험료(개인, 예상값)","비고"]
+
+        def csv_escape(s):
+            s = "" if s is None else str(s)
+            if any(c in s for c in [",", '"', "\n", "\r"]):
+                return '"' + s.replace('"', '""') + '"'
+            return s
+
+        lines = [",".join(csv_escape(h) for h in header)]
+        for x in rows:
+            lines.append(",".join([
+                csv_escape(x["idx"]),
+                csv_escape(x["teacher"]),
+                csv_escape(x["amount"]),
+                csv_escape(x["rate"]),
+                csv_escape(x["expense"]),
+                csv_escape(x["monthly"]),
+                csv_escape(x["wc"]),
+                csv_escape(x["ei"]),
+                csv_escape(x["memo"]),
+            ]))
+
+        with open(path, "w", encoding="utf-8-sig", newline="") as f:
+            f.write("\r\n".join(lines))
+
+        messagebox.showinfo("완료", f"CSV 저장 완료:\n{path}")
+
+    def save_xlsx(self):
+        if Workbook is None:
+            messagebox.showerror("오류", "openpyxl이 설치되어 있지 않습니다.\n(xlsx 저장/업로드 기능을 사용할 수 없음)\npip install openpyxl")
+            return
+
+        rows = self._collect_rows()
+        if not rows:
+            messagebox.showwarning("안내", "저장할 데이터가 없습니다.")
+            return
+
+        default = f"방과후강사_월보수액_{today_ymd()}.xlsx"
+        path = filedialog.asksaveasfilename(
+            defaultextension=".xlsx",
+            initialfile=default,
+            filetypes=[("Excel 파일", "*.xlsx")]
+        )
+        if not path:
+            return
+
+        base_rate, wc_rate, floor = self._get_base_params()
+
+        wb = Workbook()
+
+        # ---- Sheet 1: 결과 ----
+        ws = wb.active
+        ws.title = "월보수액"
+
+        header = ["순번","강사명","강사료 지급액","필요경비율(%)","필요경비","월보수액","산재보험료(개인)","고용보험료(개인, 예상값)","비고"]
+        ws.append(header)
+
+        for x in rows:
+            ws.append([
+                x["idx"],
+                x["teacher"],
+                x["amount"],
+                float(x["rate"]),
+                x["expense"],
+                x["monthly"],
+                x["wc"],
+                x["ei"],
+                x["memo"],
+            ])
+
+        # 스타일(업무용 최소 정리)
+        thin = Side(style="thin", color="999999")
+        border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+        header_fill = PatternFill("solid", fgColor="EAF4FF")
+        for cell in ws[1]:
+            cell.font = Font(bold=True)
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            cell.border = border
+
+        num_cols = [1,3,4,5,6,7,8]  # 숫자열 인덱스(1-based)
+        for r in range(2, ws.max_row + 1):
+            for c in range(1, len(header) + 1):
+                cell = ws.cell(row=r, column=c)
+                cell.border = border
+                cell.alignment = Alignment(vertical="center")
+                if c in num_cols:
+                    cell.alignment = Alignment(horizontal="right", vertical="center")
+
+        widths = [6, 18, 16, 14, 14, 14, 18, 22, 24]
+        for i, w in enumerate(widths, start=1):
+            ws.column_dimensions[chr(64+i)].width = w
+
+        # ---- Sheet 2: 기준설정 ----
+        ws2 = wb.create_sheet("기준설정")
+        ws2.append(["항목", "값"])
+        ws2.append(["필요경비율(%)", base_rate])
+        ws2.append(["산재보험료율(개인)(%)", wc_rate * 100.0])
+        ws2.append(["고용보험요율(개인)(%)", EI_PERSONAL_RATE * 100.0])
+        ws2.append(["기준보수 하한값", floor])
+
+        for cell in ws2[1]:
+            cell.font = Font(bold=True)
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            cell.border = border
+
+        for r in range(2, ws2.max_row + 1):
+            for c in range(1, 3):
+                cell = ws2.cell(row=r, column=c)
+                cell.border = border
+                cell.alignment = Alignment(vertical="center")
+                if c == 2:
+                    cell.alignment = Alignment(horizontal="right", vertical="center")
+
+        ws2.column_dimensions["A"].width = 24
+        ws2.column_dimensions["B"].width = 18
+
+        wb.save(path)
+        messagebox.showinfo("완료. 고주무관 천재", f"엑셀 저장 완료:\n{path}")
+
+    # =========================
+    # ✅ 서식 다운로드 / 업로드
+    # =========================
+
+    def download_template(self):
+        """
+        업로드 서식(xlsx) 다운로드
+        - openpyxl 없으면 csv로 대체
+        """
+        date = today_ymd()
+
+        if Workbook is None:
+            default = f"방과후강사_입력서식_{date}.csv"
+            path = filedialog.asksaveasfilename(
+                defaultextension=".csv",
+                initialfile=default,
+                filetypes=[("CSV 파일", "*.csv")]
+            )
+            if not path:
+                return
+
+            with open(path, "w", encoding="utf-8-sig", newline="") as f:
+                w = csv.writer(f)
+                w.writerow(["강사명", "강사료 지급액", "비고"])
+                for _ in range(TEMPLATE_ROWS):
+                    w.writerow(["", "", ""])
+
+            messagebox.showinfo("완료", f"서식(CSV) 저장 완료:\n{path}")
+            return
+
+        default = f"방과후강사_입력서식_{date}.xlsx"
+        path = filedialog.asksaveasfilename(
+            defaultextension=".xlsx",
+            initialfile=default,
+            filetypes=[("Excel 파일", "*.xlsx")]
+        )
+        if not path:
+            return
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "입력"
+
+        ws.append(["강사명", "강사료 지급액", "비고"])
+        for _ in range(TEMPLATE_ROWS):
+            ws.append(["", "", ""])
+
+        # 열 너비
+        ws.column_dimensions["A"].width = 18
+        ws.column_dimensions["B"].width = 16
+        ws.column_dimensions["C"].width = 22
+
+        # 헤더 굵게
+        for cell in ws[1]:
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill("solid", fgColor="EAF4FF")
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        wb.save(path)
+        messagebox.showinfo("완료", f"서식(Excel) 저장 완료:\n{path}")
+
+    def upload_apply(self, mode: str):
+        """
+        mode:
+          - "replace": 초기화 후 반영(교체)
+          - "append": 추가 반영
+        """
+        path = filedialog.askopenfilename(
+            title="업로드 파일 선택",
+            filetypes=[
+                ("Excel 파일", "*.xlsx"),
+                ("CSV 파일", "*.csv"),
+                ("모든 파일", "*.*"),
+            ]
+        )
+        if not path:
+            return
+
+        try:
+            rows = self._read_upload_file(path)
+            self._apply_rows_from_upload(rows, mode=mode)
+            messagebox.showinfo("완료", f"업로드 반영 완료: {len(rows)}명")
+            self.var_status.set(f"업로드 반영 완료: {len(rows)}명")
+        except Exception as e:
+            messagebox.showerror("오류", f"업로드 처리 중 오류가 발생했습니다.\n\n{e}")
+
+    def _read_upload_file(self, path: str) -> list[dict]:
+        ext = os.path.splitext(path)[1].lower().strip()
+
+        if ext == ".xls":
+            raise RuntimeError("xls는 기본 지원하지 않습니다.\nxlsx 또는 csv로 저장해서 업로드해 주세요.")
+
+        if ext == ".csv":
+            return self._read_upload_csv(path)
+
+        if ext == ".xlsx":
+            return self._read_upload_xlsx(path)
+
+        raise RuntimeError("지원하지 않는 형식입니다.\nxlsx 또는 csv 파일을 선택해 주세요.")
+
+    def _read_upload_csv(self, path: str) -> list[dict]:
+        rows_out: list[dict] = []
+
+        with open(path, "r", encoding="utf-8-sig", newline="") as f:
+            reader = csv.reader(f)
+            all_rows = list(reader)
+
+        if len(all_rows) < 2:
+            return rows_out
+
+        header = all_rows[0]
+        name_idx, amt_idx, memo_idx = detect_upload_columns(header)
+
+        for line in all_rows[1:]:
+            teacher = str(line[name_idx] if name_idx < len(line) else "").strip()
+            amount = to_int(line[amt_idx] if amt_idx < len(line) else 0)
+            memo = "" if memo_idx is None else str(line[memo_idx] if memo_idx < len(line) else "").strip()
+
+            if (not teacher) and amount == 0 and (not memo):
+                continue
+
+            rows_out.append({"teacher": teacher, "amount": amount, "memo": memo})
+
+        return rows_out
+
+    def _read_upload_xlsx(self, path: str) -> list[dict]:
+        if load_workbook is None:
+            raise RuntimeError("openpyxl이 설치되어 있지 않습니다.\nxlsx 업로드 기능을 사용할 수 없습니다.")
+
+        wb = load_workbook(path, data_only=True)
+        ws = wb.worksheets[0] if wb.worksheets else wb.active
+
+        # AOA 형태로 읽기
+        aoa = []
+        for row in ws.iter_rows(values_only=True):
+            aoa.append(list(row))
+
+        if len(aoa) < 2:
+            return []
+
+        header = aoa[0]
+        name_idx, amt_idx, memo_idx = detect_upload_columns(header)
+
+        rows_out: list[dict] = []
+        for line in aoa[1:]:
+            teacher = str(line[name_idx] if name_idx < len(line) else "").strip()
+            amount = to_int(line[amt_idx] if amt_idx < len(line) else 0)
+            memo = "" if memo_idx is None else str(line[memo_idx] if memo_idx < len(line) else "").strip()
+
+            if (not teacher) and amount == 0 and (not memo):
+                continue
+
+            rows_out.append({"teacher": teacher, "amount": amount, "memo": memo})
+
+        return rows_out
+
+    def _apply_rows_from_upload(self, rows: list[dict], mode: str = "replace"):
+        """
+        mode:
+          - replace: 초기화 후 업로드 내용으로 반영(최소 10행 유지)
+          - append: 기존 내용 유지 + 빈행 우선 채우고 부족하면 행 추가(최소 10행 유지)
+        """
+        if mode not in ("replace", "append"):
+            mode = "replace"
+
+        self._bulk_updating = True
+        try:
+            if mode == "replace":
+                # 교체
+                # 1) 표를 비우고
+                for r in self.rows:
+                    r.frame.destroy()
+                self.rows.clear()
+
+                # 2) 필요한 행 수 생성
+                count = max(len(rows), MIN_ROWS_AFTER_UPLOAD)
+                for _ in range(count):
+                    self.add_row(recalc=False)
+
+                # 3) 데이터 채우기
+                for i, data in enumerate(rows):
+                    self.rows[i].set_data(
+                        teacher=data.get("teacher", ""),
+                        amount=int(data.get("amount", 0) or 0),
+                        memo=data.get("memo", "")
+                    )
+
+            else:
+                # 추가 반영
+                if len(self.rows) == 0:
+                    self.init_rows(MIN_ROWS_AFTER_UPLOAD)
+
+                for data in rows:
+                    target = next((r for r in self.rows if r.is_empty()), None)
+                    if target is None:
+                        self.add_row(recalc=False)
+                        target = self.rows[-1]
+                    target.set_data(
+                        teacher=data.get("teacher", ""),
+                        amount=int(data.get("amount", 0) or 0),
+                        memo=data.get("memo", "")
+                    )
+
+                self.ensure_min_rows(MIN_ROWS_AFTER_UPLOAD)
+
+        finally:
+            self._bulk_updating = False
+
+        self.renumber()
+        self.recalc_all()
+
+    # =========================
+    # End
+    # =========================
+
+
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
