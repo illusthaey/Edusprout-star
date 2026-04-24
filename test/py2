@@ -1,0 +1,804 @@
+# -*- coding: utf-8 -*-
+"""
+특근매식비 4중 대조 도구 (Windows EXE 배포용, Tkinter)
+- 공무원 초근 / 공무직 연근 / 지문 / 설문 4개 파일 대조
+- 드래그앤드롭 업로드 (tkinterdnd2 미설치 시 클릭 업로드 fallback)
+- CSV/XLSX 자동 인식, 인코딩 자동 감지
+- 1인당 단가 × 정산가능 인원 → 원단위(10원) 절삭 결제액
+- 결과 Treeview 4색 표시 + CSV 저장
+"""
+
+from __future__ import annotations
+
+import os
+import re
+import csv
+import datetime
+import webbrowser
+import tkinter as tk
+from tkinter import ttk, filedialog, messagebox
+
+# xlsx 지원 (선택)
+try:
+    from openpyxl import load_workbook
+except Exception:
+    load_workbook = None
+
+# 드래그앤드롭 (선택, 없으면 클릭 업로드만)
+try:
+    from tkinterdnd2 import DND_FILES, TkinterDnD
+    DND_AVAILABLE = True
+except Exception:
+    DND_AVAILABLE = False
+
+
+# =========================
+# 유틸 (HTML의 JS 함수 이식)
+# =========================
+
+def col_to_idx(s: str) -> int:
+    """알파벳 → 0-based 인덱스 (A→0, B→1, ..., Z→25, AA→26). 숫자면 1-based 취급."""
+    s = str(s).strip().upper()
+    if not s:
+        return -1
+    if s.isdigit():
+        return int(s) - 1
+    n = 0
+    for c in s:
+        code = ord(c)
+        if code < 65 or code > 90:
+            return -1
+        n = n * 26 + (code - 64)
+    return n - 1
+
+
+def norm_date(s) -> str:
+    """날짜 정규화: '2026-04-24 09:07:24', '2026/4/24', '4월 24일' → '2026-04-24'"""
+    if s is None:
+        return ""
+    # datetime 객체(엑셀에서 자동 파싱된 경우)
+    if isinstance(s, (datetime.datetime, datetime.date)):
+        return s.strftime("%Y-%m-%d")
+
+    s = str(s).strip()
+    if not s:
+        return ""
+
+    m = re.search(r"(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})", s)
+    if m:
+        return f"{m.group(1)}-{m.group(2).zfill(2)}-{m.group(3).zfill(2)}"
+
+    m = re.search(r"(\d{1,2})월\s*(\d{1,2})일", s)
+    if m:
+        y = datetime.date.today().year
+        return f"{y}-{m.group(1).zfill(2)}-{m.group(2).zfill(2)}"
+
+    return s
+
+
+def norm_name(s, remove_paren: bool) -> str:
+    """이름 정규화: 괄호+괄호내용 제거(옵션), 공백 모두 제거"""
+    s = str(s or "").strip()
+    if remove_paren:
+        s = re.sub(r"\s*\([^)]*\)\s*", "", s).strip()
+    return re.sub(r"\s+", "", s)
+
+
+def cut_won10(n) -> int:
+    """원단위(10원) 절삭: 1111 → 1110"""
+    try:
+        n = int(n)
+    except Exception:
+        return 0
+    if n <= 0:
+        return 0
+    return (n // 10) * 10
+
+
+def fmt(n) -> str:
+    try:
+        return f"{int(n):,}"
+    except Exception:
+        return "0"
+
+
+def today_ymd() -> str:
+    return datetime.date.today().strftime("%Y-%m-%d")
+
+
+# =========================
+# 파일 읽기
+# =========================
+
+def read_file_as_rows(path: str) -> list[list]:
+    """파일을 2D 리스트로 읽기. xlsx/csv/txt 지원"""
+    ext = os.path.splitext(path)[1].lower()
+
+    if ext in (".xlsx", ".xlsm"):
+        if load_workbook is None:
+            raise RuntimeError("openpyxl이 설치되어 있지 않습니다.\npip install openpyxl")
+        wb = load_workbook(path, data_only=True)
+        ws = wb.worksheets[0]
+        rows = []
+        for row in ws.iter_rows(values_only=True):
+            rows.append(["" if v is None else v for v in row])
+        return rows
+
+    if ext == ".xls":
+        raise RuntimeError("xls는 지원하지 않습니다.\nxlsx 또는 csv로 저장해 주세요.")
+
+    # CSV / TXT: 인코딩 자동 감지
+    return read_csv_auto(path)
+
+
+def read_csv_auto(path: str) -> list[list]:
+    """utf-8-sig → utf-8 → euc-kr → cp949 순으로 시도"""
+    encodings = ("utf-8-sig", "utf-8", "euc-kr", "cp949")
+    last_err = None
+    for enc in encodings:
+        try:
+            with open(path, "r", encoding=enc, newline="") as f:
+                sample = f.read(4096)
+                f.seek(0)
+                # 탭 vs 쉼표 자동 판별
+                delim = "\t" if sample.count("\t") > sample.count(",") else ","
+                reader = csv.reader(f, delimiter=delim)
+                rows = []
+                for row in reader:
+                    if any(str(c).strip() for c in row):
+                        rows.append(list(row))
+                return rows
+        except UnicodeDecodeError as e:
+            last_err = e
+            continue
+        except Exception as e:
+            raise e
+    raise RuntimeError(f"파일 인코딩을 읽을 수 없습니다. ({last_err})")
+
+
+# =========================
+# 카드 (각 파일 업로드 컴포넌트)
+# =========================
+
+class DropCard:
+    def __init__(self, parent, num: int, title: str, hint: str, cfg_defaults: dict, on_change=None):
+        self.num = num
+        self.title = title
+        self.hint = hint
+        self.on_change = on_change
+        self.data: list[list] | None = None
+        self.filename: str = ""
+
+        self.BG_CARD = "#FFFFFF"
+        self.BG_DROP = "#FAFAFA"
+        self.BG_DROP_LOADED = "#E6FFE6"
+        self.BORDER_NORMAL = "#E0E0E0"
+        self.BORDER_LOADED = "#2A9D3F"
+
+        # 상단 카드 프레임
+        self.frame = tk.LabelFrame(
+            parent, text=f"  {title}  ",
+            bg=self.BG_CARD, fg="#1a1a1a",
+            font=("맑은 고딕", 10, "bold"),
+            bd=1, relief="solid",
+            labelanchor="nw"
+        )
+
+        # 배지
+        badge_holder = tk.Frame(self.frame, bg=self.BG_CARD)
+        badge_holder.pack(fill="x", padx=8, pady=(6, 0))
+        tk.Label(badge_holder, text="", bg=self.BG_CARD).pack(side="left", expand=True)
+
+        self.badge_var = tk.StringVar(value="미입력")
+        self.badge_lbl = tk.Label(
+            badge_holder, textvariable=self.badge_var,
+            bg="#888888", fg="white", font=("맑은 고딕", 8, "bold"),
+            padx=8, pady=1
+        )
+        self.badge_lbl.pack(side="right")
+
+        # 드롭 영역
+        self.drop = tk.Label(
+            self.frame,
+            text=f"📂  {hint}\n(클릭 또는 드래그 앤 드롭)",
+            bg=self.BG_DROP, fg="#555",
+            font=("맑은 고딕", 10),
+            relief="solid", bd=1,
+            padx=10, pady=14,
+            cursor="hand2", justify="center"
+        )
+        self.drop.pack(fill="x", padx=8, pady=(4, 4))
+        self.drop.bind("<Button-1>", lambda e: self.pick_file())
+
+        # 드래그앤드롭 바인딩
+        if DND_AVAILABLE:
+            try:
+                self.drop.drop_target_register(DND_FILES)
+                self.drop.dnd_bind("<<Drop>>", self._on_drop)
+                # hover 효과
+                self.drop.dnd_bind("<<DragEnter>>", lambda e: self.drop.config(bg="#E6F2FF"))
+                self.drop.dnd_bind("<<DragLeave>>", lambda e: self.drop.config(
+                    bg=self.BG_DROP_LOADED if self.data else self.BG_DROP))
+            except Exception:
+                pass
+
+        # 상태
+        self.status_var = tk.StringVar(value="")
+        tk.Label(
+            self.frame, textvariable=self.status_var,
+            bg=self.BG_CARD, fg="#2A9D3F",
+            font=("맑은 고딕", 9, "bold"),
+            anchor="w", justify="left"
+        ).pack(fill="x", padx=8, pady=(0, 2))
+
+        # 열 설정
+        cfg = tk.Frame(self.frame, bg="#F7F7FA")
+        cfg.pack(fill="x", padx=8, pady=(2, 8))
+
+        self.var_header = tk.StringVar(value=str(cfg_defaults.get("header", 1)))
+        self.var_date = tk.StringVar(value=str(cfg_defaults.get("date", "B")))
+        self.var_name = tk.StringVar(value=str(cfg_defaults.get("name", "E")))
+        self.var_paren = tk.BooleanVar(value=bool(cfg_defaults.get("paren", False)))
+
+        tk.Label(cfg, text="헤더행", bg="#F7F7FA", font=("맑은 고딕", 8)
+                 ).grid(row=0, column=0, padx=(8, 2), pady=5, sticky="e")
+        tk.Entry(cfg, textvariable=self.var_header, width=3, justify="center"
+                 ).grid(row=0, column=1, padx=2, pady=5)
+
+        tk.Label(cfg, text="날짜열", bg="#F7F7FA", font=("맑은 고딕", 8)
+                 ).grid(row=0, column=2, padx=(10, 2), pady=5, sticky="e")
+        tk.Entry(cfg, textvariable=self.var_date, width=4, justify="center"
+                 ).grid(row=0, column=3, padx=2, pady=5)
+
+        tk.Label(cfg, text="이름열", bg="#F7F7FA", font=("맑은 고딕", 8)
+                 ).grid(row=0, column=4, padx=(10, 2), pady=5, sticky="e")
+        tk.Entry(cfg, textvariable=self.var_name, width=4, justify="center"
+                 ).grid(row=0, column=5, padx=2, pady=5)
+
+        tk.Checkbutton(
+            cfg, text="괄호제거", variable=self.var_paren,
+            bg="#F7F7FA", font=("맑은 고딕", 8)
+        ).grid(row=0, column=6, padx=(10, 8), pady=5)
+
+    def _on_drop(self, event):
+        """tkinterdnd2 drop 이벤트: 경로 파싱"""
+        raw = event.data
+        if not raw:
+            return
+        # 경로에 공백 있으면 중괄호로 감싸져 들어옴: {C:/path with space/a.csv} {b.csv}
+        paths = re.findall(r"\{([^}]+)\}", raw)
+        if not paths:
+            paths = raw.split()
+        if paths:
+            self.load_file(paths[0])
+
+    def pick_file(self):
+        path = filedialog.askopenfilename(
+            title=f"{self.title} 파일 선택",
+            filetypes=[
+                ("지원 파일", "*.csv *.xlsx *.xls *.txt"),
+                ("CSV 파일", "*.csv"),
+                ("Excel 파일", "*.xlsx *.xls"),
+                ("텍스트 파일", "*.txt"),
+                ("모든 파일", "*.*")
+            ]
+        )
+        if path:
+            self.load_file(path)
+
+    def load_file(self, path: str):
+        try:
+            rows = read_file_as_rows(path)
+            self.data = rows
+            self.filename = os.path.basename(path)
+            self.status_var.set(f"✅ {self.filename} ({len(rows)}행)")
+            self.badge_var.set(f"{len(rows)}행")
+            self.badge_lbl.config(bg="#2A9D3F")
+            self.drop.config(bg=self.BG_DROP_LOADED)
+            self.frame.config(bd=2)
+            if self.on_change:
+                self.on_change()
+        except Exception as e:
+            messagebox.showerror("파일 읽기 실패", f"{os.path.basename(path)}\n\n{e}")
+            self.status_var.set("❌ 읽기 실패")
+
+    def clear(self):
+        self.data = None
+        self.filename = ""
+        self.status_var.set("")
+        self.badge_var.set("미입력")
+        self.badge_lbl.config(bg="#888888")
+        self.drop.config(bg=self.BG_DROP)
+        self.frame.config(bd=1)
+
+    def extract(self) -> list[dict]:
+        """이 파일에서 (이름, 날짜) 튜플 리스트 추출"""
+        if not self.data:
+            return []
+
+        try:
+            header_row = int(self.var_header.get())
+        except Exception:
+            header_row = 1
+
+        date_idx = col_to_idx(self.var_date.get())
+        name_idx = col_to_idx(self.var_name.get())
+        paren = bool(self.var_paren.get())
+
+        if date_idx < 0 or name_idx < 0:
+            raise RuntimeError(
+                f"[{self.title}] 열 지정이 잘못되었습니다. (A~Z 알파벳 또는 1~N 숫자 입력)"
+            )
+
+        out = []
+        for i in range(header_row, len(self.data)):
+            r = self.data[i]
+            if not r:
+                continue
+            name_raw = r[name_idx] if name_idx < len(r) else ""
+            date_raw = r[date_idx] if date_idx < len(r) else ""
+            name = norm_name(name_raw, paren)
+            date = norm_date(date_raw)
+            if not name or not date:
+                continue
+            out.append({"name": name, "date": date, "src": self.num})
+        return out
+
+
+# =========================
+# App
+# =========================
+
+class App:
+    HOME_URL = "https://edusprouthaey.co.kr/"
+
+    def __init__(self):
+        # 드래그앤드롭 가능한 루트 선택
+        if DND_AVAILABLE:
+            self.root = TkinterDnD.Tk()
+        else:
+            self.root = tk.Tk()
+
+        self.root.title("업무천재 고주무관 - 특근매식비 4중 대조 도구 (https://edusprouthaey.co.kr)")
+        self.root.geometry("1180x880")
+        self.root.minsize(1040, 720)
+
+        self.BG = "#DCEFFF"
+        self.PANEL = "#EAF4FF"
+        self.BORDER = "#A8C3E6"
+        self.root.configure(bg=self.BG)
+
+        # =========================
+        # 헤더
+        # =========================
+        header = tk.Frame(self.root, bg=self.BG)
+        header.pack(fill="x", padx=12, pady=(10, 6))
+
+        titlebar = tk.Frame(header, bg=self.BG)
+        titlebar.pack(fill="x")
+
+        tk.Label(
+            titlebar,
+            text="특근매식비 4중 대조 도구 (ver.260424_01)",
+            font=("맑은 고딕", 20, "bold"),
+            bg=self.BG, anchor="w"
+        ).pack(side="left", fill="x", expand=True)
+
+        tk.Button(
+            titlebar, text="업무효율화 웹페이지",
+            command=self.open_homepage,
+            bg="#FFFFFF", activebackground="#F3F3F3",
+            relief="solid", bd=1, highlightthickness=0,
+            font=("맑은 고딕", 11)
+        ).pack(side="right")
+
+        dnd_note = "" if DND_AVAILABLE else "  ※ tkinterdnd2 미설치: 드래그앤드롭 비활성(클릭 업로드 가능). pip install tkinterdnd2"
+        tk.Label(
+            header,
+            text="·나이스 복무에서 공무원 초과근무·공무직 연장근로를 CSV/XLSX로 저장하고,\n"
+                 "  지문인식기 출력 / 네이버폼 설문 응답과 함께 4중 대조하여 결제 가능 인원·금액 산출.\n"
+                 "·결제액은 1인당 단가 × 정산가능 인원, 원단위(10원) 절삭." + dnd_note,
+            font=("맑은 고딕", 10), bg=self.BG, justify="left", anchor="w"
+        ).pack(fill="x", pady=(4, 0))
+
+        # =========================
+        # 4개 업로드 카드 (2×2)
+        # =========================
+        cards_wrap = tk.LabelFrame(
+            self.root, text="파일 업로드 (4개)",
+            bg=self.BG, fg="#1a1a1a", font=("맑은 고딕", 10, "bold")
+        )
+        cards_wrap.pack(fill="x", padx=12, pady=(6, 8))
+
+        cards_frame = tk.Frame(cards_wrap, bg=self.BG)
+        cards_frame.pack(fill="x", padx=8, pady=8)
+        cards_frame.columnconfigure(0, weight=1)
+        cards_frame.columnconfigure(1, weight=1)
+
+        c1 = DropCard(
+            cards_frame, 1, "① 공무원 초과근무",
+            "나이스 CSV/XLSX (예: 공무원_초과근무목록.csv)",
+            {"header": 1, "date": "B", "name": "E", "paren": True}
+        )
+        c1.frame.grid(row=0, column=0, padx=(0, 6), pady=4, sticky="ew")
+
+        c2 = DropCard(
+            cards_frame, 2, "② 공무직 연장근로",
+            "나이스 CSV/XLSX (예: 공무직_연장근로목록.csv)",
+            {"header": 1, "date": "B", "name": "F", "paren": False}
+        )
+        c2.frame.grid(row=0, column=1, padx=(6, 0), pady=4, sticky="ew")
+
+        c3 = DropCard(
+            cards_frame, 3, "③ 지문 증빙 내역",
+            "지문인식기 XLSX/CSV (기본: B=발생시각, F=성명)",
+            {"header": 1, "date": "B", "name": "F", "paren": False}
+        )
+        c3.frame.grid(row=1, column=0, padx=(0, 6), pady=4, sticky="ew")
+
+        c4 = DropCard(
+            cards_frame, 4, "④ 네이버폼 설문 응답",
+            "네이버폼 XLSX/CSV (기본: D=이름, F=날짜)",
+            {"header": 1, "date": "F", "name": "D", "paren": False}
+        )
+        c4.frame.grid(row=1, column=1, padx=(6, 0), pady=4, sticky="ew")
+
+        self.cards: list[DropCard] = [c1, c2, c3, c4]
+
+        # =========================
+        # 실행 영역 (단가 + 버튼)
+        # =========================
+        run_frame = tk.LabelFrame(
+            self.root, text="실행", bg=self.BG, fg="#1a1a1a",
+            font=("맑은 고딕", 10, "bold")
+        )
+        run_frame.pack(fill="x", padx=12, pady=(0, 8))
+
+        run_inner = tk.Frame(run_frame, bg=self.BG)
+        run_inner.pack(fill="x", padx=10, pady=8)
+
+        tk.Label(run_inner, text="1인당 단가(원):", bg=self.BG,
+                 font=("맑은 고딕", 10)).pack(side="left")
+
+        self.var_unit = tk.StringVar(value="9000")
+        tk.Entry(run_inner, textvariable=self.var_unit, width=10,
+                 justify="right", font=("맑은 고딕", 10)
+                 ).pack(side="left", padx=(6, 14))
+
+        btn_primary = dict(
+            bg="#EEF6FF", activebackground="#E2F0FF",
+            relief="solid", bd=1, highlightthickness=0,
+            font=("맑은 고딕", 10, "bold")
+        )
+        btn_ghost = dict(
+            bg="#FFFFFF", activebackground="#F3F3F3",
+            relief="solid", bd=1, highlightthickness=0,
+            font=("맑은 고딕", 10)
+        )
+
+        tk.Button(run_inner, text="🔍 4중 대조 실행",
+                  command=self.run, **btn_primary
+                  ).pack(side="left")
+
+        tk.Button(run_inner, text="초기화",
+                  command=self.reset, **btn_ghost
+                  ).pack(side="left", padx=(8, 0))
+
+        tk.Button(run_inner, text="📥 결과 CSV 저장",
+                  command=self.export_csv, **btn_ghost
+                  ).pack(side="right")
+
+        # 범례
+        self.var_legend = tk.StringVar(value="대조 실행 전")
+        tk.Label(run_frame, textvariable=self.var_legend,
+                 bg=self.BG, font=("맑은 고딕", 9, "bold"),
+                 anchor="w", justify="left"
+                 ).pack(fill="x", padx=10, pady=(0, 8))
+
+        # =========================
+        # 결과 테이블 + 요약
+        # =========================
+        mid = tk.Frame(self.root, bg=self.BG)
+        mid.pack(fill="both", expand=True, padx=12, pady=(0, 6))
+
+        # Treeview
+        table_wrap = tk.Frame(
+            mid, bg=self.PANEL,
+            highlightbackground=self.BORDER, highlightthickness=1
+        )
+        table_wrap.pack(side="left", fill="both", expand=True)
+
+        style = ttk.Style()
+        try:
+            style.theme_use("clam")
+        except Exception:
+            pass
+        style.configure("Treeview", rowheight=24, font=("맑은 고딕", 9),
+                        background="white", fieldbackground="white")
+        style.configure("Treeview.Heading", font=("맑은 고딕", 9, "bold"),
+                        background="#EAF4FF")
+
+        cols = ("category", "name", "date", "duty", "fp", "sv", "action")
+        self.tree = ttk.Treeview(table_wrap, columns=cols, show="headings", height=16)
+
+        widths = {"category": 150, "name": 100, "date": 110,
+                  "duty": 50, "fp": 50, "sv": 50, "action": 140}
+        titles = {"category": "구분", "name": "이름", "date": "날짜",
+                  "duty": "복무", "fp": "지문", "sv": "설문", "action": "조치"}
+        for c in cols:
+            self.tree.heading(c, text=titles[c])
+            anchor = "center" if c in ("duty", "fp", "sv", "date") else "w"
+            self.tree.column(c, width=widths[c], anchor=anchor, stretch=True)
+
+        self.tree.tag_configure("ok", background="#F3FBF3")
+        self.tree.tag_configure("warn", background="#FFF8E6")
+        self.tree.tag_configure("bad", background="#FFECEC")
+        self.tree.tag_configure("info", background="#F0F4FA")
+
+        sb = ttk.Scrollbar(table_wrap, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=sb.set)
+        sb.pack(side="right", fill="y")
+        self.tree.pack(side="left", fill="both", expand=True, padx=1, pady=1)
+
+        # 요약 패널
+        sum_panel = tk.Frame(
+            mid, bg="#FFFFFF",
+            highlightbackground=self.BORDER, highlightthickness=1
+        )
+        sum_panel.pack(side="right", fill="y", padx=(8, 0))
+
+        tk.Label(
+            sum_panel, text="💰 결제 요약",
+            bg="#FFFFFF", font=("맑은 고딕", 12, "bold"),
+            anchor="w"
+        ).pack(fill="x", padx=16, pady=(14, 10))
+
+        self.var_sum_people = tk.StringVar(value="-")
+        self.var_sum_unit = tk.StringVar(value="-")
+        self.var_sum_subtotal = tk.StringVar(value="-")
+        self.var_sum_total = tk.StringVar(value="-")
+
+        def sumrow(label, var, bold=False, size=9):
+            f = tk.Frame(sum_panel, bg="#FFFFFF")
+            f.pack(fill="x", padx=16, pady=3)
+            tk.Label(
+                f, text=label, bg="#FFFFFF",
+                font=("맑은 고딕", size, "bold" if bold else "normal"),
+                anchor="w"
+            ).pack(side="left")
+            tk.Label(
+                f, textvariable=var, bg="#FFFFFF",
+                font=("맑은 고딕", size + (3 if bold else 0),
+                      "bold" if bold else "normal"),
+                anchor="e"
+            ).pack(side="right")
+
+        sumrow("정산 인원", self.var_sum_people)
+        sumrow("1인당 단가", self.var_sum_unit)
+        sumrow("소계", self.var_sum_subtotal)
+
+        tk.Frame(sum_panel, bg="#333", height=2
+                 ).pack(fill="x", padx=16, pady=(8, 4))
+
+        sumrow("결제액 (원단위 절삭)", self.var_sum_total, bold=True, size=10)
+
+        tk.Label(
+            sum_panel,
+            text="\n[범례]\n✅ 정산가능\n❌ 복무승인 없음\n⚠ 지문증빙 없음\n📋 식사 미이용(참고)",
+            bg="#FFFFFF", fg="#555",
+            font=("맑은 고딕", 8), justify="left", anchor="w"
+        ).pack(fill="x", padx=16, pady=(10, 14))
+
+        # 상태바
+        self.var_status = tk.StringVar(value="대기 (파일 업로드 후 [4중 대조 실행])")
+        tk.Label(
+            self.root, textvariable=self.var_status, bg=self.BG,
+            anchor="w", font=("맑은 고딕", 9), fg="#333"
+        ).pack(fill="x", padx=12, pady=(4, 10))
+
+        self._export_data = None
+
+    # =========================
+    # 핸들러
+    # =========================
+
+    def open_homepage(self):
+        try:
+            webbrowser.open_new_tab(self.HOME_URL)
+        except Exception as e:
+            messagebox.showerror("오류", f"웹페이지를 열 수 없습니다.\n{e}")
+
+    def run(self):
+        c1, c2, c3, c4 = self.cards
+
+        missing = []
+        if c1.data is None and c2.data is None:
+            missing.append("① 또는 ② (복무승인)")
+        if c3.data is None:
+            missing.append("③ 지문")
+        if c4.data is None:
+            missing.append("④ 설문")
+
+        if missing:
+            messagebox.showwarning(
+                "필수 파일 없음",
+                "다음 파일이 필요합니다:\n\n- " + "\n- ".join(missing)
+            )
+            return
+
+        try:
+            gov = c1.extract() if c1.data else []
+            mu = c2.extract() if c2.data else []
+            fp = c3.extract()
+            sv = c4.extract()
+        except Exception as e:
+            messagebox.showerror("열 설정 오류", str(e))
+            return
+
+        try:
+            unit = int(str(self.var_unit.get()).replace(",", ""))
+        except Exception:
+            unit = 9000
+            self.var_unit.set("9000")
+
+        def key(r): return f"{r['name']}|{r['date']}"
+
+        # 집합
+        M = set(key(r) for r in (gov + mu))   # 복무승인 (공무원 ∪ 공무직)
+        F = set(key(r) for r in fp)            # 지문
+        S_arr = sv                              # 설문 (원본 유지)
+        S_set = set(key(r) for r in sv)
+
+        ok, no_fp, no_duty = [], [], []
+        for r in S_arr:
+            k = key(r)
+            in_m = k in M
+            in_f = k in F
+            if in_m and in_f:
+                ok.append(r)
+            elif not in_m:
+                no_duty.append(r)
+            else:
+                no_fp.append(r)
+
+        # 참고: 복무+지문은 있는데 설문 안 한 사람
+        missed_meal = []
+        for k in M:
+            if k in F and k not in S_set:
+                name, date = k.split("|", 1)
+                missed_meal.append({"name": name, "date": date})
+        missed_meal.sort(key=lambda x: (x["date"], x["name"]))
+
+        total = len(ok) * unit
+        total_trunc = cut_won10(total)
+
+        # 표 렌더
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        for r in sorted(no_duty, key=lambda x: (x["date"], x["name"])):
+            k = key(r)
+            self.tree.insert("", "end", tags=("bad",), values=(
+                "❌ 복무승인 없음", r["name"], r["date"],
+                "✗", "✓" if k in F else "✗", "✓", "결제 취소"
+            ))
+        for r in sorted(no_fp, key=lambda x: (x["date"], x["name"])):
+            self.tree.insert("", "end", tags=("warn",), values=(
+                "⚠ 지문증빙 없음", r["name"], r["date"],
+                "✓", "✗", "✓", "본인 확인 필요"
+            ))
+        for r in sorted(ok, key=lambda x: (x["date"], x["name"])):
+            self.tree.insert("", "end", tags=("ok",), values=(
+                "✅ 정산가능", r["name"], r["date"],
+                "✓", "✓", "✓", "-"
+            ))
+        for r in missed_meal:
+            self.tree.insert("", "end", tags=("info",), values=(
+                "📋 식사 미이용", r["name"], r["date"],
+                "✓", "✓", "✗", "(참고)"
+            ))
+
+        # 범례
+        self.var_legend.set(
+            f"✅ 정산가능 {len(ok)}    "
+            f"❌ 복무승인 없음 {len(no_duty)}    "
+            f"⚠ 지문증빙 없음 {len(no_fp)}    "
+            f"📋 식사 미이용 {len(missed_meal)}"
+        )
+
+        # 요약
+        self.var_sum_people.set(f"{len(ok)}명")
+        self.var_sum_unit.set(f"{fmt(unit)}원")
+        self.var_sum_subtotal.set(f"{fmt(total)}원")
+        self.var_sum_total.set(f"{fmt(total_trunc)}원")
+
+        self.var_status.set(
+            f"대조 완료 — 정산 {len(ok)} / 복무승인없음 {len(no_duty)} / "
+            f"지문없음 {len(no_fp)} / 식사미이용 {len(missed_meal)}"
+        )
+
+        self._export_data = {
+            "ok": ok, "no_fp": no_fp, "no_duty": no_duty,
+            "missed_meal": missed_meal,
+            "total": total, "total_trunc": total_trunc,
+            "unit": unit, "F": F
+        }
+
+    def export_csv(self):
+        d = self._export_data
+        if not d:
+            messagebox.showwarning("안내", "먼저 [🔍 4중 대조 실행]을 눌러 주세요.")
+            return
+
+        default = f"특근매식비_4중대조_{today_ymd()}.csv"
+        path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            initialfile=default,
+            filetypes=[("CSV 파일", "*.csv")]
+        )
+        if not path:
+            return
+
+        def key(r): return f"{r['name']}|{r['date']}"
+
+        def esc(s):
+            s = "" if s is None else str(s)
+            if any(c in s for c in [",", '"', "\n", "\r"]):
+                return '"' + s.replace('"', '""') + '"'
+            return s
+
+        header = ["구분", "이름", "날짜", "복무", "지문", "설문", "조치"]
+        lines = [",".join(esc(h) for h in header)]
+
+        for r in sorted(d["no_duty"], key=lambda x: (x["date"], x["name"])):
+            k = key(r)
+            lines.append(",".join(esc(x) for x in [
+                "복무승인없음", r["name"], r["date"], "✗",
+                "✓" if k in d["F"] else "✗", "✓", "결제취소"
+            ]))
+        for r in sorted(d["no_fp"], key=lambda x: (x["date"], x["name"])):
+            lines.append(",".join(esc(x) for x in [
+                "지문증빙없음", r["name"], r["date"], "✓", "✗", "✓", "본인확인"
+            ]))
+        for r in sorted(d["ok"], key=lambda x: (x["date"], x["name"])):
+            lines.append(",".join(esc(x) for x in [
+                "정산가능", r["name"], r["date"], "✓", "✓", "✓", "-"
+            ]))
+        for r in d["missed_meal"]:
+            lines.append(",".join(esc(x) for x in [
+                "식사미이용", r["name"], r["date"], "✓", "✓", "✗", "참고"
+            ]))
+
+        lines.append("")
+        lines.append(f"정산인원,{len(d['ok'])}명")
+        lines.append(f"1인당단가,{fmt(d['unit'])}원")
+        lines.append(f"소계,{fmt(d['total'])}원")
+        lines.append(f"결제액(원단위절삭),{fmt(d['total_trunc'])}원")
+
+        try:
+            with open(path, "w", encoding="utf-8-sig", newline="") as f:
+                f.write("\r\n".join(lines))
+            messagebox.showinfo("완료", f"CSV 저장 완료:\n{path}")
+        except Exception as e:
+            messagebox.showerror("저장 실패", str(e))
+
+    def reset(self):
+        for c in self.cards:
+            c.clear()
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        self.var_legend.set("대조 실행 전")
+        self.var_sum_people.set("-")
+        self.var_sum_unit.set("-")
+        self.var_sum_subtotal.set("-")
+        self.var_sum_total.set("-")
+        self.var_status.set("초기화 완료")
+        self._export_data = None
+
+    def mainloop(self):
+        self.root.mainloop()
+
+
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
