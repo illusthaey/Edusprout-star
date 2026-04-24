@@ -3,232 +3,478 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>특근매식비 대조 도구</title>
-
- 
-        <link href="/static/favicon.ico" rel="icon"/>
-        <link href="/static/style.css?v=20260413-1" rel="stylesheet"/>
-        <script src="/static/footer.js"></script>
-        <script src="/static/global-loader.js?v=1"></script>
-
- 
+<title>특근매식비 4중 대조 도구 v3</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   * { box-sizing: border-box; }
+  html, body { color-scheme: light; background: #f5f5f7; }
   body {
     font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
-    background: #f5f5f7; color: #1a1a1a;
-    margin: 0 auto; padding: 16px; max-width: 960px;
+    color: #1a1a1a; margin: 0 auto; padding: 16px; max-width: 1100px;
   }
-  h1 { font-size: 20px; margin: 8px 0 8px; }
-  h2 { font-size: 16px; margin: 20px 0 8px; color: #333; }
-  p.sub { font-size: 13px; color: #555; margin: 0 0 12px; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+  h1 { font-size: 20px; margin: 8px 0 4px; }
+  h2 { font-size: 15px; margin: 14px 0 6px; color: #333; }
+  p.sub { font-size: 13px; color: #555; margin: 0 0 14px; line-height: 1.55; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+    padding: 10px; position: relative;
+  }
+  .card.loaded { border-color: #2a9d3f; box-shadow: 0 0 0 2px #2a9d3f22; }
+  .card h2 { margin-top: 0; display: flex; justify-content: space-between; align-items: center; }
+  .badge { font-size: 11px; color: #fff; background: #888; padding: 2px 8px; border-radius: 10px; font-weight: normal; }
+  .card.loaded .badge { background: #2a9d3f; }
   .drop {
-    border: 2px dashed #bbb; border-radius: 8px;
-    padding: 18px; text-align: center; background: #fafafa;
+    border: 2px dashed #bbb; border-radius: 6px;
+    padding: 14px 10px; text-align: center; background: #fafafa;
     cursor: pointer; transition: all .15s; font-size: 13px;
   }
   .drop.over { border-color: #0066cc; background: #e6f2ff; }
-  .drop small { color: #666; display: block; margin-top: 4px; }
-  textarea {
-    width: 100%; min-height: 120px;
-    font-family: ui-monospace, Menlo, Consolas, monospace;
-    font-size: 12px; padding: 8px;
-    border: 1px solid #ccc; border-radius: 6px; resize: vertical;
-    margin-top: 6px;
+  .drop small { color: #666; display: block; margin-top: 3px; font-size: 11px; }
+  .status { font-size: 11px; color: #2a9d3f; margin: 4px 0 0; min-height: 14px; font-weight: 600; }
+  details { margin-top: 6px; font-size: 12px; }
+  details summary {
+    cursor: pointer; color: #0066cc; padding: 4px 0; user-select: none;
   }
+  .cfg { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 6px 8px; align-items: center; padding: 6px; background: #f7f7fa; border-radius: 4px; margin-top: 4px; }
+  .cfg input {
+    width: 100%; padding: 4px 6px; border: 1px solid #ccc; border-radius: 3px;
+    font-size: 12px; font-family: ui-monospace, Menlo, monospace;
+  }
+  .cfg label { font-size: 11px; color: #555; }
   button {
     background: #0066cc; color: white; border: none;
-    padding: 10px 16px; border-radius: 6px; font-size: 14px;
-    cursor: pointer; margin: 8px 4px 8px 0;
+    padding: 10px 18px; border-radius: 6px; font-size: 14px;
+    cursor: pointer; margin: 10px 4px 6px 0; font-weight: 600;
   }
-  button.ghost { background: #fff; color: #333; border: 1px solid #ccc; }
+  button.ghost { background: #fff; color: #333; border: 1px solid #ccc; font-weight: normal; }
+  button:hover { opacity: 0.9; }
+  .unit {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: #555; margin-right: 14px;
+  }
+  .unit input {
+    padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; width: 90px;
+    font-size: 13px;
+  }
   table {
-    width: 100%; border-collapse: collapse; font-size: 13px;
-    margin-top: 12px; background: #fff;
+    width: 100%; border-collapse: collapse; font-size: 12.5px;
+    margin-top: 10px; background: #fff;
   }
-  th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
-  th { background: #f0f0f0; font-weight: 600; }
-  tr.ok td   { background: #f5fff5; }
-  tr.warn td { background: #fff7e6; }
+  th, td { border: 1px solid #ddd; padding: 5px 8px; text-align: left; }
+  th { background: #eef1f5; font-weight: 600; font-size: 12px; }
+  tr.ok td   { background: #f3fbf3; }
+  tr.warn td { background: #fff8e6; }
   tr.bad td  { background: #ffecec; }
+  tr.info td { background: #f0f4fa; }
+  .legend { font-size: 12px; color: #444; margin: 10px 0 4px; }
+  .legend span { display: inline-block; padding: 3px 9px; border-radius: 4px; margin: 0 6px 4px 0; }
   .summary {
-    background: white; border: 1px solid #ddd; border-radius: 8px;
-    padding: 16px; margin-top: 16px;
+    background: #fff; border: 1px solid #ddd; border-radius: 8px;
+    padding: 14px 16px; margin-top: 14px; max-width: 380px;
   }
-  .summary .row { display: flex; justify-content: space-between; padding: 4px 0; }
+  .summary .row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 13px; }
   .summary .total {
-    font-size: 18px; font-weight: 700;
-    border-top: 2px solid #333; margin-top: 8px; padding-top: 8px;
+    font-size: 17px; font-weight: 700;
+    border-top: 2px solid #333; margin-top: 6px; padding-top: 8px;
   }
-  label { font-size: 13px; color: #555; display: inline-block; margin-top: 8px; margin-right: 12px; }
-  input[type="number"] {
-    padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; width: 100px;
+  .mini-note {
+    font-size: 11px; color: #888; font-style: italic; margin: 2px 0 0 0;
   }
-  .legend { font-size: 12px; color: #666; margin: 8px 0; }
-  .legend span { display: inline-block; padding: 3px 8px; border-radius: 4px; margin-right: 6px; }
 </style>
 </head>
 <body>
-<h1>🍚 특근매식비 대조 도구</h1>
-<p class="sub">초과근무 승인 명단과 식당 장부를 각각 업로드(드래그앤드롭 또는 붙여넣기)하면, 자동으로 대조하여 <b>정산가능</b>·<b>결제취소대상</b>·<b>식사미이용</b>으로 분리합니다.</p>
+<h1>🍚 특근매식비 4중 대조 도구 v3</h1>
+<p class="sub">
+  <b>나이스 복무(공무원·공무직) + 지문 증빙 + 설문 응답</b>을 모두 대조합니다.<br>
+  각 파일은 <b>드래그앤드롭 또는 클릭</b>으로 업로드하며, 서식이 다르면 "열 설정"에서 수정하세요 (A·B·C… 알파벳 입력).
+</p>
 
 <div class="grid">
-  <div>
-    <h2>1. 초과근무 승인 명단</h2>
-    <div class="drop" id="dropA">
-      📂 파일을 여기로 드래그 (또는 클릭)
-      <small>CSV/TXT 형식: 이름,날짜</small>
+
+  <!-- 1. 공무원 초근 -->
+  <div class="card" id="card1">
+    <h2>① 공무원 초과근무 <span class="badge" id="badge1">미입력</span></h2>
+    <div class="drop" id="drop1">
+      📂 나이스 CSV/XLSX 파일<br>
+      <small>예: 공무원_초과근무목록.csv</small>
     </div>
-    <textarea id="textA" placeholder="이름,날짜&#10;홍길동,2026-04-20&#10;김철수,2026-04-20"></textarea>
+    <div class="status" id="status1"></div>
+    <details>
+      <summary>열 설정 (기본: 헤더1행 / 날짜B / 이름E·괄호제거)</summary>
+      <div class="cfg">
+        <label>헤더행</label><input id="cfg1_header" value="1">
+        <label>날짜열</label><input id="cfg1_date" value="B">
+        <label>이름열</label><input id="cfg1_name" value="E">
+        <label>괄호제거</label><input id="cfg1_paren" type="checkbox" checked style="width:auto">
+      </div>
+    </details>
   </div>
-  <div>
-    <h2>2. 식당 매식 장부</h2>
-    <div class="drop" id="dropB">
-      📂 파일을 여기로 드래그 (또는 클릭)
-      <small>CSV/TXT 형식: 이름,날짜</small>
+
+  <!-- 2. 공무직 연근 -->
+  <div class="card" id="card2">
+    <h2>② 공무직 연장근로 <span class="badge" id="badge2">미입력</span></h2>
+    <div class="drop" id="drop2">
+      📂 나이스 CSV/XLSX 파일<br>
+      <small>예: 공무직_연장근로목록.csv</small>
     </div>
-    <textarea id="textB" placeholder="이름,날짜&#10;홍길동,2026-04-20&#10;박영희,2026-04-20"></textarea>
+    <div class="status" id="status2"></div>
+    <details>
+      <summary>열 설정 (기본: 헤더1행 / 날짜B / 이름F)</summary>
+      <div class="cfg">
+        <label>헤더행</label><input id="cfg2_header" value="1">
+        <label>날짜열</label><input id="cfg2_date" value="B">
+        <label>이름열</label><input id="cfg2_name" value="F">
+        <label>괄호제거</label><input id="cfg2_paren" type="checkbox" style="width:auto">
+      </div>
+    </details>
   </div>
+
+  <!-- 3. 지문 -->
+  <div class="card" id="card3">
+    <h2>③ 지문 증빙 내역 <span class="badge" id="badge3">미입력</span></h2>
+    <div class="drop" id="drop3">
+      📂 지문인식기 XLSX/CSV<br>
+      <small>문막초 기본: B=발생시각, D=출퇴근, F=성명</small>
+    </div>
+    <div class="status" id="status3"></div>
+    <details>
+      <summary>열 설정 (학교별 업체 서식 다를 수 있음)</summary>
+      <div class="cfg">
+        <label>헤더행</label><input id="cfg3_header" value="1">
+        <label>날짜열</label><input id="cfg3_date" value="B">
+        <label>이름열</label><input id="cfg3_name" value="F">
+        <label>괄호제거</label><input id="cfg3_paren" type="checkbox" style="width:auto">
+      </div>
+      <p class="mini-note">※ 날짜열에 "2026-04-24 09:07:24"처럼 시간이 붙어있어도 자동으로 날짜만 추출</p>
+    </details>
+  </div>
+
+  <!-- 4. 설문 -->
+  <div class="card" id="card4">
+    <h2>④ 네이버폼 설문 응답 <span class="badge" id="badge4">미입력</span></h2>
+    <div class="drop" id="drop4">
+      📂 네이버폼 XLSX<br>
+      <small>설문 질문 순서에 따라 열 위치 조정</small>
+    </div>
+    <div class="status" id="status4"></div>
+    <details>
+      <summary>열 설정 (기본: 헤더1행 / 이름D / 날짜F)</summary>
+      <div class="cfg">
+        <label>헤더행</label><input id="cfg4_header" value="1">
+        <label>날짜열</label><input id="cfg4_date" value="F">
+        <label>이름열</label><input id="cfg4_name" value="D">
+        <label>괄호제거</label><input id="cfg4_paren" type="checkbox" style="width:auto">
+      </div>
+    </details>
+  </div>
+
 </div>
 
-<label>1인당 단가(원)
-  <input type="number" id="unit" value="9000" step="100">
-</label>
-
-<div>
-  <button onclick="run()">🔍 대조 실행</button>
-  <button class="ghost" onclick="loadSample()">샘플 데이터</button>
+<div style="margin-top: 14px;">
+  <span class="unit">1인당 단가(원)
+    <input type="number" id="unit" value="9000" step="100">
+  </span>
+  <button onclick="run()">🔍 4중 대조 실행</button>
   <button class="ghost" onclick="reset()">초기화</button>
 </div>
 
 <div id="result"></div>
 
 <script>
-// ---- 드래그앤드롭 + 클릭 업로드 ----
-function setupDrop(dropId, textId) {
-  const drop = document.getElementById(dropId);
-  const text = document.getElementById(textId);
+// ─────────────────────────────────────────────
+// 알파벳 → 인덱스 (A→0, B→1, ..., Z→25, AA→26)
+// ─────────────────────────────────────────────
+function colToIdx(s) {
+  s = String(s).trim().toUpperCase();
+  if (/^\d+$/.test(s)) return parseInt(s, 10) - 1; // 숫자면 1-based 취급
+  let n = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 65 || c > 90) return -1;
+    n = n * 26 + (c - 64);
+  }
+  return n - 1;
+}
+
+// ─────────────────────────────────────────────
+// 파일을 2D 배열(rows)로 읽기 (xlsx/csv/txt 모두 지원)
+// ─────────────────────────────────────────────
+const fileData = { 1:null, 2:null, 3:null, 4:null };
+
+function setupDrop(n) {
+  const drop   = document.getElementById('drop' + n);
+  const status = document.getElementById('status' + n);
+  const card   = document.getElementById('card' + n);
+  const badge  = document.getElementById('badge' + n);
+
   ['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => {
     ev.preventDefault(); drop.classList.add('over');
   }));
   ['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => {
     ev.preventDefault(); drop.classList.remove('over');
   }));
-  drop.addEventListener('drop', ev => readFile(ev.dataTransfer.files[0], text));
+  drop.addEventListener('drop', ev => handleFile(ev.dataTransfer.files[0], n, status, card, badge));
   drop.addEventListener('click', () => {
     const input = document.createElement('input');
-    input.type = 'file'; input.accept = '.csv,.txt';
-    input.onchange = ev => readFile(ev.target.files[0], text);
+    input.type = 'file';
+    input.accept = '.csv,.txt,.xlsx,.xls';
+    input.onchange = ev => handleFile(ev.target.files[0], n, status, card, badge);
     input.click();
   });
 }
-function readFile(file, text) {
+
+function handleFile(file, n, status, card, badge) {
   if (!file) return;
+  status.textContent = `⏳ ${file.name} 읽는 중...`;
+  const ext = file.name.split('.').pop().toLowerCase();
   const reader = new FileReader();
-  reader.onload = () => { text.value = reader.result; };
-  reader.readAsText(file, 'utf-8');
-}
-setupDrop('dropA','textA');
-setupDrop('dropB','textB');
 
-// ---- CSV/TSV 파싱 ----
-function parse(txt) {
-  return txt.trim().split(/\r?\n/).map(line => {
-    const parts = line.split(/[,\t]/).map(s => s.trim());
-    if (parts.length < 2) return null;
-    if (/^이름/.test(parts[0]) || /^name/i.test(parts[0])) return null;
-    return { name: parts[0], date: parts[1] };
-  }).filter(Boolean);
+  if (ext === 'xlsx' || ext === 'xls') {
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+        fileData[n] = rows;
+        markLoaded(file.name, rows.length, status, card, badge);
+      } catch (err) {
+        status.textContent = `❌ 읽기 실패: ${err.message}`;
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    // CSV/TXT: 인코딩 감지 (UTF-8 우선, 실패 시 EUC-KR)
+    reader.onload = () => {
+      let txt = reader.result;
+      // CP949 감지 (깨진 문자 보이면 재시도)
+      if (/\ufffd/.test(txt)) {
+        const r2 = new FileReader();
+        r2.onload = () => {
+          const rows = parseCSV(r2.result);
+          fileData[n] = rows;
+          markLoaded(file.name, rows.length, status, card, badge);
+        };
+        r2.readAsText(file, 'euc-kr');
+      } else {
+        const rows = parseCSV(txt);
+        fileData[n] = rows;
+        markLoaded(file.name, rows.length, status, card, badge);
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  }
 }
 
-// ---- 원단위 절삭 (1111 → 1110) ----
+function markLoaded(name, rowCount, status, card, badge) {
+  status.textContent = `✅ ${name} (${rowCount}행)`;
+  card.classList.add('loaded');
+  badge.textContent = `${rowCount}행`;
+}
+
+// 간단한 CSV 파서 (쉼표·탭 구분, 따옴표 처리)
+function parseCSV(txt) {
+  const rows = [];
+  const lines = txt.replace(/\r/g, '').split('\n');
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const cells = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (inQ) {
+        if (c === '"' && line[i+1] === '"') { cur += '"'; i++; }
+        else if (c === '"') { inQ = false; }
+        else cur += c;
+      } else {
+        if (c === '"') inQ = true;
+        else if (c === ',' || c === '\t') { cells.push(cur); cur = ''; }
+        else cur += c;
+      }
+    }
+    cells.push(cur);
+    rows.push(cells.map(s => s.trim()));
+  }
+  return rows;
+}
+
+[1,2,3,4].forEach(setupDrop);
+
+// ─────────────────────────────────────────────
+// 날짜 정규화: "2026-04-24 09:07:24", "2026/4/24", "4월 24일" → "2026-04-24"
+// ─────────────────────────────────────────────
+function normDate(s) {
+  if (s === null || s === undefined) return '';
+  s = String(s).trim();
+  if (!s) return '';
+  let m = s.match(/(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m = s.match(/(\d{1,2})월\s*(\d{1,2})일/);
+  if (m) {
+    const y = new Date().getFullYear();
+    return `${y}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  }
+  return s;
+}
+
+// 이름 정규화: 괄호 및 괄호 안 내용 제거, 공백 제거
+function normName(s, removeParen) {
+  s = String(s || '').trim();
+  if (removeParen) s = s.replace(/\s*\([^)]*\)\s*/g, '').trim();
+  return s.replace(/\s+/g, '');
+}
+
+// ─────────────────────────────────────────────
+// 파일 n에서 (이름,날짜) 튜플 배열 추출
+// ─────────────────────────────────────────────
+function extract(n) {
+  const rows = fileData[n];
+  if (!rows) return [];
+  const headerRow = parseInt(document.getElementById(`cfg${n}_header`).value, 10) || 1;
+  const dateIdx   = colToIdx(document.getElementById(`cfg${n}_date`).value);
+  const nameIdx   = colToIdx(document.getElementById(`cfg${n}_name`).value);
+  const paren     = document.getElementById(`cfg${n}_paren`).checked;
+  if (dateIdx < 0 || nameIdx < 0) {
+    throw new Error(`파일 ${n}: 열 지정이 잘못되었습니다 (A~Z 알파벳 입력)`);
+  }
+  const out = [];
+  for (let i = headerRow; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r) continue;
+    const name = normName(r[nameIdx], paren);
+    const date = normDate(r[dateIdx]);
+    if (!name || !date) continue;
+    out.push({ name, date, src: n });
+  }
+  return out;
+}
+
 function truncWon(v) { return Math.floor(v / 10) * 10; }
 
-// ---- 대조 실행 ----
+// ─────────────────────────────────────────────
+// 4중 대조
+// ─────────────────────────────────────────────
 function run() {
-  const overtime = parse(document.getElementById('textA').value);
-  const ledger   = parse(document.getElementById('textB').value);
-  const unit     = +document.getElementById('unit').value || 9000;
-
-  if (overtime.length === 0 || ledger.length === 0) {
-    alert('양쪽 모두 데이터를 입력해 주세요.');
+  // 최소 필수: 공무원/공무직 중 하나 + 지문 + 설문
+  const missing = [];
+  if (!fileData[1] && !fileData[2]) missing.push('① 또는 ②(복무)');
+  if (!fileData[3]) missing.push('③ 지문');
+  if (!fileData[4]) missing.push('④ 설문');
+  if (missing.length) {
+    alert('필수 파일이 없습니다: ' + missing.join(', '));
     return;
   }
 
-  const key = r => r.name + '|' + r.date;
-  const otSet = new Set(overtime.map(key));
-  const lgSet = new Set(ledger.map(key));
+  let gov, mu, fp, sv;
+  try {
+    gov = fileData[1] ? extract(1) : [];
+    mu  = fileData[2] ? extract(2) : [];
+    fp  = extract(3);
+    sv  = extract(4);
+  } catch (e) {
+    alert(e.message); return;
+  }
 
-  const badRows    = ledger.filter(r => !otSet.has(key(r)));   // 장부O, 초과근무X → 취소
-  const okRows     = ledger.filter(r =>  otSet.has(key(r)));   // 양쪽O → 정산
-  const missedRows = overtime.filter(r => !lgSet.has(key(r))); // 초과근무O, 장부X → 참고
+  const unit = +document.getElementById('unit').value || 9000;
+  const key  = r => r.name + '|' + r.date;
 
-  const total      = okRows.length * unit;
+  // 복무 승인 집합 M = 공무원 ∪ 공무직
+  const M = new Set([...gov, ...mu].map(key));
+  // 실근무(지문) 집합 F — 출퇴근 중복 제거 자동
+  const F = new Set(fp.map(key));
+  // 설문 = S (원본 배열 유지)
+  const S_arr = sv;
+  const S_set = new Set(S_arr.map(key));
+
+  // 설문 기준 분류
+  const ok      = [];  // ✅ S ∩ M ∩ F
+  const noFp    = [];  // ⚠ S ∩ M, S − F
+  const noDuty  = [];  // ❌ S − M
+  S_arr.forEach(r => {
+    const k = key(r);
+    const inM = M.has(k), inF = F.has(k);
+    if (inM && inF) ok.push(r);
+    else if (!inM) noDuty.push(r);
+    else noFp.push(r); // inM && !inF
+  });
+
+  // 참고 정보: 복무+지문은 있는데 설문 안 한 사람
+  const missedMeal = [];
+  M.forEach(k => {
+    if (F.has(k) && !S_set.has(k)) {
+      const [name, date] = k.split('|');
+      missedMeal.push({ name, date });
+    }
+  });
+
+  const total      = ok.length * unit;
   const totalTrunc = truncWon(total);
 
   const html = `
-    <h2>3. 대조 결과</h2>
+    <h2>🔍 대조 결과</h2>
     <div class="legend">
-      <span style="background:#e6ffe6">✅ 정산가능 ${okRows.length}</span>
-      <span style="background:#ffe6e6">❌ 취소필요 ${badRows.length}</span>
-      <span style="background:#fff2cc">⚠️ 미이용 ${missedRows.length}</span>
+      <span style="background:#e6ffe6">✅ 정산가능 ${ok.length}</span>
+      <span style="background:#ffecec">❌ 복무승인 없음 ${noDuty.length}</span>
+      <span style="background:#fff2cc">⚠️ 지문증빙 없음 ${noFp.length}</span>
+      <span style="background:#e8eef8">📋 식사 미이용 ${missedMeal.length}</span>
     </div>
+
     <table>
-      <thead><tr><th>구분</th><th>이름</th><th>날짜</th><th>조치</th></tr></thead>
+      <thead>
+        <tr><th>구분</th><th>이름</th><th>날짜</th><th>복무</th><th>지문</th><th>설문</th><th>조치</th></tr>
+      </thead>
       <tbody>
-        ${badRows.map(r => `<tr class="bad"><td>❌ 초과근무 미확인</td><td>${r.name}</td><td>${r.date}</td><td><b>결제 취소 요청</b></td></tr>`).join('')}
-        ${okRows.map(r => `<tr class="ok"><td>✅ 정산가능</td><td>${r.name}</td><td>${r.date}</td><td>-</td></tr>`).join('')}
-        ${missedRows.map(r => `<tr class="warn"><td>⚠️ 식사 미이용</td><td>${r.name}</td><td>${r.date}</td><td>(참고용)</td></tr>`).join('')}
+        ${noDuty.map(r => `<tr class="bad"><td>❌ 복무승인 없음</td><td>${r.name}</td><td>${r.date}</td><td>✗</td><td>${F.has(key(r))?'✓':'✗'}</td><td>✓</td><td><b>결제 취소</b></td></tr>`).join('')}
+        ${noFp.map(r => `<tr class="warn"><td>⚠️ 지문증빙 없음</td><td>${r.name}</td><td>${r.date}</td><td>✓</td><td>✗</td><td>✓</td><td>본인 확인 필요</td></tr>`).join('')}
+        ${ok.map(r => `<tr class="ok"><td>✅ 정산가능</td><td>${r.name}</td><td>${r.date}</td><td>✓</td><td>✓</td><td>✓</td><td>-</td></tr>`).join('')}
+        ${missedMeal.map(r => `<tr class="info"><td>📋 식사 미이용</td><td>${r.name}</td><td>${r.date}</td><td>✓</td><td>✓</td><td>✗</td><td>(참고)</td></tr>`).join('')}
       </tbody>
     </table>
+
     <div class="summary">
-      <div class="row"><span>정산 인원</span><span>${okRows.length}명</span></div>
+      <div class="row"><span>정산 인원</span><span>${ok.length}명</span></div>
       <div class="row"><span>1인당 단가</span><span>${unit.toLocaleString()}원</span></div>
       <div class="row"><span>소계</span><span>${total.toLocaleString()}원</span></div>
       <div class="row total"><span>결제액 (원단위 절삭)</span><span>${totalTrunc.toLocaleString()}원</span></div>
     </div>
+
     <button onclick="exportCSV()">📥 결과 CSV 다운로드</button>
     <button class="ghost" onclick="window.print()">🖨️ 인쇄</button>
   `;
   document.getElementById('result').innerHTML = html;
-  window._exportData = { badRows, okRows, missedRows, total, totalTrunc, unit };
+  window._exportData = { ok, noFp, noDuty, missedMeal, total, totalTrunc, unit, F };
 }
 
-// ---- 결과 CSV 내보내기 ----
+// ─────────────────────────────────────────────
+// CSV 내보내기
+// ─────────────────────────────────────────────
 function exportCSV() {
   const d = window._exportData;
   if (!d) return;
-  let csv = '구분,이름,날짜,조치\n';
-  d.badRows.forEach(r => csv += `취소필요,${r.name},${r.date},결제취소\n`);
-  d.okRows.forEach(r => csv += `정산가능,${r.name},${r.date},-\n`);
-  d.missedRows.forEach(r => csv += `미이용,${r.name},${r.date},참고\n`);
-  csv += `\n합계,,${d.okRows.length}명,${d.totalTrunc.toLocaleString()}원(절삭)\n`;
+  const key = r => r.name + '|' + r.date;
+  let csv = '구분,이름,날짜,복무,지문,설문,조치\n';
+  d.noDuty.forEach(r => csv += `복무승인없음,${r.name},${r.date},✗,${d.F.has(key(r))?'✓':'✗'},✓,결제취소\n`);
+  d.noFp.forEach(r => csv += `지문증빙없음,${r.name},${r.date},✓,✗,✓,본인확인\n`);
+  d.ok.forEach(r => csv += `정산가능,${r.name},${r.date},✓,✓,✓,-\n`);
+  d.missedMeal.forEach(r => csv += `식사미이용,${r.name},${r.date},✓,✓,✗,참고\n`);
+  csv += `\n정산인원,${d.ok.length}명\n`;
+  csv += `결제액(원단위절삭),${d.totalTrunc.toLocaleString()}원\n`;
   const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `특근매식비_대조결과_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `특근매식비_4중대조_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 }
 
-// ---- 샘플 / 초기화 ----
-function loadSample() {
-  document.getElementById('textA').value = `이름,날짜
-고해영,2026-04-20
-이원애,2026-04-20
-한지윤,2026-04-21
-김명수,2026-04-22`;
-  document.getElementById('textB').value = `이름,날짜
-고해영,2026-04-20
-이원애,2026-04-20
-한지윤,2026-04-20
-김명수,2026-04-21`;
-}
 function reset() {
-  document.getElementById('textA').value = '';
-  document.getElementById('textB').value = '';
+  [1,2,3,4].forEach(n => {
+    fileData[n] = null;
+    document.getElementById('status' + n).textContent = '';
+    document.getElementById('card' + n).classList.remove('loaded');
+    document.getElementById('badge' + n).textContent = '미입력';
+  });
   document.getElementById('result').innerHTML = '';
 }
 </script>
