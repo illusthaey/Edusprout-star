@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>특근매식비 대조 도구</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+    background: #f5f5f7; color: #1a1a1a;
+    margin: 0 auto; padding: 16px; max-width: 960px;
+  }
+  h1 { font-size: 20px; margin: 8px 0 8px; }
+  h2 { font-size: 16px; margin: 20px 0 8px; color: #333; }
+  p.sub { font-size: 13px; color: #555; margin: 0 0 12px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+  .drop {
+    border: 2px dashed #bbb; border-radius: 8px;
+    padding: 18px; text-align: center; background: #fafafa;
+    cursor: pointer; transition: all .15s; font-size: 13px;
+  }
+  .drop.over { border-color: #0066cc; background: #e6f2ff; }
+  .drop small { color: #666; display: block; margin-top: 4px; }
+  textarea {
+    width: 100%; min-height: 120px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12px; padding: 8px;
+    border: 1px solid #ccc; border-radius: 6px; resize: vertical;
+    margin-top: 6px;
+  }
+  button {
+    background: #0066cc; color: white; border: none;
+    padding: 10px 16px; border-radius: 6px; font-size: 14px;
+    cursor: pointer; margin: 8px 4px 8px 0;
+  }
+  button.ghost { background: #fff; color: #333; border: 1px solid #ccc; }
+  table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+    margin-top: 12px; background: #fff;
+  }
+  th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+  th { background: #f0f0f0; font-weight: 600; }
+  tr.ok td   { background: #f5fff5; }
+  tr.warn td { background: #fff7e6; }
+  tr.bad td  { background: #ffecec; }
+  .summary {
+    background: white; border: 1px solid #ddd; border-radius: 8px;
+    padding: 16px; margin-top: 16px;
+  }
+  .summary .row { display: flex; justify-content: space-between; padding: 4px 0; }
+  .summary .total {
+    font-size: 18px; font-weight: 700;
+    border-top: 2px solid #333; margin-top: 8px; padding-top: 8px;
+  }
+  label { font-size: 13px; color: #555; display: inline-block; margin-top: 8px; margin-right: 12px; }
+  input[type="number"] {
+    padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; width: 100px;
+  }
+  .legend { font-size: 12px; color: #666; margin: 8px 0; }
+  .legend span { display: inline-block; padding: 3px 8px; border-radius: 4px; margin-right: 6px; }
+</style>
+</head>
+<body>
+<h1>🍚 특근매식비 대조 도구</h1>
+<p class="sub">초과근무 승인 명단과 식당 장부를 각각 업로드(드래그앤드롭 또는 붙여넣기)하면, 자동으로 대조하여 <b>정산가능</b>·<b>결제취소대상</b>·<b>식사미이용</b>으로 분리합니다.</p>
+
+<div class="grid">
+  <div>
+    <h2>1. 초과근무 승인 명단</h2>
+    <div class="drop" id="dropA">
+      📂 파일을 여기로 드래그 (또는 클릭)
+      <small>CSV/TXT 형식: 이름,날짜</small>
+    </div>
+    <textarea id="textA" placeholder="이름,날짜&#10;홍길동,2026-04-20&#10;김철수,2026-04-20"></textarea>
+  </div>
+  <div>
+    <h2>2. 식당 매식 장부</h2>
+    <div class="drop" id="dropB">
+      📂 파일을 여기로 드래그 (또는 클릭)
+      <small>CSV/TXT 형식: 이름,날짜</small>
+    </div>
+    <textarea id="textB" placeholder="이름,날짜&#10;홍길동,2026-04-20&#10;박영희,2026-04-20"></textarea>
+  </div>
+</div>
+
+<label>1인당 단가(원)
+  <input type="number" id="unit" value="9000" step="100">
+</label>
+
+<div>
+  <button onclick="run()">🔍 대조 실행</button>
+  <button class="ghost" onclick="loadSample()">샘플 데이터</button>
+  <button class="ghost" onclick="reset()">초기화</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+// ---- 드래그앤드롭 + 클릭 업로드 ----
+function setupDrop(dropId, textId) {
+  const drop = document.getElementById(dropId);
+  const text = document.getElementById(textId);
+  ['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => {
+    ev.preventDefault(); drop.classList.add('over');
+  }));
+  ['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => {
+    ev.preventDefault(); drop.classList.remove('over');
+  }));
+  drop.addEventListener('drop', ev => readFile(ev.dataTransfer.files[0], text));
+  drop.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = '.csv,.txt';
+    input.onchange = ev => readFile(ev.target.files[0], text);
+    input.click();
+  });
+}
+function readFile(file, text) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { text.value = reader.result; };
+  reader.readAsText(file, 'utf-8');
+}
+setupDrop('dropA','textA');
+setupDrop('dropB','textB');
+
+// ---- CSV/TSV 파싱 ----
+function parse(txt) {
+  return txt.trim().split(/\r?\n/).map(line => {
+    const parts = line.split(/[,\t]/).map(s => s.trim());
+    if (parts.length < 2) return null;
+    if (/^이름/.test(parts[0]) || /^name/i.test(parts[0])) return null;
+    return { name: parts[0], date: parts[1] };
+  }).filter(Boolean);
+}
+
+// ---- 원단위 절삭 (1111 → 1110) ----
+function truncWon(v) { return Math.floor(v / 10) * 10; }
+
+// ---- 대조 실행 ----
+function run() {
+  const overtime = parse(document.getElementById('textA').value);
+  const ledger   = parse(document.getElementById('textB').value);
+  const unit     = +document.getElementById('unit').value || 9000;
+
+  if (overtime.length === 0 || ledger.length === 0) {
+    alert('양쪽 모두 데이터를 입력해 주세요.');
+    return;
+  }
+
+  const key = r => r.name + '|' + r.date;
+  const otSet = new Set(overtime.map(key));
+  const lgSet = new Set(ledger.map(key));
+
+  const badRows    = ledger.filter(r => !otSet.has(key(r)));   // 장부O, 초과근무X → 취소
+  const okRows     = ledger.filter(r =>  otSet.has(key(r)));   // 양쪽O → 정산
+  const missedRows = overtime.filter(r => !lgSet.has(key(r))); // 초과근무O, 장부X → 참고
+
+  const total      = okRows.length * unit;
+  const totalTrunc = truncWon(total);
+
+  const html = `
+    <h2>3. 대조 결과</h2>
+    <div class="legend">
+      <span style="background:#e6ffe6">✅ 정산가능 ${okRows.length}</span>
+      <span style="background:#ffe6e6">❌ 취소필요 ${badRows.length}</span>
+      <span style="background:#fff2cc">⚠️ 미이용 ${missedRows.length}</span>
+    </div>
+    <table>
+      <thead><tr><th>구분</th><th>이름</th><th>날짜</th><th>조치</th></tr></thead>
+      <tbody>
+        ${badRows.map(r => `<tr class="bad"><td>❌ 초과근무 미확인</td><td>${r.name}</td><td>${r.date}</td><td><b>결제 취소 요청</b></td></tr>`).join('')}
+        ${okRows.map(r => `<tr class="ok"><td>✅ 정산가능</td><td>${r.name}</td><td>${r.date}</td><td>-</td></tr>`).join('')}
+        ${missedRows.map(r => `<tr class="warn"><td>⚠️ 식사 미이용</td><td>${r.name}</td><td>${r.date}</td><td>(참고용)</td></tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="summary">
+      <div class="row"><span>정산 인원</span><span>${okRows.length}명</span></div>
+      <div class="row"><span>1인당 단가</span><span>${unit.toLocaleString()}원</span></div>
+      <div class="row"><span>소계</span><span>${total.toLocaleString()}원</span></div>
+      <div class="row total"><span>결제액 (원단위 절삭)</span><span>${totalTrunc.toLocaleString()}원</span></div>
+    </div>
+    <button onclick="exportCSV()">📥 결과 CSV 다운로드</button>
+    <button class="ghost" onclick="window.print()">🖨️ 인쇄</button>
+  `;
+  document.getElementById('result').innerHTML = html;
+  window._exportData = { badRows, okRows, missedRows, total, totalTrunc, unit };
+}
+
+// ---- 결과 CSV 내보내기 ----
+function exportCSV() {
+  const d = window._exportData;
+  if (!d) return;
+  let csv = '구분,이름,날짜,조치\n';
+  d.badRows.forEach(r => csv += `취소필요,${r.name},${r.date},결제취소\n`);
+  d.okRows.forEach(r => csv += `정산가능,${r.name},${r.date},-\n`);
+  d.missedRows.forEach(r => csv += `미이용,${r.name},${r.date},참고\n`);
+  csv += `\n합계,,${d.okRows.length}명,${d.totalTrunc.toLocaleString()}원(절삭)\n`;
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `특근매식비_대조결과_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ---- 샘플 / 초기화 ----
+function loadSample() {
+  document.getElementById('textA').value = `이름,날짜
+고해영,2026-04-20
+이원애,2026-04-20
+한지윤,2026-04-21
+김명수,2026-04-22`;
+  document.getElementById('textB').value = `이름,날짜
+고해영,2026-04-20
+이원애,2026-04-20
+한지윤,2026-04-20
+김명수,2026-04-21`;
+}
+function reset() {
+  document.getElementById('textA').value = '';
+  document.getElementById('textB').value = '';
+  document.getElementById('result').innerHTML = '';
+}
+</script>
+</body>
+</html>
