@@ -54,7 +54,9 @@
       event.preventDefault();
     };
 
-    document.addEventListener("contextmenu", stop, { capture: true, passive: false });
+    // 우클릭 방지 제거:
+    // document.addEventListener("contextmenu", stop, { capture: true, passive: false });
+
     document.addEventListener("selectstart", stop, { capture: true, passive: false });
     document.addEventListener("copy", stop, { capture: true, passive: false });
 
