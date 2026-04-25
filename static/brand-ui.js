@@ -18,7 +18,15 @@
     brandAccentColor: "#1f3a5f",
     schoolAccentColor: "#628a63",
     heroImage: "/static/alien.jpg",
-    routes: { home: "/", notice: "/notice/", faq: "/faq/", contact: "/" },
+    routes: {  
+      home: "/",
+      notice: "/notice/",
+      faq: "/faq/",
+      contact: "/contact/",
+      guideForNewMembers: "/guide-for-new-members/"
+    },
+    usePublicThemeToggle: false,
+    copyProtection: true
     lightOnly: true
   };
 
