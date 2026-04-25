@@ -9,6 +9,7 @@
     siteDescription: "교육행정 실무자가 반복 업무를 빠르게 처리하고 검산할 수 있도록 고주무관이 만든 웹 도구 모음입니다.",
     operatorName: "업무천재 고주무관",
     contactEmail: "edusproutcomics@naver.com",
+    feedbackLabel: "고주무관에게 사용자 의견 전달하기",
     slogan: "빨리 끝내고 제시간에 집에 갑시다.",
     homeHeadline: "업무천재 고주무관의 교육행정 업무 효율화 도구",
     homeSubtitle: "제시간에 퇴근하고 빨리 집에 가서 개발 놀이하고 싶습니다.",
@@ -18,16 +19,17 @@
     brandAccentColor: "#1f3a5f",
     schoolAccentColor: "#628a63",
     heroImage: "/static/alien.jpg",
-    routes: {  
+    routes: {
       home: "/",
       notice: "/notice/",
       faq: "/faq/",
       contact: "/contact/",
-      guideForNewMembers: "/guide-for-new-members/"
+      guideForNewMembers: "/guide-for-new-members/",
+      feedback: "https://naver.me/GEdAnG29"
     },
     usePublicThemeToggle: false,
+    lightOnly: true,
     copyProtection: true
-    lightOnly: true
   };
 
   function mergeBrand(raw) {
@@ -49,6 +51,30 @@
       const value = resolvePath(cfg, key.trim());
       return value === undefined || value === null ? "" : String(value);
     });
+  }
+
+  function escapeHtml(value) {
+    return String(value === undefined || value === null ? "" : value).replace(/[&<>"']/g, function (char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char];
+    });
+  }
+
+  function escapeAttribute(value) {
+    return escapeHtml(value);
+  }
+
+  function isExternalUrl(href) {
+    return /^https?:\/\//i.test(String(href || ""));
+  }
+
+  function externalLinkAttrs(href) {
+    return isExternalUrl(href) ? ' target="_blank" rel="noopener noreferrer"' : "";
   }
 
   function ensureMeta(name, content) {
@@ -149,20 +175,35 @@
     document.querySelectorAll("[data-brand-route]").forEach(function (el) {
       const key = el.getAttribute("data-brand-route");
       const href = resolvePath(cfg, "routes." + key);
-      if (href) el.setAttribute("href", href);
+      if (!href) return;
+
+      el.setAttribute("href", href);
+
+      if (isExternalUrl(href)) {
+        el.setAttribute("target", "_blank");
+        el.setAttribute("rel", "noopener noreferrer");
+      }
     });
   }
 
   function injectHeader(cfg) {
     document.querySelectorAll("header.brand-site-header[data-brand-header]").forEach(function (node) { node.remove(); });
 
+    const homeHref = cfg.routes.home || "/";
+    const feedbackHref = cfg.routes.feedback || "";
+    const feedbackLabel = cfg.feedbackLabel || "고주무관에게 사용자 의견 전달하기";
+    const feedbackButton = feedbackHref
+      ? '      <a class="btn-home brand-feedback-link" href="' + escapeAttribute(feedbackHref) + '"' + externalLinkAttrs(feedbackHref) + '>' + escapeHtml(feedbackLabel) + '</a>'
+      : "";
+
     const header = toElement([
       '<header class="site-header brand-site-header" data-brand-header="true">',
       '  <div class="shell">',
-      '    <a class="brand-home-link" href="' + (cfg.routes.home || "/") + '" aria-label="메인으로 이동"><span>' + cfg.masterBrand + '</span></a>',
+      '    <a class="brand-home-link" href="' + escapeAttribute(homeHref) + '" aria-label="메인으로 이동"><span>' + escapeHtml(cfg.masterBrand) + '</span></a>',
       '    <div class="brand-site-header__right">',
-      '      <span class="brand-site-header__tagline">' + cfg.slogan + '</span>',
-      '      <a class="btn-home" href="' + (cfg.routes.home || "/") + '">메인</a>',
+      '      <span class="brand-site-header__tagline">' + escapeHtml(cfg.slogan) + '</span>',
+      feedbackButton,
+      '      <a class="btn-home" href="' + escapeAttribute(homeHref) + '">메인</a>',
       '    </div>',
       '  </div>',
       '</header>'
@@ -201,7 +242,7 @@
     }
 
     if (!hero.querySelector(".hero-figure")) {
-      const figure = toElement('<figure class="hero-figure" aria-hidden="true"><img src="' + cfg.heroImage + '" alt="" loading="eager" /></figure>');
+      const figure = toElement('<figure class="hero-figure" aria-hidden="true"><img src="' + escapeAttribute(cfg.heroImage) + '" alt="" loading="eager" /></figure>');
       hero.appendChild(figure);
     }
   }
