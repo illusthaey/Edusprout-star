@@ -3,12 +3,12 @@
   window.__GO_OFFICER_STANDARD_FOOTER_LOADED__ = true;
 
   const FALLBACK = {
-    masterBrand: "고주무관의 업무돋움",
-    editionTitle: "교육행정 업무도구",
-    operatorName: "고주무관",
+    masterBrand: "업무천재 고주무관과 함께 칼퇴를!",
+    editionTitle: "교육행정 업무 효율화 도구",
+    operatorName: "업무천재 고주무관",
     contactEmail: "edusproutcomics@naver.com",
-    trustMessage: "이 웹페이지는 비공식 업무 참고용입니다. 최종 기준은 공문·지침·계약서 등 공식 자료를 우선합니다.",
-    affectionLine: "고주무관이 현장에서 반복되는 행정업무를 줄이기 위해 운영합니다.",
+    trustMessage: "이 웹페이지는 도교육청에서 배포한 게 아닌 비공식 사설 페이지입니다. 최종 기준은 공문·지침·계약서 등 공식 자료를 우선합시다.",
+    affectionLine: "집에 가게 해주세요.",
     playfulAlias: "업무천재 고주무관",
     routes: { home: "/", notice: "/notice/", faq: "/faq/", contact: "/contact/" }
   };
