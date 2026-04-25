@@ -7,7 +7,7 @@
     editionTitle: "교육행정 업무 효율화 도구",
     operatorName: "업무천재 고주무관",
     contactEmail: "edusproutcomics@naver.com",
-    trustMessage: "이 웹페이지는 도교육청에서 배포한 게 아닌 비공식 사설 페이지입니다. 최종 기준은 공문·지침·계약서 등 공식 자료를 우선합시다.",
+    trustMessage: "이 웹페이지는 개인이 만든 비공식 웹페이지입니다. 도교육청 공식 배포가 아니니, 최종 기준은 공문·지침·편람 등 공식 자료를 우선합시다.",
     affectionLine: "집에 가게 해주세요.",
     playfulAlias: "업무천재 고주무관",
     routes: { home: "/", notice: "/notice/", faq: "/faq/", contact: "/contact/" }
