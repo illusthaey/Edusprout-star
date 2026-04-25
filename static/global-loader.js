@@ -1,176 +1,79 @@
 // /static/global-loader.js
-// 사이트 공통 스크립트 모음 (우클릭 방지)
-
+// 고주무관 브랜드 공통 로더: light-only, 공통 CSS/브랜드 UI 보정, 선택적 복사 보호
 (function () {
-  // ---------------------------:contentReference[oaicite:11]{index=11}- 허용한 호스트에서만 보호 기능 켜기
-  // -----------------------------
-  const host = location.hostname || "";
-  const allowed = [
-    "edusprouthaey.co.kr",
-    "eduworkhaey.co.kr",
-    "savinghaey.co.kr",
-    "archivinghaey.co.kr",
-    "tftesthaey.co.kr",
-    "localhost",
-    "127.0.0.1"
-  ];
+  if (window.__GO_OFFICER_GLOBAL_LOADER__) return;
+  window.__GO_OFFICER_GLOBAL_LOADER__ = true;
 
-  if (!allowed.includes(host)) {
-    // 다른 도메인에서는 그냥 바로 종료
-    return;
+  const VERSION = "20260425-mm-brand";
+
+  function ensureStyle() {
+    const hasStyle = !!document.querySelector('link[href*="/static/style.css"]');
+    if (hasStyle) return;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "/static/style.css?v=" + VERSION;
+    document.head.appendChild(link);
   }
 
-  // -----------------------------
-  // 2. 보호 모드 표시 (선택 사항)
-  //    - 제목 뒤에 점 하나 찍어서 티만 살짝 내기
-  // -----------------------------
-  try {
-    document.title += " •";
-  } catch (_) {}
-
-  // -----------------------------
-  // 3. 우클릭 / 선택 / 드래그 막기
-  // -----------------------------
-  const stop = e => e.preventDefault();
-
-  document.addEventListener("contextmenu", stop, {
-    capture: true,
-    passive: false
-  });
-
-  document.addEventListener("selectstart", stop, {
-    capture: true,
-    passive: false
-  });
-
-  document.addEventListener("dragstart", stop, {
-    capture: true,
-    passive: false
-  });
-
-  // -----------------------------
-  // 4. 주요 단축키 막기
-  //    - F12, Ctrl+U, Ctrl+S, Ctrl+C, Ctrl+Shift+I 등
-  // -----------------------------
-  document.addEventListener(
-    "keydown",
-    e => {
-      const k = (e.key || "").toLowerCase();
-
-      // F12
-      if (e.keyCode === 123) {
-        e.preventDefault();
-        return;
-      }
-
-      // Ctrl + (U, S, C, A, P, I, J, K)
-      if (e.ctrlKey && ["u", "s", "c", "a", "p", "i", "j", "k"].includes(k)) {
-        e.preventDefault();
-        return;
-      }
-
-      // Ctrl + Shift + (I, J, C, K)
-      if (e.ctrlKey && e.shiftKey && ["i", "j", "c", "k"].includes(k)) {
-        e.preventDefault();
-        return;
-      }
-    },
-    true
-  );
-
-  // -----------------------------
-  // 5. 텍스트 선택 / 복사 방지
-  // -----------------------------
-  document.documentElement.style.userSelect = "none";
-
-  document.addEventListener(
-    "copy",
-    e => {
-      e.preventDefault();
-    },
-    true
-  );
-
-  // -----------------------------
-  // 6. 콘솔(DevTools) 감지해서 새로고침하는 옵션
-  //    - 기본은 꺼둠. 필요하면 true로 변경.
-  // -----------------------------
-  const DEVTOOLS_RELOAD = false;
-
-  if (DEVTOOLS_RELOAD) {
-    setInterval(() => {
-      const t = Date.now();
-      // debugger에서 멈추면 시간 차이가 크게 나므로 감지 가능
-      // eslint-disable-next-line no-debugger
-      debugger;
-      const d = Date.now() - t;
-      if (d > 120) {
-        location.reload();
-      }
-    }, 2000);
+  function ensureScript(src, attrs) {
+    if (document.querySelector('script[src*="' + src + '"]')) return;
+    const script = document.createElement("script");
+    script.src = src + "?v=" + VERSION;
+    if (attrs) Object.keys(attrs).forEach(function (key) { script.setAttribute(key, attrs[key]); });
+    document.head.appendChild(script);
   }
 
-  // -----------------------------
-  // 7. 공통 로딩 관련 훅 (지금은 자리만 잡아둠)
-  //    - 나중에 로딩 스피너, 공통 알람 등 넣고 싶으면 여기 활용
-  // -----------------------------
-  // window.addEventListener("load", () => {
-  //   console.log("global-loader.js loaded");
-  // });
+  function ensureBrandStack() {
+    ensureStyle();
+    ensureScript("/static/brand-config.js");
+    ensureScript("/static/brand-ui.js", { defer: "" });
+  }
 
-  // -----------------------------
-  // 8. UI Kit: Web Awesome (옵션 / 충돌 최소화)
-  //    - 페이지에 <wa-*> 컴포넌트가 있거나
-  //    - <html data-ui-kit="wa"> 또는 <body data-ui-kit="wa"> 가 있으면
-  //      /static/wa-kit.js를 주입해서 테마/로더를 "필요할 때만" 로드
-  // -----------------------------
-  try {
-    const waSelector = [
-      "wa-button",
-      "wa-dialog",
-      "wa-input",
-      "wa-textarea",
-      "wa-select",
-      "wa-checkbox",
-      "wa-switch",
-      "wa-radio",
-      "wa-radio-group",
-      "wa-dropdown",
-      "wa-popup",
-      "wa-tooltip",
-      "wa-details",
-      "wa-card",
-      "wa-alert",
-      "wa-badge",
-      "wa-tag"
-    ].join(",");
+  function applyProtection() {
+    const cfg = window.SITE_BRAND || {};
+    if (cfg.copyProtection === false) return;
 
-    const wantsWA =
-      (document.documentElement?.dataset?.uiKit === "wa") ||
-      (document.body?.dataset?.uiKit === "wa") ||
-      !!document.querySelector(waSelector);
+    const host = location.hostname || "";
+    const allowed = [
+      "edusprouthaey.co.kr",
+      "eduworkhaey.co.kr",
+      "savinghaey.co.kr",
+      "archivinghaey.co.kr",
+      "tftesthaey.co.kr",
+      "localhost",
+      "127.0.0.1"
+    ];
 
-    if (wantsWA) {
-      const id = "wa-kit-js";
-      if (!document.getElementById(id)) {
-        const s = document.createElement("script");
-        s.id = id;
-        s.src = "/static/wa-kit.js?v=1";
-        s.defer = true;
-        s.onload = () => {
-          try {
-            if (window.WAKit && typeof window.WAKit.auto === "function") {
-              window.WAKit.auto();
-            }
-          } catch (_) {}
-        };
-        (document.head || document.documentElement).appendChild(s);
-      } else {
-        if (window.WAKit && typeof window.WAKit.auto === "function") {
-          window.WAKit.auto();
-        }
+    if (!allowed.includes(host)) return;
+
+    const stop = function (event) {
+      const target = event.target;
+      if (target && target.closest && target.closest("input, textarea, [contenteditable='true'], .copy-block, .copy-card, .copy-box, pre, code")) {
+        return;
       }
-    }
-  } catch (_) {}
+      event.preventDefault();
+    };
 
+    document.addEventListener("contextmenu", stop, { capture: true, passive: false });
+    document.addEventListener("selectstart", stop, { capture: true, passive: false });
+    document.addEventListener("copy", stop, { capture: true, passive: false });
+
+    document.addEventListener("keydown", function (event) {
+      const key = String(event.key || "").toLowerCase();
+      const target = event.target;
+      const editable = target && target.closest && target.closest("input, textarea, [contenteditable='true'], pre, code");
+      if (editable) return;
+      if (event.keyCode === 123) event.preventDefault();
+      if (event.ctrlKey && ["u", "s", "p", "i", "j", "k"].includes(key)) event.preventDefault();
+      if (event.ctrlKey && event.shiftKey && ["i", "j", "c", "k"].includes(key)) event.preventDefault();
+    }, true);
+  }
+
+  function init() {
+    ensureBrandStack();
+    applyProtection();
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
 })();
