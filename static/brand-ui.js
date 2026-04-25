@@ -5,7 +5,7 @@
   const FALLBACK = {
     masterBrand: "업무천재 고주무관과 함께 칼퇴를!",
     editionTitle: "교육행정 업무 효율화 도구",
-    siteTitle: "업천고와 함께 칼퇴를! | 교육행정 업무 효율화 웹페이지",
+    siteTitle: "업천고와 함께 칼퇴를! | 교육행정 업무도구",
     siteDescription: "기면병 및 탈력발작 (Narcolepsy and Cataplexy, G47.4)",
     operatorName: "업무천재 고주무관",
     contactEmail: "edusproutcomics@naver.com",
@@ -16,8 +16,10 @@
     trustMessage: "이 웹페이지는 개인이 만든 비공식 웹페이지입니다. 도교육청 공식 배포가 아니니, 최종 기준은 공문·지침·편람 등 공식 자료를 우선합시다.",
     affectionLine: "집에 가게 해주세요.",
     playfulAlias: "업무천재 고주무관",
-    brandAccentColor: "#1f3a5f",
-    schoolAccentColor: "#628a63",
+
+    brandAccentColor: "#000000",
+    schoolAccentColor: "#000000",
+
     heroImage: "/static/alien.jpg",
     routes: {
       home: "/",
@@ -28,8 +30,8 @@
       feedback: "https://naver.me/GEdAnG29"
     },
     usePublicThemeToggle: false,
-    lightOnly: true,
-    copyProtection: true
+    copyProtection: true,
+    lightOnly: true
   };
 
   function mergeBrand(raw) {
@@ -43,7 +45,9 @@
     return String(path || "")
       .split(".")
       .filter(Boolean)
-      .reduce((acc, key) => (acc && Object.prototype.hasOwnProperty.call(acc, key) ? acc[key] : undefined), obj);
+      .reduce(function (acc, key) {
+        return acc && Object.prototype.hasOwnProperty.call(acc, key) ? acc[key] : undefined;
+      }, obj);
   }
 
   function interpolate(template, cfg) {
@@ -121,11 +125,17 @@
   }
 
   function applyLightOnly(cfg) {
+    const brandAccent = cfg.brandAccentColor || FALLBACK.brandAccentColor;
+    const schoolAccent = cfg.schoolAccentColor || FALLBACK.schoolAccentColor;
+
     ensureMeta("color-scheme", "light");
     document.documentElement.setAttribute("data-light-only", cfg.lightOnly ? "true" : "false");
     document.documentElement.removeAttribute("data-theme");
-    document.documentElement.style.setProperty("--brand-accent", cfg.brandAccentColor || FALLBACK.brandAccentColor);
-    document.documentElement.style.setProperty("--school-accent", cfg.schoolAccentColor || FALLBACK.schoolAccentColor);
+
+    document.documentElement.style.setProperty("--brand-accent", brandAccent);
+    document.documentElement.style.setProperty("--school-accent", schoolAccent);
+    document.documentElement.style.setProperty("--brand-accent-color", brandAccent);
+    document.documentElement.style.setProperty("--school-accent-color", schoolAccent);
 
     if (document.body) {
       document.body.classList.add("brand-site");
@@ -139,9 +149,11 @@
     const rawTitle = titleTemplate && titleTemplate.content ? interpolate(titleTemplate.content, cfg) : document.title;
     const currentTitle = String(rawTitle || "").replace(/\s*[|•]\s*고주무관의 업무돋움\s*$/g, "").trim();
     const title = isHomePage() ? cfg.siteTitle : (currentTitle ? currentTitle + " | " + cfg.masterBrand : cfg.siteTitle);
+
     document.title = title;
 
     const url = location.origin + location.pathname;
+
     ensureCanonical(url);
     ensureMeta("description", cfg.siteDescription);
     ensureProperty("og:type", "website");
@@ -161,20 +173,30 @@
     document.querySelectorAll("[data-brand-key]").forEach(function (el) {
       const key = el.getAttribute("data-brand-key");
       const value = resolvePath(cfg, key);
+
       if (value === undefined || value === null) return;
-      if (el.hasAttribute("data-brand-html")) el.innerHTML = String(value);
-      else el.textContent = String(value);
+
+      if (el.hasAttribute("data-brand-html")) {
+        el.innerHTML = String(value);
+      } else {
+        el.textContent = String(value);
+      }
     });
 
     document.querySelectorAll("[data-brand-template]").forEach(function (el) {
       const rendered = interpolate(el.getAttribute("data-brand-template"), cfg);
-      if (el.hasAttribute("data-brand-html")) el.innerHTML = rendered;
-      else el.textContent = rendered;
+
+      if (el.hasAttribute("data-brand-html")) {
+        el.innerHTML = rendered;
+      } else {
+        el.textContent = rendered;
+      }
     });
 
     document.querySelectorAll("[data-brand-route]").forEach(function (el) {
       const key = el.getAttribute("data-brand-route");
       const href = resolvePath(cfg, "routes." + key);
+
       if (!href) return;
 
       el.setAttribute("href", href);
@@ -187,26 +209,29 @@
   }
 
   function injectHeader(cfg) {
-    document.querySelectorAll("header.brand-site-header[data-brand-header]").forEach(function (node) { node.remove(); });
+    document.querySelectorAll("header.brand-site-header[data-brand-header]").forEach(function (node) {
+      node.remove();
+    });
 
     const homeHref = cfg.routes.home || "/";
     const feedbackHref = cfg.routes.feedback || "";
     const feedbackLabel = cfg.feedbackLabel || "고주무관에게 사용자 의견 전달하기";
+
     const feedbackButton = feedbackHref
-      ? '      <a class="btn-home brand-feedback-link" href="' + escapeAttribute(feedbackHref) + '"' + externalLinkAttrs(feedbackHref) + '>' + escapeHtml(feedbackLabel) + '</a>'
+      ? '      <a class="btn-home brand-feedback-link" href="' + escapeAttribute(feedbackHref) + '"' + externalLinkAttrs(feedbackHref) + ">" + escapeHtml(feedbackLabel) + "</a>"
       : "";
 
     const header = toElement([
       '<header class="site-header brand-site-header" data-brand-header="true">',
       '  <div class="shell">',
-      '    <a class="brand-home-link" href="' + escapeAttribute(homeHref) + '" aria-label="메인으로 이동"><span>' + escapeHtml(cfg.masterBrand) + '</span></a>',
+      '    <a class="brand-home-link" href="' + escapeAttribute(homeHref) + '" aria-label="메인으로 이동"><span>' + escapeHtml(cfg.masterBrand) + "</span></a>",
       '    <div class="brand-site-header__right">',
-      '      <span class="brand-site-header__tagline">' + escapeHtml(cfg.slogan) + '</span>',
+      '      <span class="brand-site-header__tagline">' + escapeHtml(cfg.slogan) + "</span>",
       feedbackButton,
       '      <a class="btn-home" href="' + escapeAttribute(homeHref) + '">메인</a>',
-      '    </div>',
-      '  </div>',
-      '</header>'
+      "    </div>",
+      "  </div>",
+      "</header>"
     ].join(""));
 
     document.body.insertBefore(header, document.body.firstChild);
@@ -242,7 +267,9 @@
     }
 
     if (!hero.querySelector(".hero-figure")) {
-      const figure = toElement('<figure class="hero-figure" aria-hidden="true"><img src="' + escapeAttribute(cfg.heroImage) + '" alt="" loading="eager" /></figure>');
+      const figure = toElement(
+        '<figure class="hero-figure" aria-hidden="true"><img src="' + escapeAttribute(cfg.heroImage) + '" alt="" loading="eager" /></figure>'
+      );
       hero.appendChild(figure);
     }
   }
@@ -261,6 +288,7 @@
 
   function boot() {
     const cfg = mergeBrand(window.SITE_BRAND || FALLBACK);
+
     applyLightOnly(cfg);
     applyMeta(cfg);
     applyBrandText(cfg);
@@ -270,8 +298,12 @@
 
     window.BrandUI = {
       brand: cfg,
-      resolvePath: function (path) { return resolvePath(cfg, path); },
-      interpolate: function (template) { return interpolate(template, cfg); }
+      resolvePath: function (path) {
+        return resolvePath(cfg, path);
+      },
+      interpolate: function (template) {
+        return interpolate(template, cfg);
+      }
     };
   }
 
