@@ -2,8 +2,8 @@
   window.SITE_BRAND = Object.freeze({
     masterBrand: "업무천재 고주무관과 함께 칼퇴를!",
     editionTitle: "교육행정 업무 효율화 도구",
-    siteTitle: "업천고와 함께 칼퇴를! | 교육행정 업무도구",
-    siteDescription: "교육행정 실무자가 반복 업무를 빠르게 처리하고 검산할 수 있도록 고주무관이 만든 웹 도구 모음입니다.",
+    siteTitle: "업천고와 함께 칼퇴를! | 교육행정 업무 효율화 웹페이지",
+    siteDescription: "기면병 및 탈력발작 (Narcolepsy and Cataplexy, G47.4)",
     operatorName: "업무천재 고주무관",
     contactEmail: "edusproutcomics@naver.com",
     feedbackLabel: "고주무관에게 사용자 의견 전달하기",
