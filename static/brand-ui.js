@@ -9,7 +9,7 @@
     siteDescription: "기면병 및 탈력발작 (Narcolepsy and Cataplexy, G47.4)",
     operatorName: "업무천재 고주무관",
     contactEmail: "edusproutcomics@naver.com",
-    feedbackLabel: "고주무관에게 사용자 의견 전달하기",
+    feedbackLabel: "고주무관에게 응원과 격려 보내기",
     slogan: "빨리 끝내고 제시간에 집에 갑시다.",
     homeHeadline: "업무천재 고주무관의 교육행정 업무 효율화 도구",
     homeSubtitle: "제시간에 퇴근하고 빨리 집에 가서 개발 놀이하고 싶습니다.",
@@ -215,7 +215,7 @@
 
     const homeHref = cfg.routes.home || "/";
     const feedbackHref = cfg.routes.feedback || "";
-    const feedbackLabel = cfg.feedbackLabel || "고주무관에게 사용자 의견 전달하기";
+    const feedbackLabel = cfg.feedbackLabel || "고주무관에게 응원과 격려 보내기";
 
     const feedbackButton = feedbackHref
       ? '      <a class="btn-home brand-feedback-link" href="' + escapeAttribute(feedbackHref) + '"' + externalLinkAttrs(feedbackHref) + ">" + escapeHtml(feedbackLabel) + "</a>"
