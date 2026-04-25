@@ -13,8 +13,8 @@
     trustMessage: "이 웹페이지는 개인이 만든 비공식 웹페이지입니다. 도교육청 공식 배포가 아니니, 최종 기준은 공문·지침·편람 등 공식 자료를 우선합시다.",
     affectionLine: "집에 가게 해주세요.",
     playfulAlias: "업무천재 고주무관",
-    brandAccentColor: "#1f3a5f",
-    schoolAccentColor: "#628a63",
+    brandAccentColor: "#000000",
+    schoolAccentColor: "#000000",
     heroImage: "/static/alien.jpg",
     routes: {
       home: "/",
