@@ -4,7 +4,7 @@
 
   const FALLBACK = {
     masterBrand: "업무천재 고주무관과 함께 칼퇴를!",
-    editionTitle: "교육행정 업무 효율화 도구",
+    editionTitle: "업천고와 함께 칼퇴를!",
     operatorName: "업무천재 고주무관",
     contactEmail: "edusproutcomics@naver.com",
     trustMessage: "이 웹페이지는 개인이 만든 비공식 웹페이지입니다. 도교육청 공식 배포가 아니니, 최종 기준은 공문·지침·편람 등 공식 자료를 우선합시다.",
