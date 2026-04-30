@@ -1,7 +1,7 @@
 (function () {
   window.SITE_BRAND = Object.freeze({
     masterBrand: "업무천재 고주무관과 함께 칼퇴를!",
-    editionTitle: "교육행정 업무 효율화 도구",
+    editionTitle: "업천고와 함께 칼퇴를!",
     siteTitle: "업천고와 함께 칼퇴를! | 교육행정 업무 효율화 웹페이지",
     siteDescription: "기면병 및 탈력발작 (Narcolepsy and Cataplexy, G47.4)",
     operatorName: "업무천재 고주무관",
