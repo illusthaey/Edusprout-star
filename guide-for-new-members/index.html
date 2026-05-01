@@ -25,6 +25,7 @@
   <style>
   /* =============================================
      guide-intro 네임스페이스 — 기존 CSS와 충돌 없음
+     v2: 스테이지 → 퀘스트 보드(의뢰판) 구조로 전환
   ============================================= */
   .guide-intro {
     --gi-font-pixel: 'Nanum Gothic Coding', monospace;
@@ -59,7 +60,6 @@
     padding-bottom: 1.2rem;
     margin-bottom: 1.4rem;
   }
-
   .guide-intro__kicker {
     font-family: var(--gi-font-pixel);
     font-size: 0.78rem;
@@ -67,7 +67,6 @@
     letter-spacing: 0.08em;
     margin: 0 0 0.5rem;
   }
-
   .guide-intro__title {
     font-family: var(--gi-font-pixel);
     font-size: clamp(1.5rem, 4vw, 2.2rem);
@@ -77,7 +76,6 @@
     margin: 0 0 0.6rem;
     letter-spacing: -0.01em;
   }
-
   .guide-intro__version {
     font-size: 0.72rem;
     color: var(--gi-text-muted);
@@ -95,31 +93,25 @@
     flex-direction: column;
     gap: 0.45rem;
   }
-
   .guide-intro__status-row {
     display: flex;
     align-items: center;
     gap: 0.7rem;
     font-size: 0.82rem;
   }
-
   .guide-intro__status-label {
     color: var(--gi-text-muted);
     min-width: 4rem;
     font-size: 0.75rem;
   }
-
   .guide-intro__status-val {
     color: var(--gi-text);
     font-weight: 700;
   }
-
   .guide-intro__status--blink {
     animation: gi-blink-text 1.4s step-end infinite;
     color: var(--gi-hp-green);
   }
-
-  /* HP 게이지 */
   .guide-intro__hp-track {
     flex: 1;
     height: 12px;
@@ -129,7 +121,6 @@
     overflow: hidden;
     max-width: 200px;
   }
-
   .guide-intro__hp-fill {
     height: 100%;
     width: 100%;
@@ -143,7 +134,6 @@
     text-align: center;
     padding: 1.5rem 0;
   }
-
   .guide-intro__start-btn {
     font-family: var(--gi-font-pixel);
     font-size: 1.1rem;
@@ -159,22 +149,18 @@
     transition: transform 0.1s, box-shadow 0.1s;
     animation: gi-pulse 2s ease-in-out infinite;
   }
-
   .guide-intro__start-btn:hover {
     transform: translate(-1px, -1px);
     box-shadow: 4px 4px 0 var(--gi-border-dark);
   }
-
   .guide-intro__start-btn:active {
     transform: translate(2px, 2px);
     box-shadow: 1px 1px 0 var(--gi-border-dark);
   }
-
   .guide-intro__start-arrow {
     display: inline-block;
     animation: gi-blink-text 0.9s step-end infinite;
   }
-
   .guide-intro__start-hint {
     font-size: 0.72rem;
     color: var(--gi-text-muted);
@@ -189,23 +175,19 @@
     padding: 1.4rem 1.6rem;
     min-height: 120px;
   }
-
   .guide-intro__text-wrap {
     font-family: var(--gi-font-pixel);
     font-size: 0.92rem;
     color: var(--gi-text);
     line-height: 1.9;
   }
-
   .guide-intro__text-wrap p {
     margin: 0 0 0.9rem;
   }
-
   .guide-intro__text-wrap strong {
     color: var(--gi-accent);
     font-weight: 700;
   }
-
   .guide-intro__text-wrap .gi-single {
     font-size: 1rem;
     font-weight: 700;
@@ -214,7 +196,6 @@
     margin: 1rem 0 0.5rem;
     letter-spacing: 0.05em;
   }
-
   .guide-intro__cursor {
     font-family: var(--gi-font-pixel);
     font-size: 1rem;
@@ -223,86 +204,138 @@
     display: inline;
   }
 
-  /* 스테이지 선택 */
-  .guide-intro__stages {
+  /* ============= 퀘스트 보드 (NEW) ============= */
+  .guide-intro__board {
     margin-top: 1.6rem;
     animation: gi-fadein 0.5s ease;
   }
 
-  .guide-intro__stages-label {
+  .guide-intro__board-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px dashed var(--gi-border);
+  }
+  .guide-intro__board-label {
     font-family: var(--gi-font-pixel);
     font-size: 0.85rem;
     color: var(--gi-accent);
     font-weight: 700;
-    margin-bottom: 0.8rem;
     letter-spacing: 0.05em;
+    margin: 0;
+  }
+  .guide-intro__board-meta {
+    font-size: 0.72rem;
+    color: var(--gi-text-muted);
+    letter-spacing: 0.04em;
+  }
+  .guide-intro__board-meta b {
+    color: var(--gi-accent);
+    font-weight: 700;
   }
 
-  .guide-intro__stage-grid {
+  .guide-intro__quest-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 0.6rem;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.7rem;
     margin-bottom: 1rem;
   }
 
-  .guide-intro__stage-btn {
+  .guide-intro__quest {
     font-family: var(--gi-font-pixel);
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
-    padding: 0.75rem 1rem;
+    gap: 0.45rem;
+    padding: 0.85rem 0.95rem;
     background: var(--gi-bg);
     border: 2px solid var(--gi-border);
     border-radius: 2px;
     text-decoration: none;
     color: var(--gi-text);
     cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s, background 0.15s;
+    transition: transform 0.1s, box-shadow 0.1s, background 0.15s, border-color 0.15s;
     box-shadow: 2px 2px 0 var(--gi-border);
     position: relative;
   }
-
-  .guide-intro__stage-btn::before {
-    content: '▶';
-    position: absolute;
-    left: -1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--gi-accent);
-    font-size: 0.75rem;
-    opacity: 0;
-    transition: opacity 0.15s, left 0.15s;
-  }
-
-  .guide-intro__stage-btn:hover {
+  .guide-intro__quest:hover {
     background: var(--gi-accent-dim);
     border-color: var(--gi-accent);
     transform: translate(-2px, -2px);
     box-shadow: 4px 4px 0 var(--gi-border-dark);
   }
-
-  .guide-intro__stage-btn:hover::before {
-    opacity: 1;
-    left: -0.8rem;
-  }
-
-  .guide-intro__stage-btn--locked {
-    opacity: 0.5;
+  .guide-intro__quest--coming {
+    opacity: 0.55;
     cursor: not-allowed;
     pointer-events: none;
   }
 
-  .guide-intro__stage-num {
-    font-size: 0.68rem;
-    color: var(--gi-text-muted);
-    letter-spacing: 0.08em;
+  /* 카드 헤더 (카테고리 칩 + 우선도 점) */
+  .guide-intro__quest-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
   }
-
-  .guide-intro__stage-name {
-    font-size: 0.85rem;
+  .guide-intro__chip {
+    display: inline-block;
+    font-size: 0.66rem;
     font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 0.15rem 0.45rem;
+    border: 1px solid var(--gi-border-dark);
+    border-radius: 2px;
+    background: var(--gi-bg-screen);
     color: var(--gi-text);
   }
+  .guide-intro__chip--always   { background: #eaf3ea; border-color: var(--gi-hp-green); color: #2d5e2d; }
+  .guide-intro__chip--monthly  { background: #fdf4d6; border-color: var(--gi-hp-yellow); color: #7a5c0c; }
+  .guide-intro__chip--yearly   { background: #ffe6d8; border-color: var(--gi-accent); color: var(--gi-accent); }
+  .guide-intro__chip--special  { background: #f8d8d8; border-color: var(--gi-hp-red); color: #7a1c1c; }
+
+  .guide-intro__priority {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--gi-hp-green);
+    box-shadow: 0 0 0 2px var(--gi-bg);
+    flex-shrink: 0;
+  }
+  .guide-intro__priority--mid { background: var(--gi-hp-yellow); }
+  .guide-intro__priority--hi  { background: var(--gi-hp-red); animation: gi-blink-text 1s step-end infinite; }
+
+  .guide-intro__quest-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--gi-text);
+    line-height: 1.3;
+  }
+  .guide-intro__quest-desc {
+    font-size: 0.74rem;
+    color: var(--gi-text-muted);
+    line-height: 1.5;
+    min-height: 2.2em;
+  }
+  .guide-intro__quest-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.15rem;
+    padding-top: 0.45rem;
+    border-top: 1px dashed var(--gi-border);
+    font-size: 0.7rem;
+    color: var(--gi-text-muted);
+  }
+  .guide-intro__quest-foot b { color: var(--gi-text); font-weight: 700; }
+  .guide-intro__quest-status {
+    color: var(--gi-accent);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .guide-intro__quest-status--draft  { color: var(--gi-hp-yellow); }
+  .guide-intro__quest-status--soon   { color: var(--gi-text-muted); }
 
   .guide-intro__replay-btn {
     font-family: var(--gi-font-pixel);
@@ -315,7 +348,6 @@
     cursor: pointer;
     transition: color 0.15s, border-color 0.15s;
   }
-
   .guide-intro__replay-btn:hover {
     color: var(--gi-accent);
     border-color: var(--gi-accent);
@@ -326,34 +358,31 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
   }
-
   @keyframes gi-pulse {
     0%, 100% { box-shadow: 3px 3px 0 var(--gi-border-dark); }
     50% { box-shadow: 3px 3px 0 var(--gi-border-dark), 0 0 12px rgba(192, 90, 0, 0.3); }
   }
-
   @keyframes gi-fadein {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* 모션 줄이기 설정 존중 */
   @media (prefers-reduced-motion: reduce) {
     .guide-intro__start-btn,
     .guide-intro__status--blink,
     .guide-intro__start-arrow,
-    .guide-intro__cursor {
+    .guide-intro__cursor,
+    .guide-intro__priority--hi {
       animation: none;
     }
   }
 
-  /* 모바일 */
   @media (max-width: 480px) {
     .guide-intro {
       padding: 1.4rem 1.2rem 2rem;
       margin: 1.5rem 0.5rem;
     }
-    .guide-intro__stage-grid {
+    .guide-intro__quest-grid {
       grid-template-columns: 1fr;
     }
   }
@@ -372,7 +401,7 @@
 
       <!-- 게임 타이틀 박스 -->
       <div class="guide-intro__title-box">
-        <p class="guide-intro__kicker">STAGE SELECT / 실무 공략집</p>
+        <p class="guide-intro__kicker">QUEST BOARD / 실무 의뢰판</p>
         <h2 class="guide-intro__title" id="guideIntroTitle">
           행정실 주무관은 이제 칼퇴하고 싶다
         </h2>
@@ -401,7 +430,7 @@
       <!-- START 버튼 -->
       <div class="guide-intro__start-wrap" id="guideStartWrap">
         <button class="guide-intro__start-btn" id="guideStartBtn" type="button">
-          <span class="guide-intro__start-arrow">▶</span> 인트로 불러오기
+          <span class="guide-intro__start-arrow">▶</span> 의뢰판 열기
         </button>
         <p class="guide-intro__start-hint">클릭하면 공략집을 불러옵니다.</p>
       </div>
@@ -411,27 +440,75 @@
         <div class="guide-intro__text-wrap" id="guideTextWrap"></div>
         <span class="guide-intro__cursor" id="guideCursor" aria-hidden="true">█</span>
 
-        <!-- 스테이지 선택 -->
-        <div class="guide-intro__stages" id="guideStages" hidden>
-          <p class="guide-intro__stages-label">▶ 스테이지를 선택하세요</p>
-          <div class="guide-intro__stage-grid">
-            <a class="guide-intro__stage-btn" href="/guide/labor/" data-href="/guide/labor/">
-              <span class="guide-intro__stage-num">STAGE.0</span>
-              <span class="guide-intro__stage-name">생존 팁</span>
-            </a>
-            <a class="guide-intro__stage-btn" href="/guide/insurance/" data-href="/guide/insurance/">
-              <span class="guide-intro__stage-num">STG.02</span>
-              <span class="guide-intro__stage-name">사회보험 월마감</span>
-            </a>
-            <a class="guide-intro__stage-btn" href="/guide/income/" data-href="/guide/income/">
-              <span class="guide-intro__stage-num">STG.03</span>
-              <span class="guide-intro__stage-name">세입·세출외현금</span>
-            </a>
-            <a class="guide-intro__stage-btn guide-intro__stage-btn--locked" href="#" aria-disabled="true">
-              <span class="guide-intro__stage-num">STG.04</span>
-              <span class="guide-intro__stage-name">기록물 관리 🔒</span>
-            </a>
+        <!-- 퀘스트 보드 -->
+        <div class="guide-intro__board" id="guideBoard" hidden>
+          <div class="guide-intro__board-head">
+            <p class="guide-intro__board-label">▶ 의뢰판</p>
+            <div class="guide-intro__board-meta">
+              동시 진행 의뢰: <b>3</b>건 &nbsp;|&nbsp; 작성 예정: <b>1</b>건
+            </div>
           </div>
+
+          <div class="guide-intro__quest-grid">
+
+            <!-- 1. 생존 팁 -->
+            <a class="guide-intro__quest" href="/guide/labor/" data-href="/guide/labor/">
+              <div class="guide-intro__quest-head">
+                <span class="guide-intro__chip guide-intro__chip--always">상시</span>
+                <span class="guide-intro__priority" title="우선도: 일상"></span>
+              </div>
+              <div class="guide-intro__quest-title">생존 팁</div>
+              <div class="guide-intro__quest-desc">첫 출근, 인사이동, 결재 라인. 살아남기 위한 잡지식 모음.</div>
+              <div class="guide-intro__quest-foot">
+                <span>주기 <b>상시</b></span>
+                <span class="guide-intro__quest-status">운영중</span>
+              </div>
+            </a>
+
+            <!-- 2. 사회보험 월마감 -->
+            <a class="guide-intro__quest" href="/guide/insurance/" data-href="/guide/insurance/">
+              <div class="guide-intro__quest-head">
+                <span class="guide-intro__chip guide-intro__chip--monthly">월마감</span>
+                <span class="guide-intro__priority guide-intro__priority--mid" title="우선도: 정기 마감"></span>
+              </div>
+              <div class="guide-intro__quest-title">사회보험 월마감</div>
+              <div class="guide-intro__quest-desc">4대보험 부과·정산, 자격취득·상실 신고. 매달 돌아오는 보스.</div>
+              <div class="guide-intro__quest-foot">
+                <span>주기 <b>매월</b></span>
+                <span class="guide-intro__quest-status">운영중</span>
+              </div>
+            </a>
+
+            <!-- 3. 세입·세출외현금 -->
+            <a class="guide-intro__quest" href="/guide/income/" data-href="/guide/income/">
+              <div class="guide-intro__quest-head">
+                <span class="guide-intro__chip guide-intro__chip--monthly">월마감</span>
+                <span class="guide-intro__priority guide-intro__priority--mid" title="우선도: 정기 마감"></span>
+              </div>
+              <div class="guide-intro__quest-title">세입·세출외현금</div>
+              <div class="guide-intro__quest-desc">학교운영지원비, 수익자부담, 미사용액 처리. 통장과 장부 일치 시키기.</div>
+              <div class="guide-intro__quest-foot">
+                <span>주기 <b>매월</b></span>
+                <span class="guide-intro__quest-status">운영중</span>
+              </div>
+            </a>
+
+            <!-- 4. 기록물 관리 (예정) -->
+            <a class="guide-intro__quest guide-intro__quest--coming" href="#" aria-disabled="true">
+              <div class="guide-intro__quest-head">
+                <span class="guide-intro__chip guide-intro__chip--yearly">연간</span>
+                <span class="guide-intro__priority" title="우선도: 정기"></span>
+              </div>
+              <div class="guide-intro__quest-title">기록물 관리</div>
+              <div class="guide-intro__quest-desc">생산·등록·이관·평가심의. 12월에 몰려오는 그것.</div>
+              <div class="guide-intro__quest-foot">
+                <span>주기 <b>연 1회</b></span>
+                <span class="guide-intro__quest-status guide-intro__quest-status--soon">작성 예정</span>
+              </div>
+            </a>
+
+          </div>
+
           <button class="guide-intro__replay-btn" id="guideReplayBtn" type="button">↺ 인트로 다시보기</button>
         </div>
       </div>
@@ -455,17 +532,17 @@
     },
     {
       type: 'p',
-      text: '하지만 현실은 녹록지 않습니다. 매일 아침 새로운 공문이 스폰되고, 클리어 조건은 매년 바뀌며, 보스는 항상 마감일 하루 전에 등장합니다. 체력 게이지는 줄어들고, 세이브 포인트는 존재하지 않습니다.'
+      text: '하지만 현실은 녹록지 않습니다. 의뢰판에는 매일 새 의뢰가 동시에 갱신되고, 월마감·연마감·긴급공문이 한 화면에 겹쳐 뜹니다. 클리어 조건은 매년 바뀌며, 보스는 항상 마감일 하루 전에 등장합니다. 체력 게이지는 줄어들고, 세이브 포인트는 존재하지 않습니다.'
     },
     {
       type: 'p',
-      text: '이 페이지는 <strong>혼자 맨몸으로 첫 번째 스테이지를 클리어한 주무관</strong>이 직접 작성한 비공식 공략집입니다. 지침서에 없는 것, 선배도 몰랐던 것, 몸으로 때우고 나서야 알게 된 것들을 기록합니다.'
+      text: '이 페이지는 <strong>맨몸으로 여러 의뢰를 동시에 떠안고 살아남은 주무관</strong>이 직접 작성한 비공식 공략집입니다. 지침서에 없는 것, 선배도 몰랐던 것, 몸으로 때우고 나서야 알게 된 것들을 기록합니다.'
     }
   ];
 
   const TYPING_DELAY  = 18;
   const LINE_GAP      = 600;
-  const STAGE_DELAY   = 500;
+  const BOARD_DELAY   = 500;
 
   /* DOM */
   const startWrap = document.getElementById('guideStartWrap');
@@ -473,8 +550,7 @@
   const screen    = document.getElementById('guideScreen');
   const textWrap  = document.getElementById('guideTextWrap');
   const cursor    = document.getElementById('guideCursor');
-  const warning   = document.getElementById('guideWarning');   // null이어도 OK
-  const stages    = document.getElementById('guideStages');
+  const board     = document.getElementById('guideBoard');
   const replayBtn = document.getElementById('guideReplayBtn');
   const hpFill    = document.getElementById('guideHpFill');
   const hpVal     = document.getElementById('guideHpVal');
@@ -498,7 +574,6 @@
 
       if (progress < 1) requestAnimationFrame(step);
     }
-
     requestAnimationFrame(step);
   }
 
@@ -532,7 +607,6 @@
       element.innerHTML = built;
       setTimeout(next, tokens[i - 1].startsWith('<') ? 0 : charDelay);
     }
-
     next();
   }
 
@@ -542,7 +616,6 @@
       if (onAllDone) onAllDone();
       return;
     }
-
     const line = lines[index];
     const el   = document.createElement('p');
     if (line.type === 'single') el.className = 'gi-single';
@@ -558,46 +631,38 @@
 
   /* 인트로 실행 */
   function startIntro() {
-    startWrap.hidden         = true;
-    screen.hidden            = false;
-    textWrap.innerHTML       = '';
-    cursor.style.display     = 'inline';
-    stages.hidden            = true;
-    if (warning) warning.hidden = true;   // ← null 체크
+    startWrap.hidden     = true;
+    screen.hidden        = false;
+    textWrap.innerHTML   = '';
+    cursor.style.display = 'inline';
+    board.hidden         = true;
 
     drainHp();
 
     showLines(INTRO_LINES, 0, function () {
       cursor.style.display = 'none';
-
       setTimeout(function () {
-        if (warning) warning.hidden = false;  // ← null 체크
-
-        setTimeout(function () {
-          stages.hidden = false;
-        }, STAGE_DELAY);
-
-      }, 400);
+        board.hidden = false;
+      }, BOARD_DELAY);
     });
   }
 
   /* 리셋 */
   function resetIntro() {
-    textWrap.innerHTML          = '';
-    if (warning) warning.hidden = true;   // ← null 체크
-    stages.hidden               = true;
-    screen.hidden               = true;
-    startWrap.hidden            = false;
-    hpFill.style.width          = '100%';
-    hpFill.style.background     = 'var(--gi-hp-green)';
-    hpVal.textContent           = '100 / 100';
+    textWrap.innerHTML      = '';
+    board.hidden            = true;
+    screen.hidden           = true;
+    startWrap.hidden        = false;
+    hpFill.style.width      = '100%';
+    hpFill.style.background = 'var(--gi-hp-green)';
+    hpVal.textContent       = '100 / 100';
   }
 
   /* 이벤트 */
   startBtn.addEventListener('click', startIntro);
   replayBtn.addEventListener('click', resetIntro);
 
-  document.querySelectorAll('.guide-intro__stage-btn[data-href]').forEach(function (btn) {
+  document.querySelectorAll('.guide-intro__quest[data-href]').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       const href = btn.getAttribute('data-href');
       if (!href || href === '#') return;
