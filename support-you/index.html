@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>몸으로 때우며 정리한 실무 지식</title>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-BQLFX9NXE4"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-BQLFX9NXE4');
+  </script>
+
+  <link rel="icon" href="/static/favicon.ico" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="/static/footer.js"></script>
+  <script src="/static/global-loader.js?v=1"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+  /* =============================================
+     guide-intro 네임스페이스 — 기존 CSS와 충돌 없음
+     v2: 스테이지 → 퀘스트 보드(의뢰판) 구조로 전환
+  ============================================= */
+  .guide-intro {
+    --gi-font-pixel: 'Nanum Gothic Coding', monospace;
+    --gi-font-body: 'Noto Sans KR', sans-serif;
+    --gi-bg: #faf8f2;
+    --gi-bg-screen: #fffef9;
+    --gi-border: #c8b97a;
+    --gi-border-dark: #8a7440;
+    --gi-text: #2a2215;
+    --gi-text-muted: #7a6e52;
+    --gi-accent: #c05a00;
+    --gi-accent-dim: #f0e6d0;
+    --gi-hp-green: #4a9e4a;
+    --gi-hp-yellow: #d4a017;
+    --gi-hp-red: #c03030;
+    --gi-shadow: 4px 4px 0px #c8b97a;
+
+    font-family: var(--gi-font-pixel);
+    background-color: var(--gi-bg);
+    border: 3px solid var(--gi-border-dark);
+    box-shadow: var(--gi-shadow);
+    border-radius: 4px;
+    padding: 2rem 2rem 2.5rem;
+    max-width: 720px;
+    margin: 2.5rem auto;
+    position: relative;
+  }
+
+  /* 타이틀 박스 */
+  .guide-intro__title-box {
+    border-bottom: 2px solid var(--gi-border);
+    padding-bottom: 1.2rem;
+    margin-bottom: 1.4rem;
+  }
+  .guide-intro__kicker {
+    font-family: var(--gi-font-pixel);
+    font-size: 0.78rem;
+    color: var(--gi-text-muted);
+    letter-spacing: 0.08em;
+    margin: 0 0 0.5rem;
+  }
+  .guide-intro__title {
+    font-family: var(--gi-font-pixel);
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-weight: 700;
+    color: var(--gi-text);
+    line-height: 1.3;
+    margin: 0 0 0.6rem;
+    letter-spacing: -0.01em;
+  }
+  .guide-intro__version {
+    font-size: 0.72rem;
+    color: var(--gi-text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* 상태창 */
+  .guide-intro__status-bar {
+    background: var(--gi-accent-dim);
+    border: 2px solid var(--gi-border);
+    border-radius: 2px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .guide-intro__status-row {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 0.82rem;
+  }
+  .guide-intro__status-label {
+    color: var(--gi-text-muted);
+    min-width: 4rem;
+    font-size: 0.75rem;
+  }
+  .guide-intro__status-val {
+    color: var(--gi-text);
+    font-weight: 700;
+  }
+  .guide-intro__status--blink {
+    animation: gi-blink-text 1.4s step-end infinite;
+    color: var(--gi-hp-green);
+  }
+  .guide-intro__hp-track {
+    flex: 1;
+    height: 12px;
+    background: #e0d5b8;
+    border: 1px solid var(--gi-border);
+    border-radius: 2px;
+    overflow: hidden;
+    max-width: 200px;
+  }
+  .guide-intro__hp-fill {
+    height: 100%;
+    width: 100%;
+    background: var(--gi-hp-green);
+    transition: width 2s ease, background-color 2s ease;
+    border-radius: 2px;
+  }
+
+  /* START 버튼 */
+  .guide-intro__start-wrap {
+    text-align: center;
+    padding: 1.5rem 0;
+  }
+  .guide-intro__start-btn {
+    font-family: var(--gi-font-pixel);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--gi-accent);
+    border: 3px solid var(--gi-border-dark);
+    border-radius: 3px;
+    padding: 0.75rem 2.5rem;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    box-shadow: 3px 3px 0 var(--gi-border-dark);
+    transition: transform 0.1s, box-shadow 0.1s;
+    animation: gi-pulse 2s ease-in-out infinite;
+  }
+  .guide-intro__start-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--gi-border-dark);
+  }
+  .guide-intro__start-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--gi-border-dark);
+  }
+  .guide-intro__start-arrow {
+    display: inline-block;
+    animation: gi-blink-text 0.9s step-end infinite;
+  }
+  .guide-intro__start-hint {
+    font-size: 0.72rem;
+    color: var(--gi-text-muted);
+    margin-top: 0.6rem;
+  }
+
+  /* 인트로 스크린 */
+  .guide-intro__screen {
+    border: 2px solid var(--gi-border);
+    background: var(--gi-bg-screen);
+    border-radius: 2px;
+    padding: 1.4rem 1.6rem;
+    min-height: 120px;
+  }
+  .guide-intro__text-wrap {
+    font-family: var(--gi-font-pixel);
+    font-size: 0.92rem;
+    color: var(--gi-text);
+    line-height: 1.9;
+  }
+  .guide-intro__text-wrap p {
+    margin: 0 0 0.9rem;
+  }
+  .guide-intro__text-wrap strong {
+    color: var(--gi-accent);
+    font-weight: 700;
+  }
+  .guide-intro__text-wrap .gi-single {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gi-accent);
+    display: block;
+    margin: 1rem 0 0.5rem;
+    letter-spacing: 0.05em;
+  }
+  .guide-intro__cursor {
+    font-family: var(--gi-font-pixel);
+    font-size: 1rem;
+    color: var(--gi-accent);
+    animation: gi-blink-text 0.8s step-end infinite;
+    display: inline;
+  }
+
+  /* ============= 퀘스트 보드 (NEW) ============= */
+  .guide-intro__board {
+    margin-top: 1.6rem;
+    animation: gi-fadein 0.5s ease;
+  }
+
+  .guide-intro__board-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px dashed var(--gi-border);
+  }
+  .guide-intro__board-label {
+    font-family: var(--gi-font-pixel);
+    font-size: 0.85rem;
+    color: var(--gi-accent);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin: 0;
+  }
+  .guide-intro__board-meta {
+    font-size: 0.72rem;
+    color: var(--gi-text-muted);
+    letter-spacing: 0.04em;
+  }
+  .guide-intro__board-meta b {
+    color: var(--gi-accent);
+    font-weight: 700;
+  }
+
+  .guide-intro__quest-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.7rem;
+    margin-bottom: 1rem;
+  }
+
+  .guide-intro__quest {
+    font-family: var(--gi-font-pixel);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.85rem 0.95rem;
+    background: var(--gi-bg);
+    border: 2px solid var(--gi-border);
+    border-radius: 2px;
+    text-decoration: none;
+    color: var(--gi-text);
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s, background 0.15s, border-color 0.15s;
+    box-shadow: 2px 2px 0 var(--gi-border);
+    position: relative;
+  }
+  .guide-intro__quest:hover {
+    background: var(--gi-accent-dim);
+    border-color: var(--gi-accent);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--gi-border-dark);
+  }
+  .guide-intro__quest--coming {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* 카드 헤더 (카테고리 칩 + 우선도 점) */
+  .guide-intro__quest-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .guide-intro__chip {
+    display: inline-block;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 0.15rem 0.45rem;
+    border: 1px solid var(--gi-border-dark);
+    border-radius: 2px;
+    background: var(--gi-bg-screen);
+    color: var(--gi-text);
+  }
+  .guide-intro__chip--always   { background: #eaf3ea; border-color: var(--gi-hp-green); color: #2d5e2d; }
+  .guide-intro__chip--monthly  { background: #fdf4d6; border-color: var(--gi-hp-yellow); color: #7a5c0c; }
+  .guide-intro__chip--yearly   { background: #ffe6d8; border-color: var(--gi-accent); color: var(--gi-accent); }
+  .guide-intro__chip--special  { background: #f8d8d8; border-color: var(--gi-hp-red); color: #7a1c1c; }
+
+  .guide-intro__priority {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--gi-hp-green);
+    box-shadow: 0 0 0 2px var(--gi-bg);
+    flex-shrink: 0;
+  }
+  .guide-intro__priority--mid { background: var(--gi-hp-yellow); }
+  .guide-intro__priority--hi  { background: var(--gi-hp-red); animation: gi-blink-text 1s step-end infinite; }
+
+  .guide-intro__quest-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--gi-text);
+    line-height: 1.3;
+  }
+  .guide-intro__quest-desc {
+    font-size: 0.74rem;
+    color: var(--gi-text-muted);
+    line-height: 1.5;
+    min-height: 2.2em;
+  }
+  .guide-intro__quest-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.15rem;
+    padding-top: 0.45rem;
+    border-top: 1px dashed var(--gi-border);
+    font-size: 0.7rem;
+    color: var(--gi-text-muted);
+  }
+  .guide-intro__quest-foot b { color: var(--gi-text); font-weight: 700; }
+  .guide-intro__quest-status {
+    color: var(--gi-accent);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .guide-intro__quest-status--draft  { color: var(--gi-hp-yellow); }
+  .guide-intro__quest-status--soon   { color: var(--gi-text-muted); }
+
+  .guide-intro__replay-btn {
+    font-family: var(--gi-font-pixel);
+    font-size: 0.75rem;
+    color: var(--gi-text-muted);
+    background: none;
+    border: 1px solid var(--gi-border);
+    border-radius: 2px;
+    padding: 0.35rem 0.8rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .guide-intro__replay-btn:hover {
+    color: var(--gi-accent);
+    border-color: var(--gi-accent);
+  }
+
+  /* 애니메이션 */
+  @keyframes gi-blink-text {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  @keyframes gi-pulse {
+    0%, 100% { box-shadow: 3px 3px 0 var(--gi-border-dark); }
+    50% { box-shadow: 3px 3px 0 var(--gi-border-dark), 0 0 12px rgba(192, 90, 0, 0.3); }
+  }
+  @keyframes gi-fadein {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .guide-intro__start-btn,
+    .guide-intro__status--blink,
+    .guide-intro__start-arrow,
+    .guide-intro__cursor,
+    .guide-intro__priority--hi {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .guide-intro {
+      padding: 1.4rem 1.2rem 2rem;
+      margin: 1.5rem 0.5rem;
+    }
+    .guide-intro__quest-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  </style>
+</head>
+
+<body class="alien-side-bg">
+<div class="alien-page-frame">
+  <main class="container">
+
+    <h1>행정 게임 실무 공략집</h1>
+    <p class="muted">몸으로 때우며 정리한 실무 지식</p>
+    <hr/>
+
+      <p class="page-kicker">Intro</p>
+  
+
+    <section class="guide-intro" id="home-guide" aria-labelledby="guideIntroTitle">
+
+      <!-- 게임 타이틀 박스 -->
+      <div class="guide-intro__title-box">
+        <p class="guide-intro__kicker">QUEST BOARD / 실무 의뢰판</p>
+        <h2 class="guide-intro__title" id="guideIntroTitle">
+          행정실 주무관은 이제 칼퇴하고 싶다
+        </h2>
+        <div class="guide-intro__version">VER. 2026.5.1 &nbsp;|&nbsp; 강원특별자치도 패치 서버</div>
+      </div>
+
+      <!-- HP 상태창 -->
+      <div class="guide-intro__status-bar" aria-hidden="true">
+        <div class="guide-intro__status-row">
+          <span class="guide-intro__status-label">HP</span>
+          <div class="guide-intro__hp-track">
+            <div class="guide-intro__hp-fill" id="guideHpFill"></div>
+          </div>
+          <span class="guide-intro__status-val" id="guideHpVal">100 / 100</span>
+        </div>
+        <div class="guide-intro__status-row">
+          <span class="guide-intro__status-label">직급</span>
+          <span class="guide-intro__status-val">지방교육행정서기(보)</span>
+        </div>
+        <div class="guide-intro__status-row">
+          <span class="guide-intro__status-label">상태</span>
+          <span class="guide-intro__status-val guide-intro__status--blink">● 일단 생존 중</span>
+        </div>
+      </div>
+
+      <!-- START 버튼 -->
+      <div class="guide-intro__start-wrap" id="guideStartWrap">
+        <button class="guide-intro__start-btn" id="guideStartBtn" type="button">
+          <span class="guide-intro__start-arrow">▶</span> 게임 시작하기
+        </button>
+        <p class="guide-intro__start-hint">클릭하면 인트로와 업무 퀘스트 보드가 열립니다.</p>
+      </div>
+
+      <!-- 인트로 텍스트 영역 -->
+      <div class="guide-intro__screen" id="guideScreen" hidden>
+        <div class="guide-intro__text-wrap" id="guideTextWrap"></div>
+        <span class="guide-intro__cursor" id="guideCursor" aria-hidden="true">█</span>
+
+        <!-- 퀘스트 보드 -->
+        <div class="guide-intro__board" id="guideBoard" hidden>
+          <div class="guide-intro__board-head">
+            <p class="guide-intro__board-label">▶ 업무 발생 게시판</p>
+            <div class="guide-intro__board-meta">
+              진행 중 의뢰: <b>5</b>건 &nbsp;|&nbsp; 해금 예정: <b>2</b>건
+            </div>
+          </div>
+
+          <div class="guide-intro__quest-grid">
+
+            <!-- 1. 생존 팁 -->
+            <a class="guide-intro__quest" href="/support-you/survival-code" data-href="/support-you/survival-code">
+              <div class="guide-intro__quest-head">
+                <span class="guide-intro__chip guide-intro__chip--always">상시</span>
+                <span class="guide-intro__priority" title="우선도: 일상"></span>
+              </div>
+              <div class="guide-intro__quest-title">생존 팁</div>
+              <div class="guide-intro__quest-desc">첫 출근, 인사이동, 결재 라인. 살아남기 위한 잡지식 모음.</div>
+              <div class="guide-intro__quest-foot">
+                <span>주기 <b>상시</b></span>
+                <span class="guide-intro__quest-status">운영중</span>
+              </div>
+            </a>
+
+            <!-- 2. 사회보험 월마감 -->
+            <a class="guide-intro__quest" href="/guide/insurance/" data-href="/guide/insurance/">
+              <div class="guide-intro__quest-head">
+                <span class="guide-intro__chip guide-intro__chip--monthly">월마감</span>
+                <span class="guide-intro__priority guide-intro__priority--mid" title="우선도: 정기 마감"></span>
+              </div>
+              <div class="guide-intro__quest-title">사회보험 월마감</div>
+              <div class="guide-intro__quest-desc">4대보험 부과·정산, 자격취득·상실 신고. 매달 돌아오는 보스.</div>
+              <div class="guide-intro__quest-foot">
+                <span>주기 <b>매월</b></span>
+                <span class="guide-intro__quest-status">운영중</span>
+              </div>
+            </a>
+
+            <!-- 3. 세입·세출외현금 -->
+            <a class="guide-intro__quest" href="/guide/income/" data-href="/guide/income/">
+              <div class="guide-intro__quest-head">
+                <span class="guide-intro__chip guide-intro__chip--monthly">월마감</span>
+                <span class="guide-intro__priority guide-intro__priority--mid" title="우선도: 정기 마감"></span>
+              </div>
+              <div class="guide-intro__quest-title">세입·세출외현금</div>
+              <div class="guide-intro__quest-desc">학교운영지원비, 수익자부담, 미사용액 처리. 통장과 장부 일치 시키기.</div>
+              <div class="guide-intro__quest-foot">
+                <span>주기 <b>매월</b></span>
+                <span class="guide-intro__quest-status">운영중</span>
+              </div>
+            </a>
+
+            <!-- 4. 기록물 관리 (예정) -->
+            <a class="guide-intro__quest guide-intro__quest--coming" href="#" aria-disabled="true">
+              <div class="guide-intro__quest-head">
+                <span class="guide-intro__chip guide-intro__chip--yearly">연간</span>
+                <span class="guide-intro__priority" title="우선도: 정기"></span>
+              </div>
+              <div class="guide-intro__quest-title">기록물 관리</div>
+              <div class="guide-intro__quest-desc">생산·등록·이관·평가심의. 12월에 몰려오는 그것.</div>
+              <div class="guide-intro__quest-foot">
+                <span>주기 <b>연 1회</b></span>
+                <span class="guide-intro__quest-status guide-intro__quest-status--soon">작성 예정</span>
+              </div>
+            </a>
+
+          </div>
+
+          <button class="guide-intro__replay-btn" id="guideReplayBtn" type="button">↺ 인트로 다시보기</button>
+        </div>
+      </div>
+
+    </section>
+
+
+<section class="section">
+
+
+<div>
+
+        <details class="img-zoom">
+          <summary aria-label="크게 보기">
+            <img src="/static/image/camera.png" alt="도트 버전">
+            </summary>
+          </details>
+
+
+</div>
+
+
+</section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+
+  const INTRO_LINES = [
+    {
+      type: 'p',
+      text: '당신은 추억의 고전 게임 <strong>행정실 주무관은 이제 칼퇴하고 싶다</strong>의 플레이어입니다. 불친절하기로 유명한 이 게임은 튜토리얼이 없습니다. 공략집도 없습니다. 선배 플레이어에게 물어보면 "저도 몰라요"라는 답변이 돌아옵니다.'
+    },
+    {
+      type: 'single',
+      text: '당신의 목표는 단 하나. 칼퇴.'
+    },
+    {
+      type: 'p',
+      text: '하지만 현실은 녹록지 않습니다. 의뢰판에는 매일 새 의뢰가 동시에 갱신되고, 월마감·연마감·긴급공문이 한 화면에 겹쳐 뜹니다. 클리어 조건은 매년 바뀌며, 보스는 항상 마감일 하루 전에 등장합니다. 체력 게이지는 줄어들고, 세이브 포인트는 존재하지 않습니다.'
+    },
+    {
+      type: 'p',
+      text: '이 페이지는 <strong>맨몸으로 여러 의뢰를 동시에 떠안고 살아남은 주무관</strong>이 직접 작성한 비공식 공략집입니다. 지침서에 없는 것, 선배도 몰랐던 것, 몸으로 때우고 나서야 알게 된 것들을 기록합니다.'
+    }
+  ];
+
+  const TYPING_DELAY  = 18;
+  const LINE_GAP      = 600;
+  const BOARD_DELAY   = 500;
+
+  /* DOM */
+  const startWrap = document.getElementById('guideStartWrap');
+  const startBtn  = document.getElementById('guideStartBtn');
+  const screen    = document.getElementById('guideScreen');
+  const textWrap  = document.getElementById('guideTextWrap');
+  const cursor    = document.getElementById('guideCursor');
+  const board     = document.getElementById('guideBoard');
+  const replayBtn = document.getElementById('guideReplayBtn');
+  const hpFill    = document.getElementById('guideHpFill');
+  const hpVal     = document.getElementById('guideHpVal');
+
+  /* HP 점진 감소 */
+  function drainHp() {
+    const totalDuration = 4000;
+    const targetPct     = 42;
+    const start         = performance.now();
+
+    function step(now) {
+      const elapsed  = now - start;
+      const progress = Math.min(elapsed / totalDuration, 1);
+      const current  = Math.round(100 - (100 - targetPct) * progress);
+
+      hpFill.style.width = current + '%';
+      hpVal.textContent  = current + ' / 100';
+
+      if      (current <= 30) hpFill.style.background = 'var(--gi-hp-red)';
+      else if (current <= 60) hpFill.style.background = 'var(--gi-hp-yellow)';
+
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* 타이핑 효과 */
+  function typeText(element, html, charDelay, onDone) {
+    const tokens  = [];
+    const tagRe   = /<[^>]+>/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = tagRe.exec(html)) !== null) {
+      if (match.index > lastIndex) {
+        tokens.push(...html.slice(lastIndex, match.index).split(''));
+      }
+      tokens.push(match[0]);
+      lastIndex = tagRe.lastIndex;
+    }
+    if (lastIndex < html.length) {
+      tokens.push(...html.slice(lastIndex).split(''));
+    }
+
+    let i = 0;
+    let built = '';
+
+    function next() {
+      if (i >= tokens.length) {
+        if (onDone) onDone();
+        return;
+      }
+      built += tokens[i++];
+      element.innerHTML = built;
+      setTimeout(next, tokens[i - 1].startsWith('<') ? 0 : charDelay);
+    }
+    next();
+  }
+
+  /* 문단 순차 등장 */
+  function showLines(lines, index, onAllDone) {
+    if (index >= lines.length) {
+      if (onAllDone) onAllDone();
+      return;
+    }
+    const line = lines[index];
+    const el   = document.createElement('p');
+    if (line.type === 'single') el.className = 'gi-single';
+    textWrap.appendChild(el);
+    textWrap.appendChild(cursor);
+
+    typeText(el, line.text, TYPING_DELAY, function () {
+      setTimeout(function () {
+        showLines(lines, index + 1, onAllDone);
+      }, LINE_GAP);
+    });
+  }
+
+  /* 인트로 실행 */
+  function startIntro() {
+    startWrap.hidden     = true;
+    screen.hidden        = false;
+    textWrap.innerHTML   = '';
+    cursor.style.display = 'inline';
+    board.hidden         = true;
+
+    drainHp();
+
+    showLines(INTRO_LINES, 0, function () {
+      cursor.style.display = 'none';
+      setTimeout(function () {
+        board.hidden = false;
+      }, BOARD_DELAY);
+    });
+  }
+
+  /* 리셋 */
+  function resetIntro() {
+    textWrap.innerHTML      = '';
+    board.hidden            = true;
+    screen.hidden           = true;
+    startWrap.hidden        = false;
+    hpFill.style.width      = '100%';
+    hpFill.style.background = 'var(--gi-hp-green)';
+    hpVal.textContent       = '100 / 100';
+  }
+
+  /* 이벤트 */
+  startBtn.addEventListener('click', startIntro);
+  replayBtn.addEventListener('click', resetIntro);
+
+  document.querySelectorAll('.guide-intro__quest[data-href]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      const href = btn.getAttribute('data-href');
+      if (!href || href === '#') return;
+      e.preventDefault();
+      window.location.href = href;
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>
